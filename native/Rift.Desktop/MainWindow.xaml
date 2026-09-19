@@ -1,0 +1,29 @@
+<Window x:Class="Rift.Desktop.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="clr-namespace:Rift.Desktop" Title="Rift Companion — Windows" Width="1220" Height="900" MinWidth="1050" MinHeight="650" Background="#10151A" Foreground="#E6EDF3" FontFamily="Segoe UI" FontSize="14" Loaded="OnLoaded" Closing="OnClosing">
+ <TabControl Background="#10151A" BorderThickness="0" SelectionChanged="OnPageChanged">
+  <TabItem Header="Profil joueur" Foreground="#10151A"><local:ProfileView x:Name="ProfilePage"/></TabItem>
+  <TabItem Header="Connexion et draft" Foreground="#10151A"><Grid TextElement.Foreground="#E6EDF3">
+  <ScrollViewer VerticalScrollBarVisibility="Auto">
+    <StackPanel Margin="32,24">
+      <DockPanel><TextBlock DockPanel.Dock="Right" Text="NATIVE / PROTOTYPE 02" Foreground="#96A5AF" FontSize="11"/><TextBlock Text="◈  RIFT / COMPANION" FontSize="19" Foreground="#DEC78E" FontWeight="SemiBold"/></DockPanel>
+      <Border Height="1" Background="#303B43" Margin="0,22"/>
+      <DockPanel Margin="0,4,0,22">
+        <StackPanel DockPanel.Dock="Right" Width="150"><TextBlock Text="Rôle préféré" Foreground="#96A5AF" FontSize="11" Margin="0,0,0,6"/><ComboBox x:Name="RoleBox" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnRoleChanged" AutomationProperties.Name="Rôle préféré"/></StackPanel>
+        <StackPanel><TextBlock Text="TON ÉQUIPE. TES CHOIX." Foreground="#DEC78E" FontSize="11"/><TextBlock Text="La draft, en un regard." FontSize="32" FontWeight="SemiBold" Margin="0,8,0,6"/><TextBlock Text="Application Windows · connexion locale · préférences SQLite" Foreground="#96A5AF"/></StackPanel>
+      </DockPanel>
+      <Border Background="#1D2931" CornerRadius="8" Padding="18"><DockPanel><Button x:Name="ModeButton" DockPanel.Dock="Right" Content="Voir une démonstration" Click="OnModeClicked"/><StackPanel><TextBlock x:Name="StatusText" Text="Démarrage…" FontSize="16" FontWeight="SemiBold"/><TextBlock x:Name="MessageText" Margin="0,5,14,0" Foreground="#A8BAC6"/></StackPanel></DockPanel></Border>
+      <TextBlock x:Name="StorageText" Text="" Foreground="#DDBF83" Margin="0,8" FontSize="12"/>
+      <Grid Margin="0,8,0,0"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="18"/><ColumnDefinition/></Grid.ColumnDefinitions>
+        <Border Background="#172129" CornerRadius="8" BorderBrush="#34414B" BorderThickness="1" Padding="18"><StackPanel><TextBlock Text="●  Ton équipe" Foreground="#8AD7B7" FontWeight="SemiBold" FontSize="17" Margin="0,0,0,12"/><ItemsControl x:Name="AlliesList"/><TextBlock x:Name="AllyBans" Foreground="#A8BAC6" Margin="0,12,0,0" FontSize="12"/></StackPanel></Border>
+        <Border Grid.Column="2" Background="#172129" CornerRadius="8" BorderBrush="#34414B" BorderThickness="1" Padding="18"><StackPanel><TextBlock Text="●  Équipe adverse" Foreground="#E2A4A4" FontWeight="SemiBold" FontSize="17" Margin="0,0,0,12"/><ItemsControl x:Name="EnemiesList"/><TextBlock x:Name="EnemyBans" Foreground="#A8BAC6" Margin="0,12,0,0" FontSize="12"/></StackPanel></Border>
+      </Grid>
+      <Border BorderBrush="#4B554D" BorderThickness="1" CornerRadius="8" Padding="18" Margin="0,18"><StackPanel><TextBlock Text="Prochaine étape : des choix de champions expliqués." FontWeight="SemiBold"/><TextBlock Text="Les recommandations, l’écart d’équipement et les statistiques joueurs ne sont pas encore intégrés." Foreground="#96A5AF" Margin="0,6,0,0" FontSize="12"/></StackPanel></Border>
+      <TextBlock Text="EMPREINTE DE L’APPLICATION" Foreground="#DEC78E" FontSize="11"/>
+      <TextBlock x:Name="MetricsText" FontSize="18" Margin="0,10,0,6"/>
+      <TextBlock Text="CPU rapporté à la capacité totale du PC. Mémoire de ce processus WPF, hors LoL. Relevé toutes les 5 secondes : ce n’est pas un benchmark en partie." Foreground="#96A5AF" FontSize="11"/>
+      <Expander Header="Connexion et stockage" Foreground="#BAC8D1" Margin="0,16,0,0"><StackPanel Margin="0,10"><DockPanel><Button Content="Choisir le dossier LoL…" DockPanel.Dock="Right" Click="OnDirectoryClicked"/><TextBlock x:Name="DirectoryText" Foreground="#BAC8D1" VerticalAlignment="Center"/></DockPanel><TextBlock x:Name="DatabaseText" Foreground="#96A5AF" FontSize="11" Margin="0,8"/><TextBlock Text="Fermer cette fenêtre arrête le programme. Aucune modification du client LoL." Foreground="#96A5AF" FontSize="11"/></StackPanel></Expander>
+      <TextBlock Text="Rift Companion is not endorsed by Riot Games and does not reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games and all associated properties are trademarks or registered trademarks of Riot Games, Inc." Foreground="#768A98" FontSize="10" Margin="0,22,0,0"/>
+    </StackPanel>
+  </ScrollViewer>
+ </Grid></TabItem>
+ </TabControl>
+</Window>

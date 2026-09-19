@@ -1,0 +1,21 @@
+node_modules/
+logs/
+*.log
+.env
+.env.*
+!.env.example
+*.dpapi
+personal-profile.json
+recent-profiles.json
+# Liens privés du suivi de travail ; la documentation technique reste versionnée.
+docs/NOTION.md
+.vs/
+*.user
+*.suo
+.tools/
+**/bin/
+**/obj/
+artifacts/
+*.db
+*.db-shm
+*.db-wal
