@@ -1,0 +1,473 @@
+{
+  "data": {
+    "9101": {
+      "image": {
+        "full": "9101.png"
+      },
+      "description": "Tuer une cible vous rend @HealAmount@ PV.",
+      "name": "Absorption vitale"
+    },
+    "8236": {
+      "image": {
+        "full": "8236.png"
+      },
+      "description": "Vous gagnez de la puissance ou des dégâts d'attaque toutes les 10 min (<lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>bonus adaptatif</font></lol-uikit-tooltipped-keyword>).<br><br><i>10 min</i> : +8 puissance ou +5 dégâts d'attaque <br><i>20 min</i> : +24 puissance ou +14 dégâts d'attaque<br><i>30 min</i> : +48 puissance ou +29 dégâts d'attaque<br><i>40 min</i> : +80 puissance ou +48 dégâts d'attaque<br><i>50 min</i> : +120 puissance ou +72 dégâts d'attaque<br><i>60 min</i> : +168 puissance ou +101 dégâts d'attaque,<br>etc.",
+      "name": "Tempête menaçante"
+    },
+    "8010": {
+      "image": {
+        "full": "8010.png"
+      },
+      "description": "Les attaques de base et les compétences qui blessent un champion ennemi génèrent 2 effets Conquérant pendant 5 sec, octroyant +1.8 - 4 <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>force adaptative</font></lol-uikit-tooltipped-keyword> par effet cumulé. Cumulable 12 fois. Les champions à distance ne gagnent qu'un effet par attaque de base.<br><br>Au maximum d'effets cumulés, vous récupérez des PV équivalents à 8% des dégâts que vous infligez aux champions (5% pour les champions à distance).",
+      "name": "Conquérant"
+    },
+    "8229": {
+      "image": {
+        "full": "8229.png"
+      },
+      "description": "Blesser un champion avec une compétence fait tomber une comète sur sa position, infligeant des dégâts augmentés selon la distance.<br><br><lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>Dégâts adaptatifs</font></lol-uikit-tooltipped-keyword> : 15 - 100 selon le niveau (<scaleAP>+0.05 puissance</scaleAP> et <scaleAD>+0.1 dégâts d'attaque bonus</scaleAD>)<br>Délai de récupération : 20 - 8 sec<br><rules><br>L'amplification des dégâts augmente jusqu'à 100% à 750 de portée.<br></rules>",
+      "name": "Comète arcanique"
+    },
+    "8143": {
+      "image": {
+        "full": "8143.png"
+      },
+      "description": "Pendant 4 sec après avoir utilisé une ruée, un bond, un saut instantané ou une téléportation ou en cessant d'être furtif, vous infligez <trueDamage>20-80 pts de dégâts bruts</trueDamage> bonus (selon votre niveau) aux champions ennemis avec vos attaques de base et vos compétences qui infligent des dégâts.<br><br>Délai de récupération : 10 sec.",
+      "name": "Ruée offensive"
+    },
+    "8360": {
+      "image": {
+        "full": "8360.png"
+      },
+      "description": "Échangez l'un de vos sorts d'invocateur contre un autre sort d'invocateur à usage unique. Chaque sort d'invocateur échangé réduit définitivement de 25 sec le délai de récupération des échanges (délai initial : @f3@ sec). <br><br>Le premier échange est possible au bout de 6 minutes de jeu. <br><rules><br>Les sorts d'invocateur ne peuvent être échangés qu'en dehors des combats. <br>Après avoir utilisé un sort d'invocateur échangé, vous devez procéder à 3 autres échanges avant de pouvoir à nouveau sélectionner le premier.<br>Les dégâts de Châtiment augmentent après deux échanges de sorts d'invocateur. </rules>",
+      "name": "Grimoire déchaîné"
+    },
+    "8139": {
+      "image": {
+        "full": "8139.png"
+      },
+      "description": "Vous récupérez des PV quand vous blessez un champion ennemi.<br><br>Soins : 16 - 40 (+0.1 dégâts d'attaque supplémentaires, +0.05 puissance) PV (selon le niveau).<br><br>Délai de récupération : 20 sec.",
+      "name": "Goût du sang"
+    },
+    "8453": {
+      "image": {
+        "full": "8453.png"
+      },
+      "description": "Vous gagnez +5% d'efficacité des soins et boucliers.<br><br>Les soins et les boucliers que vous lancez ou recevez sont 10% plus puissants sur les cibles qui ont moins de 40% de leurs PV.",
+      "name": "Revitalisation"
+    },
+    "8112": {
+      "image": {
+        "full": "8112.png"
+      },
+      "description": "Toucher un champion ennemi avec 3 attaques ou compétences <b>différentes</b> en moins de 3 sec inflige des <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>dégâts adaptatifs</font></lol-uikit-tooltipped-keyword> bonus.<br><br>Dégâts : 70 - 240 (+0.1 dégâts d'attaque bonus, +0.05 puissance) pts de dégâts.<br>Délai de récupération : 20 sec.<br><br><i>« On les appelait les seigneurs de la foudre, car parler de leurs éclairs était une invitation à l'anéantissement. »</i>",
+      "name": "Électrocution"
+    },
+    "8345": {
+      "image": {
+        "full": "8345.png"
+      },
+      "description": "Livraison de biscuits : vous gagnez 1 Biscuit de longévité toutes les 2 minutes, jusqu'à 6 minutes de jeu.<br><br>Les biscuits vous rendent 20 + 2% de vos PV max. Ces soins augmentés de 100% en fonction de vos PV manquants. Consommer ou vendre un biscuit augmente définitivement vos PV max de 30. ",
+      "name": "Livraison de biscuits"
+    },
+    "8299": {
+      "image": {
+        "full": "8299.png"
+      },
+      "description": "Vous infligez 5% - 11% de dégâts supplémentaires aux champions quand vous avez moins de 60% de vos PV. Les dégâts max sont atteints à 30% de vos PV.",
+      "name": "Baroud d'honneur"
+    },
+    "9111": {
+      "image": {
+        "full": "9111.png"
+      },
+      "description": "Participer à l'élimination d'un champion vous rend 5% de vos PV manquants, 2.5% de vos PV max et vous rapporte 20 PO supplémentaires. <br><br><hr><br><i>« La proie la plus dangereuse rapporte la gloire la plus grande. » <br>—Arénaire noxien</i>",
+      "name": "Triomphe"
+    },
+    "8300": {
+      "image": {
+        "full": "8300.png"
+      },
+      "description": null,
+      "name": "Inspiration"
+    },
+    "8014": {
+      "image": {
+        "full": "8014.png"
+      },
+      "description": "Vous infligez 8% de dégâts supplémentaires aux champions qui ont moins de 40% de leurs PV.",
+      "name": "Coup de grâce"
+    },
+    "8137": {
+      "image": {
+        "full": "8137.png"
+      },
+      "description": "Repère automatiquement une balise proche qui n'a pas été vue ni suivie, et la suit pour l'équipe. <br><br>Niveau 11 : Révèle également la balise pendant 10 sec.<br><br>Cet effet a un délai de récupération de 250 sec.",
+      "name": "Sixième sens"
+    },
+    "8128": {
+      "image": {
+        "full": "8128.png"
+      },
+      "description": "Blesser un champion qui a moins de 50% de ses PV lui inflige des <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'>dégâts adaptatifs</lol-uikit-tooltipped-keyword> et siphonne son âme, ce qui augmente définitivement les dégâts de Moisson noire de 11.<br><br>Dégâts de Moisson noire : 30 (+11 pts de dégâts par âme) (+0.1 dégâts d'attaque bonus) (+0.05 puissance).<br>Délai de récupération : 35 sec (réinitialisé à 1.0 sec à chaque élimination).",
+      "name": "Moisson noire"
+    },
+    "8232": {
+      "image": {
+        "full": "8232.png"
+      },
+      "description": "Dans la rivière, vous gagnez <speed>+10 vitesse de déplacement</speed> et <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>+13 - +30 force adaptative</font></lol-uikit-tooltipped-keyword> (selon le niveau).<br><br><i>Puissiez-vous être aussi vif qu'une rivière et aussi agile qu'un carapateur effrayé.</i>",
+      "name": "Marche sur l'eau"
+    },
+    "8021": {
+      "image": {
+        "full": "8021.png"
+      },
+      "description": "Attaquer et se déplacer génère des effets Énergie. À 100 effets cumulés, votre prochaine attaque est énergisée.<br><br>Les attaques énergisées vous rendent 15 - 160 (+0.1 dégâts d'attaque bonus, +0.05 puissance) PV et vous octroient <speed>+20% de vitesse de déplacement</speed> pendant 1 sec.<br><br>Pour les champions à distance, l'efficacité des soins est de 60% et l'efficacité de la vitesse de déplacement est de 75%. Contre les sbires, l'efficacité de tous les soins est de 15%.",
+      "name": "Jeu de jambes"
+    },
+    "8233": {
+      "image": {
+        "full": "8233.png"
+      },
+      "description": "Quand vous avez plus de 70% de vos PV, vous gagnez un bonus <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>adaptatif</font></lol-uikit-tooltipped-keyword> de jusqu'à 18 dégâts d'attaque ou 30 puissance (selon le niveau). <br><br>Octroie +1.8 dégâts d'attaque ou +3 puissance au niveau 1. ",
+      "name": "Concentration absolue"
+    },
+    "8439": {
+      "image": {
+        "full": "8439.png"
+      },
+      "description": "Après avoir immobilisé un champion ennemi, votre armure et votre résistance magique augmentent de 45 + 75% de vos résistances bonus pendant 2.5 sec. Une explosion se produit ensuite, infligeant des dégâts magiques aux ennemis proches.<br><br>Dégâts : 25 - 120 (+8% de vos PV bonus).<br>Délai de récupération : 20 sec.<br><br>Les bonus de résistance d'Après-coup sont limités à : 80-150 (selon le niveau).<br>",
+      "name": "Après-coup"
+    },
+    "8214": {
+      "image": {
+        "full": "8214.png"
+      },
+      "description": "Blesser un champion ennemi avec une attaque de base ou une compétence envoie Aery vers lui, lui infligeant 10 - 50 selon le niveau (+<scaleAP>0.05 puissance</scaleAP>) (+<scaleAD>0.1 dégâts d'attaque supplémentaires</scaleAD>).<br><br>Renforcer ou protéger un allié avec une compétence envoie Aery vers lui, lui octroyant un bouclier absorbant 20 - 100 selon le niveau (+<scaleAP>0.05 puissance</scaleAP>) (+<scaleAD>0.1 dégâts d'attaque bonus</scaleAD>).<br><br>Aery ne peut plus être envoyée tant qu'elle n'est pas revenue auprès de vous.",
+      "name": "Invocation d'Aery"
+    },
+    "8106": {
+      "image": {
+        "full": "8106.png"
+      },
+      "description": "Votre ultime gagne <attention>+6</attention> accélération de compétence et <attention>+5</attention> accélération de compétence par effet <i>Chasseur de primes</i> cumulé. Vous gagnez un effet <i>Chasseur de primes</i> la première fois que vous participez à l'élimination de chaque champion ennemi.",
+      "name": "Chasseur ultime"
+    },
+    "8008": {
+      "image": {
+        "full": "8008.png"
+      },
+      "description": "Attaquer un champion ennemi vous octroie +[6% pour les champions en mêlée || 4% pour les champions à distance] vitesse d'attaque pendant 6 sec (6 effets cumulés max.). Au maximum d'effets cumulés, vous infligez également [9 - 30 pour les champions en mêlée || 6 - 24 pour les champions à distance] <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'>pts de dégâts adaptatifs bonus à l'attaque. Ces dégâts augmentent de 1% tous les 1% de vitesse d'attaque bonus</lol-uikit-tooltipped-keyword>.",
+      "name": "Tempo mortel"
+    },
+    "8200": {
+      "image": {
+        "full": "8200.png"
+      },
+      "description": null,
+      "name": "Sorcellerie"
+    },
+    "8009": {
+      "image": {
+        "full": "8009.png"
+      },
+      "description": "Infliger des dégâts à un champion ennemi vous rend 6 - 50 (80% pour les champions à distance) pts de mana ou 6 pts d'énergie.<br><br>Participer à l'élimination d'un champion vous rend 15% de votre mana max ou de votre énergie max. <br><br>Délai de récupération pour la récupération via les dégâts : 8 sec.",
+      "name": "Présence d'esprit"
+    },
+    "8446": {
+      "image": {
+        "full": "8446.png"
+      },
+      "description": "Votre troisième attaque contre les tourelles inflige [85 (+28% des PV max) en mêlée || 50 (+20% des PV max) à distance] pts de dégâts physiques bonus.<br><br>Délai de récupération : 30 sec.",
+      "name": "Démolition"
+    },
+    "8017": {
+      "image": {
+        "full": "8017.png"
+      },
+      "description": "Vous infligez 8% de dégâts supplémentaires aux champions qui ont plus de 60% de leurs PV.",
+      "name": "Abattage"
+    },
+    "8451": {
+      "image": {
+        "full": "8451.png"
+      },
+      "description": "Vous absorbez l'essence vitale des monstres et sbires ennemis proches. Tous les 8 monstres ou sbires ennemis qui meurent près de vous, vos PV max augmentent définitivement de 3.<br><br>Après avoir absorbé l'essence de 120 monstres ou sbires ennemis, vous gagnez 3.5% de PV max supplémentaires.",
+      "name": "Surcroissance"
+    },
+    "8321": {
+      "image": {
+        "full": "8321.png"
+      },
+      "description": "Vous récupérez 7.5% des PO dépensées quand vous achetez des objets légendaires.",
+      "name": "Remise immédiate"
+    },
+    "8369": {
+      "image": {
+        "full": "8369.png"
+      },
+      "description": "Vos attaques ou compétences contre un champion ennemi dans les 0.25 sec après le début du combat vous octroient 10 PO et <b>Premier coup</b> pendant 3 sec, ce qui vous permet d'infliger <truedamage>7%</truedamage> de <truedamage>dégâts</truedamage> supplémentaires aux champions et de gagner des <gold>PO</gold> équivalentes à <gold>50% (35% pour les champions à distance)</gold> des dégâts supplémentaires infligés.<br><br>Délai de récupération : <scaleLevel>25-15</scaleLevel> sec.",
+      "name": "Premier coup"
+    },
+    "8242": {
+      "image": {
+        "full": "8242.png"
+      },
+      "description": "Vous obtenez +10 armure et résistance magique quand vous êtes victime d'un contrôle de foule et ensuite pendant 2 sec.",
+      "name": "Inébranlable"
+    },
+    "8304": {
+      "image": {
+        "full": "8304.png"
+      },
+      "description": "Vous obtenez des Chaussures légèrement magiques après 12 minutes de jeu, mais vous ne pouvez pas acheter de bottes avant cela. Chaque fois que vous participez à l'élimination d'un champion, vous obtenez les bottes 45 sec plus tôt.<br><br>Les Chaussures légèrement magiques vous octroient <speed>+10 vitesse de déplacement</speed>.",
+      "name": "Chaussures magiques"
+    },
+    "8463": {
+      "image": {
+        "full": "8463.png"
+      },
+      "description": "Restreindre les déplacements d'un champion ennemi rend <healing>@BaseHeal@ PV</healing> au champion allié proche qui a le moins de PV et à vous-même.<br><br>70% d'efficacité pour les utilisateurs à distance.<br><br>Délai de récupération : 20 sec.",
+      "name": "Fontaine de vie"
+    },
+    "8105": {
+      "image": {
+        "full": "8105.png"
+      },
+      "description": "Vous gagnez <speed>+8 vitesse de déplacement</speed> en dehors des combats par effet <i>Chasseur de primes</i> cumulé. Vous gagnez un effet <i>Chasseur de primes</i> la première fois que vous participez à l'élimination de chaque champion ennemi.",
+      "name": "Chasseur acharné"
+    },
+    "8141": {
+      "image": {
+        "full": "8141.png"
+      },
+      "description": "Vos balises dans la jungle ennemie sont <keywordMajor>en profondeur</keywordMajor>. Les balises <keywordMajor>en profondeur</keywordMajor> gagnent +1 PV bonus et durent [30 - 45] sec de plus (les Balises camouflées provenant de reliques durent [45 - 150] sec de plus à la place).<br><br>Niveau 9 : les balises posées dans la rivière sont également <keywordMajor>en profondeur</keywordMajor>.",
+      "name": "Balise de profondeur"
+    },
+    "8100": {
+      "image": {
+        "full": "8100.png"
+      },
+      "description": null,
+      "name": "Domination"
+    },
+    "8992": {
+      "image": {
+        "full": "8992.png"
+      },
+      "description": "Blesser un champion avec une compétence le brûle, en fonction du niveau, de 3 - 12 (+<scaleAP>2.5% de la puissance</scaleAP>) (+<scaleAD>7% des dégâts d'attaque bonus</scaleAD>) pts de dégâts magiques par seconde. Après avoir brûlé pendant 3 sec, les dégâts de la brûlure augmentent de 75% tant que la cible reste en feu.<br><rules><br>Durée :<br>Cible unique : 4 sec.<br>Dégâts de zone : 2 sec.<br>Dégâts sur la durée : 1 sec.<br></rules>",
+      "name": "Toucher de feu mortel"
+    },
+    "8000": {
+      "image": {
+        "full": "8000.png"
+      },
+      "description": null,
+      "name": "Précision"
+    },
+    "8316": {
+      "image": {
+        "full": "8316.png"
+      },
+      "description": "Vous gagnez un effet Polyvalence pour chaque stat différente octroyée par vos objets. Chaque effet cumulé vous octroie <speed>1 accélération de compétence</speed>.<br><br>Vous gagnez 8 et 20 de <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'>force adaptative</lol-uikit-tooltipped-keyword> bonus en cumulant respectivement 5 et 10 effets.",
+      "name": "Polyvalence"
+    },
+    "8351": {
+      "image": {
+        "full": "8351.png"
+      },
+      "description": "Quand vous immobilisez un champion ennemi, 3 rayons glaciaux jaillissent de lui dans votre direction et celle des autres champions proches. Cela crée pendant 3 sec (+ la durée de l'immobilisation) des zones gelées qui ralentissent les ennemis de 20% (+90% tous les 100% d'efficacité de vos soins et boucliers) (+6% tous les 100 pts de puissance) (+7% tous 100 pts de dégâts d'attaque bonus) et qui réduisent leurs dégâts de 15% contre vos alliés (mais pas contre vous). <br><br>Délai de récupération : 25 sec.",
+      "name": "Optimisation glaciale"
+    },
+    "8410": {
+      "image": {
+        "full": "8410.png"
+      },
+      "description": "Vous gagnez <speed>+7.5% de vitesse de déplacement</speed> vers les champions ennemis proches dont les déplacements sont restreints. Ce bonus est augmenté à <speed>15%</speed> vers les champions ennemis dont vous avez restreint les déplacements. <br><br>Portée d'activation pour les contrôles de foule alliés : 1000.",
+      "name": "Vitesse d'approche"
+    },
+    "8400": {
+      "image": {
+        "full": "8400.png"
+      },
+      "description": null,
+      "name": "Volonté"
+    },
+    "8224": {
+      "image": {
+        "full": "8224.png"
+      },
+      "description": "Les dégâts, les soins et les boucliers de votre compétence ultime sont augmentés de 12%. <br>(Les dégâts de zone sont augmentés de 8% à la place.)<br><br>Participer à l'élimination d'un champion ennemi réduit le délai de récupération actuel de votre compétence ultime de 7%.",
+      "name": "Arcaniste axiomatique"
+    },
+    "8234": {
+      "image": {
+        "full": "8234.png"
+      },
+      "description": "Tous les bonus en vitesse de déplacement sont 7% plus efficaces sur vous et votre <speed>vitesse de déplacement</speed> est augmentée de 1%.",
+      "name": "Célérité"
+    },
+    "9103": {
+      "image": {
+        "full": "9103.png"
+      },
+      "description": "Vous gagnez <scaleAD>0.45% de vol de vie</scaleAD> par effet <i>Légende</i> cumulé (<statGood>max 15</statGood>). Au maximum d'effets <i>Légende</i> cumulés, vous gagnez <scaleHealth>+85 PV max</scaleHealth>.<br><br>Vous progressez vers l'obtention d'un effet <i>Légende</i> chaque fois que vous participez à l'élimination d'un champion ou d'un monstre épique, et chaque fois que vous tuez un grand monstre ou un sbire.",
+      "name": "Légende : sangsue"
+    },
+    "8140": {
+      "image": {
+        "full": "8140.png"
+      },
+      "description": "Vous gagnez 1 souvenir quand vous participez à l'<lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Takedown'>élimination</lol-uikit-tooltipped-keyword> d'un champion (max 18).<br><br>Vous gagnez +6 accélération de compétence de relique par souvenir récupéré. Dans les modes de jeu où les reliques de vision n'existent pas, vous gagnez à la place +3 accélération de sort d'invocateur par souvenir.",
+      "name": "Souvenirs épouvantables"
+    },
+    "8275": {
+      "image": {
+        "full": "8275.png"
+      },
+      "description": "Après avoir lancé un sort d'invocateur, vous gagnez un bonus en <speed>vitesse de déplacement</speed> qui dure 2 sec et qui vous permet de traverser les unités.<br><br>Bonus : <speed>+15% - +45% de vitesse de déplacement</speed>, selon le délai de récupération du sort d'invocateur (plus le délai de récupération est élevé, plus le bonus est important). ",
+      "name": "Manteau nuageux"
+    },
+    "8437": {
+      "image": {
+        "full": "8437.png"
+      },
+      "description": "Toutes les 4 sec en combat, votre prochaine attaque de base contre un champion :<li>Inflige des dégâts magiques bonus équivalents à 3.5% de vos PV max.<li>Vous rend 1.3% de vos PV max.<li>Augmente définitivement vos PV de 5.<br><rules><i>Champions à distance :</i> les dégâts, les soins et le gain définitif de PV sont efficaces à 40%.</rules>",
+      "name": "Poigne de l'immortel"
+    },
+    "8306": {
+      "image": {
+        "full": "8306.png"
+      },
+      "description": "Quand votre Saut éclair est en récupération, il est remplacé par <i>Saut Hextech</i>.<br><br><i>Saut Hextech</i> : après 2 sec de canalisation, vous vous téléportez à un autre endroit.<br><br>Délai de récupération : 20 sec. A un délai de récupération de 10 sec quand vous entrez en combat avec un champion.",
+      "name": "Canaliportation Hextech"
+    },
+    "8401": {
+      "image": {
+        "full": "8401.png"
+      },
+      "description": "Quand vous recevez un nouveau bouclier, votre prochaine attaque de base contre un champion inflige <scaleLevel>5 - 30</scaleLevel> <scaleHealth>(+2.5% de vos PV bonus)</scaleHealth> <scaleMana>(+15.0% des PV du nouveau bouclier)</scaleMana> pts de dégâts <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_Adaptive'><font color='#48C4B7'>adaptatifs</font></lol-uikit-tooltipped-keyword> bonus.<br><br>Après l'expiration du bouclier, vous avez 2 sec pour utiliser cet effet.",
+      "name": "Coup de bouclier"
+    },
+    "8444": {
+      "image": {
+        "full": "8444.png"
+      },
+      "description": "Après avoir subi des dégâts d'un champion ennemi, vous récupérez 4% de vos PV manquants en 10 sec.",
+      "name": "Second souffle"
+    },
+    "8465": {
+      "image": {
+        "full": "8465.png"
+      },
+      "description": "Vous <i>protégez</i> les alliés à moins de 350 unités de vous et les alliés que vous ciblez avec vos compétences pendant 2.5 sec. Pendant cette <i>protection</i>, si cet allié ou vous-même subissez plus que des dégâts mineurs, vous recevez tous les deux un bouclier pendant 1.5 sec.<br><br>Délai de récupération : <scaleLevel>75 - 40</scaleLevel> sec.<br>Bouclier : <scaleLevel>40 - 150</scaleLevel> + <scaleAP>20%</scaleAP> de votre puissance + <scalehealth>6%</scalehealth> de vos PV supplémentaires.<br>Seuil de déclenchement : <scaleLevel>50 - 165</scaleLevel> pts de dégâts après mitigation.",
+      "name": "Gardien"
+    },
+    "8429": {
+      "image": {
+        "full": "8429.png"
+      },
+      "description": "Après 12 min de jeu, vous gagnez +8 armure et +8 résistance magique et vous augmentez votre armure et votre résistance magique de 3%.",
+      "name": "Conditionnement"
+    },
+    "9923": {
+      "image": {
+        "full": "9923.png"
+      },
+      "description": "Quand vous attaquez un champion ennemi, votre vitesse d'attaque et vos <trueDamage>dégâts bruts bonus</trueDamage> augmentent de 90% (60% pour les champions à distance) pour 3 attaques.<br><br>Cet effet prend fin s'il s'écoule plus de 3 sec entre deux attaques.<br><br>Délai de récupération : 10 sec.<br>Dégâts à l'impact : 2 - 20 (+0.12 dégâts d'attaque bonus, +0.1 puissance) pts de dégâts.<br><br><rules>Les réinitialisations d'attaque augmentent le nombre d'attaques max de 1.<br>Permet de dépasser temporairement la limite de vitesse d'attaque.</rules>",
+      "name": "Déluge de lames"
+    },
+    "8237": {
+      "image": {
+        "full": "8237.png"
+      },
+      "description": "Votre prochaine compétence blessante met le feu aux champions, infligeant 20 - 40 pts de dégâts magiques supplémentaires (selon le niveau) après 1 sec.<br><br>Délai de récupération : 10 sec.",
+      "name": "Brûlure"
+    },
+    "8126": {
+      "image": {
+        "full": "8126.png"
+      },
+      "description": "Blesser des champions dont <b>les actions ou les déplacements sont restreints</b> leur inflige 10 - 45 pts de dégâts bruts supplémentaires (selon le niveau).<br><br>Délai de récupération : 4 sec.<br><rules>S'active avec les dégâts qui surviennent après la restriction.</rules>",
+      "name": "Coup bas"
+    },
+    "9104": {
+      "image": {
+        "full": "9104.png"
+      },
+      "description": "Vous gagnez 3% de vitesse d'attaque plus 1.5% par effet <i>Légende</i> cumulé (<statGood>max : 10</statGood>).<br><br>Vous progressez vers l'obtention d'un effet <i>Légende</i> chaque fois que vous participez à l'élimination d'un champion ou d'un monstre épique, et chaque fois que vous tuez un grand monstre ou un sbire.",
+      "name": "Légende : alacrité"
+    },
+    "8210": {
+      "image": {
+        "full": "8210.png"
+      },
+      "description": "Vous gagnez des bonus en atteignant les niveaux suivants :<br>Niveau 5 : +5 <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_CDR'>accélération de compétence</lol-uikit-tooltipped-keyword> <br>Niveau 8 : +5 <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_CDR'>accélération de compétence</lol-uikit-tooltipped-keyword> <br>Niveau 11 : participer à l'élimination d'un champion réduit de 20% le délai de récupération restant des compétences de base.",
+      "name": "Transcendance"
+    },
+    "8347": {
+      "image": {
+        "full": "8347.png"
+      },
+      "description": "+<attention>18</attention> accélération de sort d'invocateur<br>+<attention>10</attention> accélération d'objet",
+      "name": "Savoir cosmique"
+    },
+    "8352": {
+      "image": {
+        "full": "8352.png"
+      },
+      "description": "Consommer une potion vous rend immédiatement 40% des PV prévus.",
+      "name": "Philtre de chronodistorsion"
+    },
+    "8005": {
+      "image": {
+        "full": "8005.png"
+      },
+      "description": "Toucher un champion ennemi avec 3 attaques de base consécutives inflige 40 - 160 pts de <lol-uikit-tooltipped-keyword key='LinkTooltip_Description_AdaptiveDmg'><font color='#48C4B7'>dégâts adaptatifs</font></lol-uikit-tooltipped-keyword> bonus (selon le niveau) et augmente les dégâts que vous infligez de 8% jusqu'à ce que vous quittiez le combat contre des champions.",
+      "name": "Attaque soutenue"
+    },
+    "8230": {
+      "image": {
+        "full": "8230.png"
+      },
+      "description": "Infliger 25% des PV max d'un champion en moins de 3 sec octroie <speed>48% de vitesse de déplacement</speed> et <status>50% de résistance aux ralentissements</status> pendant 4 sec. La vitesse de déplacement a 75% d'efficacité pour les champions à distance.<br>Délai de récupération : 20 sec - 10 sec.",
+      "name": "Assaut du maraudeur"
+    },
+    "8473": {
+      "image": {
+        "full": "8473.png"
+      },
+      "description": "Après avoir subi des dégâts d'un champion ennemi, ses 3 prochaines compétences ou attaques vous infligent 30-60 pts de dégâts en moins (selon le niveau).<br><br>Durée : 1.5 sec.<br>Délai de récupération : 55 sec.",
+      "name": "Plaque d'os"
+    },
+    "8313": {
+      "image": {
+        "full": "8313.png"
+      },
+      "description": "Quand vous atteignez le niveau 3, vous obtenez un Élixir d'avidité.<br>Quand vous atteignez le niveau 6, vous obtenez un Élixir de force.<br>Quand vous atteignez le niveau 9, vous obtenez un Élixir de compétence. ",
+      "name": "Triple tonique"
+    },
+    "8135": {
+      "image": {
+        "full": "8135.png"
+      },
+      "description": "Vous gagnerez <gold>50 PO</gold> supplémentaires la prochaine fois que vous cumulerez un effet <i>Chasseur de primes</i>. Vous gagnez <gold>20 PO</gold> supplémentaires à chaque effet <i>Chasseur de primes</i> cumulé, jusqu'à <gold>130 PO</gold>.<br><br>Vous gagnez un effet <i>Chasseur de primes</i> la première fois que vous participez à l'élimination de chaque champion ennemi.",
+      "name": "Chasseur de trésors"
+    },
+    "9105": {
+      "image": {
+        "full": "9105.png"
+      },
+      "description": "Vous gagnez +1.5 accélération de compétence de base par effet <i>Légende</i> cumulé (<statGood>max : 10</statGood>).<br><br>Vous progressez vers l'obtention d'un effet <i>Légende</i> chaque fois que vous participez à l'élimination d'un champion ou d'un monstre épique, et chaque fois que vous tuez un grand monstre ou un sbire.",
+      "name": "Légende : accélération"
+    },
+    "8226": {
+      "image": {
+        "full": "8226.png"
+      },
+      "description": "Frapper un champion ennemi avec une compétence augmente définitivement votre mana max de 25 (bonus max : 250).<br><br>À 250 pts de mana bonus, vous récupérez 1% de votre mana manquant toutes les 5 sec.<br><br>Délai de récupération : 15 sec.",
+      "name": "Ruban de mana"
+    }
+  }
+}

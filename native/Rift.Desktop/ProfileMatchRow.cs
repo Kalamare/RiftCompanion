@@ -5,9 +5,11 @@ public sealed record ProfileMatchRow(ProfileMatch Match, ProfileVisual ChampionV
     public string Result => Match.Result;
     public string QueueLabel => Match.QueueLabel;
     public string KdaLine => Match.KdaLine;
+    public MatchStatistics Statistics { get; } = new(Match);
     public string Cs => DisplayNumbers.Exact(Match.Cs);
     public string Damage => DisplayNumbers.Compact(Match.Damage);
     public string DamageExact => DisplayNumbers.Exact(Match.Damage);
     public string Vision => DisplayNumbers.Exact(Match.Vision);
     public string PlayedLabel => Match.PlayedLabel;
+    public string DetailsLabel => $"Ouvrir la partie : {Match.Result}, {ChampionVisual.Name}, {Match.PlayedLabel}";
 }

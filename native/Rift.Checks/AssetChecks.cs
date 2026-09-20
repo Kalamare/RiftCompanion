@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Text.Json;
 using Rift.Core;
 using Rift.Infrastructure;
@@ -7,6 +7,12 @@ static class AssetChecks
 {
     public static async Task Run(Action<bool, string> check)
     {
+        check(RiotAssets.PlainDescription("<b>Test</b><br />A &amp; B") == "Test\nA & B", "assets : descriptions lisibles sans balisage HTML");
+        check(RiotAssets.PlainDescription("Soin : @HealAmount@") == "Soin : valeur indisponible", "assets : paramètres Riot non résolus signalés sans valeur inventée");
+        using var recipeJson = JsonDocument.Parse("""{"data":{"3074":{"name":"Hydre","description":"<stats>+65 dégâts</stats><br>Effet","gold":{"total":3300},"from":["1037","1037","1053"],"image":{"full":"3074.png"}},"1001":{"name":"Bottes","image":{"full":"1001.png"}}}}""");
+        var recipes = RiotAssets.ParseCatalog(recipeJson.RootElement, false);
+        check(recipes[0].Price == 3300 && recipes[0].Components.SequenceEqual([1037,1037,1053]), "objets : recette ordonnée avec doublons et prix total");
+        check(recipes[1].Price is null && recipes[1].Components.Length == 0, "objets : prix et composants absents non inventés");
         const string champions = """{"data":{"MonkeyKing":{"key":"62","id":"MonkeyKing","name":"Wukong","image":{"full":"MonkeyKing.png"}},"Kaisa":{"key":"145","id":"Kaisa","name":"Kai'Sa","image":{"full":"Kaisa.png"}}}}""";
         const string items = """{"data":{"1001":{"name":"Bottes","image":{"full":"1001.png"}}}}""";
         var folder = Path.Combine(Path.GetTempPath(), "RiftAssets-" + Guid.NewGuid().ToString("N"));
@@ -23,6 +29,16 @@ static class AssetChecks
             }));
             var match = new ProfileMatch("test", "MonkeyKing", 420, "jungle", true, false, DateTimeOffset.UtcNow, 1200, 1, 1, 1, 100, 1000, 1000, 1, 1, 1, 1, 2)
                 { ChampionId = 62, Items = [1001, 1001, 0, 0, 0, 0, 0] };
+            var downloaded = new System.Collections.Concurrent.ConcurrentBag<string>();
+            using (var recipeAssets = new RiotAssets(Path.Combine(folder, "recipes"), new Handler(request =>
+            {
+                var path = request.RequestUri!.AbsolutePath; downloaded.Add(path);
+                return new(HttpStatusCode.OK) { Content = path.EndsWith(".png") ? new ByteArrayContent([137,80,78,71,13,10,26,10]) : new StringContent(path.EndsWith("versions.json") ? "[\"16.18.1\"]" : path.EndsWith("champion.json") ? champions : """{"data":{"1001":{"name":"Bottes","from":["1002","1002"],"image":{"full":"1001.png"}},"1002":{"name":"Composant","image":{"full":"1002.png"}}}}""") };
+            })))
+            {
+                await recipeAssets.PrepareAsync([match], default);
+                check(downloaded.Count(p => p.EndsWith("/1002.png")) == 1 && recipeAssets.ItemImage(1002) is not null, "objets : composants préchargés une seule fois avant le survol");
+            }
             var imageCounts = new System.Collections.Concurrent.ConcurrentBag<int>();
             await assets.PrepareAsync([match, match], default, () =>
             {

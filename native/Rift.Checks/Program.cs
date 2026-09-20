@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Microsoft.Data.Sqlite;
 using Rift.Core;
 using Rift.Infrastructure;
@@ -98,6 +98,9 @@ void checkPreferences()
     }
     finally { if (Directory.Exists(directory)) Directory.Delete(directory,true); }
 }
+await DiagnosticChecks.Run(Check);
+await MatchDetailsChecks.Run(Check);
+await PlayerRankChecks.Run(Check);
 Console.WriteLine($"{passed} contrôles réussis.");
 
 sealed class FakeTransport(Func<Credentials, string, CancellationToken, Task<JsonElement?>> get) : ILcuTransport

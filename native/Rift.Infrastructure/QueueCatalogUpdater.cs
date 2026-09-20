@@ -1,4 +1,4 @@
-using System.Text.Json;
+﻿using System.Text.Json;
 using Rift.Core;
 
 namespace Rift.Infrastructure;
@@ -6,7 +6,7 @@ namespace Rift.Infrastructure;
 // Public client data mirror: no Riot credentials are sent. Embedded catalog works offline.
 public sealed class QueueCatalogUpdater(string directory, HttpMessageHandler? handler = null) : IDisposable
 {
-    private readonly HttpClient http = new(handler ?? new HttpClientHandler { AllowAutoRedirect = false })
+    private readonly HttpClient http = new(new DiagnosticHttpHandler("Catalogue", handler ?? new HttpClientHandler { AllowAutoRedirect = false }))
         { Timeout = TimeSpan.FromSeconds(3), MaxResponseContentBufferSize = 4_000_000 };
     private bool checkedThisSession;
     public async Task PrepareAsync(CancellationToken token)

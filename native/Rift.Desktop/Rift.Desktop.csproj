@@ -7,4 +7,6 @@
   <ItemGroup><InternalsVisibleTo Include="Rift.UiChecks"/></ItemGroup>
   <ItemGroup><Content Include="Assets/Ranks/*.png" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
   <ItemGroup><Content Include="Assets/Ui/*.png" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
+  <ItemGroup><Content Include="Assets/Champions/*" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
+  <ItemGroup><Content Include="Assets/Runes/*" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
 </Project>

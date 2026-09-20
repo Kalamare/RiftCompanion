@@ -1,8 +1,25 @@
-using Rift.Core;
+﻿using Rift.Core;
 namespace Rift.Desktop;
 
 internal static class ProfileDemo
 {
+    public static MatchDetails Details(ProfileMatch match)
+    {
+        string[] names = ["Ornn", "Vi", "Ahri", "Jinx", "Thresh", "Garen", "Viego", "Lux", "Caitlyn", "Leona"];
+        int[] ids = [516, 254, 103, 222, 412, 86, 234, 99, 51, 89];
+        string[] roles = ["top", "jungle", "middle", "bottom", "utility"];
+        int selected = Array.IndexOf(roles, match.Role); if (selected < 0) selected = 0;
+        var players = Enumerable.Range(0, 10).Select(i => new MatchParticipant(i == selected ? "demo-selected" : $"demo-{i}",
+            i == selected ? "Invocateur#DEMO" : $"Joueur{i + 1}#DEMO", i < 5 ? 100 : 200, 13 + i % 5,
+            i == selected ? match : match with { Champion = names[i], ChampionId = ids[i], Role = roles[i % 5], Kills = 2 + i, Deaths = 1 + i % 6,
+                Assists = 3 + i % 7, Win = i < 5 ? match.Win : !match.Win, Items = [3047, 3078, 3053, 0, 0, 0, 3364] })
+                { Spells = [4, i % 5 == 1 ? 11 : 14], RoleBoundItem = i % 5 == 1 ? 1103 : null,
+                  Runes = new(8000, 8005, 8400, [8005, 9111, 9104, 8014, 8473, 8451]) { PrimarySelections = [8005, 9111, 9104, 8014], SecondarySelections = [8473, 8451] } }).ToArray();
+        players = players.Select(p => p with { Stats = p.Stats with { TeamKills = players.Where(t => t.TeamId == p.TeamId).Sum(t => t.Stats.Kills) } }).ToArray();
+        return new(match.Id, match.Queue, match.PlayedAt, match.Seconds, players,
+            [new(100, match.Win, [157, 238, 11, 35, 122], new Dictionary<string, int> { ["tower"] = 7, ["dragon"] = 3, ["baron"] = 1 }),
+             new(200, !match.Win, [64, 103, 86, 51, 89], new Dictionary<string, int> { ["tower"] = 3, ["dragon"] = 1, ["baron"] = 0 })]);
+    }
     public static PlayerProfile Create()
     {
         string[] champions = ["Viego", "Vi", "Wukong", "Viego", "Ahri", "Vi", "Jinx", "Wukong", "Viego", "Thresh", "Vi", "Ornn"];

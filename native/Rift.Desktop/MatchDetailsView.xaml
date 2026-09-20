@@ -1,0 +1,113 @@
+﻿<UserControl x:Class="Rift.Desktop.MatchDetailsView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             UseLayoutRounding="True" SnapsToDevicePixels="True" RenderOptions.BitmapScalingMode="HighQuality" Background="#101820" Foreground="#E6EDF3" FontFamily="Segoe UI" FontSize="13">
+  <UserControl.Resources>
+    <DataTemplate x:Key="RuneDescription">
+      <Grid Margin="0,0,12,16"><Grid.ColumnDefinitions><ColumnDefinition Width="38"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+        <Image Source="{Binding Icon}" Width="30" Height="30" VerticalAlignment="Top"/>
+        <StackPanel Grid.Column="1"><TextBlock Text="{Binding Name}" FontWeight="SemiBold" TextWrapping="Wrap"/><TextBlock Text="{Binding Description}" Foreground="#B5C6D2" TextWrapping="Wrap" Margin="0,4,0,0"/></StackPanel>
+      </Grid>
+    </DataTemplate>
+    <DataTemplate x:Key="BannedChampion">
+      <Grid Width="25" Height="25" Margin="0,0,5,0" ToolTip="{Binding Name}">
+        <Ellipse Fill="#304652"/>
+        <Image Source="{Binding Icon}" Opacity="0.65"><Image.Clip><EllipseGeometry Center="12.5,12.5" RadiusX="11" RadiusY="11"/></Image.Clip></Image>
+        <Ellipse Stroke="#778995" StrokeThickness="2"/>
+        <Line X1="4" Y1="21" X2="21" Y2="4" Stroke="#D3A4A3" StrokeThickness="3"/>
+      </Grid>
+    </DataTemplate>
+    <Style x:Key="PlayerLink" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+      <Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="Padding" Value="0"/><Setter Property="MinHeight" Value="0"/>
+      <Setter Property="Foreground" Value="#B6E8EB"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+      <Setter Property="ToolTip" Value="Ouvrir le profil du joueur"/>
+      <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+        <Border x:Name="LinkSurface" Background="Transparent" CornerRadius="4"><ContentPresenter/></Border>
+        <ControlTemplate.Triggers>
+          <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="#FFFFFF"/><Setter TargetName="LinkSurface" Property="Background" Value="#31515D"/></Trigger>
+          <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.55"/></Trigger>
+        </ControlTemplate.Triggers>
+      </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <DataTemplate x:Key="SmallIcon">
+      <Border Width="25" Height="25" Margin="0,0,3,3" CornerRadius="4" Background="#2A404E" ToolTip="{Binding}" ToolTipService.ShowDuration="60000">
+        <Border.Style><Style TargetType="Border"><Style.Triggers><DataTrigger Binding="{Binding IsEmpty}" Value="True"><Setter Property="Opacity" Value="0"/></DataTrigger></Style.Triggers></Style></Border.Style>
+        <Grid><TextBlock Text="{Binding Fallback}" HorizontalAlignment="Center" VerticalAlignment="Center"/><Image Source="{Binding Icon}"/></Grid>
+      </Border>
+    </DataTemplate>
+  </UserControl.Resources>
+  <Grid>
+  <ScrollViewer x:Name="DetailScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="20">
+      <TextBlock Text="{Binding Heading}" FontSize="24" FontWeight="SemiBold"/>
+      <TextBlock Text="{Binding Subtitle}" Foreground="#9FB3C1" Margin="0,6,0,20"/>
+      <ItemsControl x:Name="TeamList" ItemsSource="{Binding Teams}">
+        <ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Columns="2"/></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate><DataTemplate>
+          <Border Background="#192630" BorderBrush="#324651" BorderThickness="1" CornerRadius="10" Padding="14" Margin="0,0,12,16">
+            <StackPanel>
+              <DockPanel><TextBlock Text="{Binding Score}" DockPanel.Dock="Right" FontSize="17" FontWeight="SemiBold"/><TextBlock Text="{Binding Title}" Foreground="{Binding Accent}" FontSize="18" FontWeight="SemiBold"/></DockPanel>
+              <ItemsControl ItemsSource="{Binding Objectives}" Margin="0,8,0,14"><ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><StackPanel Orientation="Horizontal" Margin="0,0,14,5" ToolTip="{Binding Label}"><Image Source="{Binding Icon}" Width="21" Height="21" Margin="0,0,5,0"/><TextBlock Text="{Binding Count}" VerticalAlignment="Center" Foreground="#C5D6E1"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+              <ItemsControl ItemsSource="{Binding Players}"><ItemsControl.ItemTemplate><DataTemplate>
+                <Border x:Name="PlayerCard" BorderThickness="2,0,0,0" CornerRadius="6" Padding="8" Margin="0,0,0,6">
+                  <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#1E303B"/><Setter Property="BorderBrush" Value="Transparent"/>
+                    <Style.Triggers><DataTrigger Binding="{Binding IsSelectedPlayer}" Value="True"><Setter Property="Background" Value="#23424A"/><Setter Property="BorderBrush" Value="#71D3D7"/></DataTrigger></Style.Triggers>
+                  </Style></Border.Style>
+                  <Grid MinHeight="78">
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="76"/><ColumnDefinition Width="*"/><ColumnDefinition Width="130"/><ColumnDefinition Width="114"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center">
+                      <Button Style="{StaticResource PlayerLink}" Click="OnPlayerProfile" IsEnabled="{Binding CanOpenProfile}" AutomationProperties.Name="{Binding RiotId}">
+                        <Grid Width="56" Height="56"><Border CornerRadius="5" Background="#304652"><Grid><TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center"/><Image Source="{Binding Champion.Icon}" ToolTip="{Binding Champion.Name}"/></Grid></Border><Border Background="#101820" CornerRadius="4" HorizontalAlignment="Left" VerticalAlignment="Bottom" Padding="2,0"><TextBlock Text="{Binding Player.Level}" FontSize="10"/></Border></Grid>
+                      </Button>
+                      <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <Button Style="{StaticResource PlayerLink}" Click="OnRunes" MouseEnter="OnRunesHover" MouseLeave="OnRunesLeave" AutomationProperties.Name="Afficher toutes les runes">
+                          <ItemsControl ItemsSource="{Binding Runes}"><ItemsControl.ItemTemplate><DataTemplate><Image Source="{Binding Icon}" Width="18" Height="18" Margin="0,0,3,0"/></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                        </Button>
+                        <ItemsControl ItemsSource="{Binding Spells}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Border Width="17" Height="18" Background="#304652" Margin="0,0,1,0" ToolTip="{Binding}" ToolTipService.ShowDuration="60000"><Grid><TextBlock Text="?" HorizontalAlignment="Center"/><Image Source="{Binding Icon}"/></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                      </StackPanel>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center">
+                      <Button Style="{StaticResource PlayerLink}" Click="OnPlayerProfile" IsEnabled="{Binding CanOpenProfile}" AutomationProperties.Name="{Binding RiotId}" ToolTip="{Binding RiotId}"><TextBlock Text="{Binding RiotId}" FontWeight="SemiBold" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis"/></Button>
+                      <DockPanel Margin="0,4,0,0" ToolTip="{Binding Rank.Name}"><Image Source="{Binding Rank.Icon}" Width="20" Height="20" Margin="0,0,3,0"/><TextBlock Text="{Binding ShortRank}" TextWrapping="NoWrap" TextTrimming="CharacterEllipsis" Foreground="#B6B7D5" FontStyle="Italic" FontSize="11" VerticalAlignment="Center"/></DockPanel>
+                      <TextBlock Text="{Binding Role}" Foreground="#829CAB" FontSize="10" Margin="0,3,0,0"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="0,0,24,0" ToolTip="{Binding Statistics}" ToolTipService.ShowDuration="60000">
+                      <TextBlock FontSize="16" FontWeight="SemiBold" HorizontalAlignment="Right"><Run Text="{Binding Player.Stats.Kills}" Foreground="#32D6A0"/><Run Text=" / " Foreground="#9FB3C1"/><Run Text="{Binding Player.Stats.Deaths}" Foreground="#FF707B"/><Run Text=" / " Foreground="#9FB3C1"/><Run Text="{Binding Player.Stats.Assists}" Foreground="#FFB65C"/></TextBlock>
+                      <TextBlock Text="{Binding Farm}" Foreground="#9FB3C1" FontSize="10" HorizontalAlignment="Right"/>
+                      <TextBlock Text="{Binding ParticipationLine}" Foreground="#9FB3C1" FontSize="10" HorizontalAlignment="Right"/>
+                      <TextBlock Text="{Binding VisionLine}" Foreground="#9FB3C1" FontSize="10" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                    <Grid Grid.Column="3" VerticalAlignment="Center">
+                      <Grid.ColumnDefinitions><ColumnDefinition Width="84"/><ColumnDefinition Width="30"/></Grid.ColumnDefinitions>
+                      <ItemsControl ItemsSource="{Binding EquipmentItems}" ItemTemplate="{StaticResource SmallIcon}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><UniformGrid Rows="2" Columns="3"/></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl>
+                      <StackPanel Grid.Column="1" Margin="2,0,0,0">
+                        <ContentControl Content="{Binding Trinket}" ContentTemplate="{StaticResource SmallIcon}"/>
+                        <ContentControl Content="{Binding RoleQuest}" ContentTemplate="{StaticResource SmallIcon}"/>
+                      </StackPanel>
+                    </Grid>
+                  </Grid>
+                </Border>
+              </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+              <TextBlock Text="{Binding BansLabel}" Foreground="#9FB3C1" FontSize="12" Margin="0,8"/>
+              <ItemsControl ItemsSource="{Binding Bans}" ItemTemplate="{StaticResource BannedChampion}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate></ItemsControl.ItemsPanel></ItemsControl>
+            </StackPanel>
+          </Border>
+        </DataTemplate></ItemsControl.ItemTemplate>
+      </ItemsControl>
+      <TextBlock Text="Le joueur du profil est surligné. Rangs actuels datés : Flex pour une partie Flex, Solo/Duo sinon. Ils ne représentent pas le rang au moment de la partie." Foreground="#829CAB" FontSize="11" TextWrapping="Wrap"/>
+    </StackPanel>
+  </ScrollViewer>
+    <Popup x:Name="RunesPopup" Placement="Bottom" StaysOpen="True" AllowsTransparency="True" PopupAnimation="None">
+      <Border Background="#233440" BorderBrush="#506773" BorderThickness="1" CornerRadius="7" Padding="12" TextElement.Foreground="#E6EDF3" PreviewKeyDown="OnRuneKey" MouseEnter="OnRunePopupEnter" MouseLeave="OnRunesLeave">
+        <StackPanel>
+<ScrollViewer x:Name="RuneScroll" PreviewMouseWheel="OnRuneWheel" MaxHeight="540" VerticalScrollBarVisibility="Auto"><StackPanel Width="600">
+                              <TextBlock Text="Runes choisies" FontSize="15" FontWeight="SemiBold" Margin="0,0,0,12"/>
+                              <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                <ItemsControl ItemsSource="{Binding PrimaryRunes}" ItemTemplate="{StaticResource RuneDescription}"/>
+                                <ItemsControl Grid.Column="1" ItemsSource="{Binding SecondaryRunes}" ItemTemplate="{StaticResource RuneDescription}"/>
+                              </Grid>
+                              <TextBlock Text="Descriptions du catalogue Riot actuel." Foreground="#829CAB" FontSize="10"/>
+                            </StackPanel></ScrollViewer>
+        </StackPanel>
+      </Border>
+    </Popup>
+  </Grid>
+</UserControl>

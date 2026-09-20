@@ -1,4 +1,5 @@
-using System.IO;
+﻿using System.IO;
+using Rift.Core;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -11,9 +12,15 @@ public sealed class ProfileBitmapCache
     private readonly Dictionary<string, BitmapSource?> cache = [];
     public BitmapSource? Get(string? path, int width = 48, bool trimTransparent = false)
     {
+        lock (cache) return Read(path, width, trimTransparent);
+    }
+    private BitmapSource? Read(string? path, int width, bool trimTransparent)
+    {
         if (path is null) return null;
         var key = $"{path}|{width}|{trimTransparent}";
-        if (cache.TryGetValue(key, out var image)) return image;
+        if (cache.TryGetValue(key, out var image)) { RuntimeDiagnostics.Count("Images · cache mémoire trouvé"); return image; }
+        using var operation = RuntimeDiagnostics.Begin("Images", "Décodage bitmap");
+        RuntimeDiagnostics.Count("Images · décodages");
         try
         {
             using var stream = File.OpenRead(path);
@@ -24,7 +31,7 @@ public sealed class ProfileBitmapCache
             cache[key] = result; return result;
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException or ArgumentException)
-        { cache[key] = null; return null; }
+        { operation.Failed(); return null; }
     }
     // Normalize the visible footprint of Riot UI assets, without altering the source PNG.
     private static BitmapSource TrimTransparent(BitmapSource bitmap)

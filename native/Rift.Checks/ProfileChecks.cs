@@ -67,9 +67,18 @@ static class ProfileChecks
             var loaded = await client.LoadAsync("Test#EUW", "euw1", "test-key", cache, null, default);
             await client.LoadAsync("Test#EUW", "euw1", "test-key", cache, null, default);
             check(loaded.Level == 42 && loaded.Matches.Count == 1 && credentialsOk && requests.Count == 9, "Riot : assemblage du profil et match servi du cache au second chargement");
+            var scoreboard = await client.LoadDetailsAsync("EUW1_123", "euw1", "", cache, default);
+            check(scoreboard.Participants.Count == 3 && requests.Count == 9, "détail : participants conservés dès le chargement du profil sans appel supplémentaire");
             check(requests[0].StartsWith("https://europe.api.riotgames.com/riot/") && requests[1].StartsWith("https://euw1.api.riotgames.com/lol/summoner/"), "Riot : routage régional et plateforme");
             bool blocked = false; try { await client.LoadAsync("Test#EUW", "evil.example", "test-key", cache, null, default); } catch (ArgumentException) { blocked = true; }
             check(blocked && requests.Count == 9, "Riot : serveur inconnu refusé avant transmission de la clé");
+            var clicked = await client.LoadAsync("AncienPseudo", "euw1", "test-key", cache, null, default, targetPuuid: "selected");
+            check(requests[9].EndsWith("/riot/account/v1/accounts/by-puuid/selected") && clicked.RiotId == "Test#EUW" && clicked.Puuid == "selected",
+                "navigation : joueur retrouvé par PUUID malgré un ancien pseudo incomplet");
+            bool mismatch = false;
+            try { await client.LoadAsync("Autre#TAG", "euw1", "test-key", cache, null, default, targetPuuid: "wrong-player"); }
+            catch (RiotApiException) { mismatch = true; }
+            check(mismatch, "navigation : identité différente renvoyée par Riot refusée");
             var listQueries = new List<string>(); int extraDetails = 0;
             for (int i = 0; i < 100; i++) cache.Set($"v2:europe:selected:EXT_{i}", match with { Id = $"EXT_{i}" });
             using var extended = new RiotProfileClient(new Handler(request =>

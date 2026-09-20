@@ -1,0 +1,1 @@
+Runes et arbres officiels Riot Data Dragon 16.18.1. Source : https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/runesReforged.json ; images https://ddragon.leagueoflegends.com/cdn/img/. Propriété de Riot Games. Rafraîchir avec native/UpdateRunes.ps1 (PowerShell 7).

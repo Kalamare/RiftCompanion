@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
@@ -35,10 +35,10 @@ static class PersonalProfileUiChecks
             if (!Control<TextBlock>("IdentityText").Text.Contains(owner.RiotId) || !Control<TextBlock>("ProfileStatus").Text.Contains("enregistré"))
                 throw new Exception("Offline startup did not restore owner");
             Console.WriteLine("OK WPF : démarrage sans LoL ni clé, profil personnel restauré et daté.");
-            if (Control<Image>("PlayerIcon").Source is not System.Windows.Media.Imaging.BitmapSource icon || !icon.IsFrozen || icon.PixelWidth != 96 ||
+            if (Control<Image>("PlayerIcon").Source is not System.Windows.Media.Imaging.BitmapSource icon || !icon.IsFrozen || icon.PixelWidth != 192 ||
                 Control<TextBlock>("PlayerIconFallback").Visibility != Visibility.Collapsed)
                 throw new Exception("Profile icon missing, not frozen or wrong decoding size");
-            Console.WriteLine("OK WPF : icône du joueur restaurée hors ligne, décodée à 96 px et gelée.");
+            Console.WriteLine("OK WPF : icône du joueur restaurée hors ligne, décodée à 192 px et gelée.");
             // A manual lookup with no key fails locally; it must not change ownership.
             Control<TextBox>("RiotIdBox").Text = "Autre#TEST";
             Control<Button>("LoadButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
@@ -50,6 +50,15 @@ static class PersonalProfileUiChecks
             if (!Control<TextBlock>("IdentityText").Text.Contains(owner.RiotId) || Control<StackPanel>("ProfileBody").Visibility != Visibility.Visible)
                 throw new Exception("Return to own profile failed");
             Console.WriteLine("OK WPF : recherche indépendante puis retour Mon profil sans réseau.");
+            var participant = ProfileDemo.Details(ProfileDemo.Create().Matches[0]).Participants[7];
+            await view.OpenParticipantProfile(participant, "euw1", demo: true);
+            if (!Control<TextBlock>("IdentityText").Text.Contains(participant.RiotId) || Control<ComboBox>("ServerBox").SelectedValue as string != "euw1" ||
+                new PersonalProfileStore(directory).Read()!.RiotId != owner.RiotId)
+                throw new Exception("Participant navigation failed or replaced personal profile");
+            Control<Button>("PersonalButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+            await WaitFor(() => Control<Button>("PersonalButton").IsEnabled);
+            if (!Control<TextBlock>("IdentityText").Text.Contains(owner.RiotId)) throw new Exception("Return from participant profile failed");
+            Console.WriteLine("OK WPF : navigation depuis un joueur, serveur conservé et retour Mon profil sans modifier le compte personnel.");
             // Inject a failing local refresh, retaining the already displayed snapshot.
             Control<PasswordBox>("ApiKeyBox").Password = "invalid key with spaces";
             Control<Button>("RefreshPersonalButton").RaiseEvent(new RoutedEventArgs(Button.ClickEvent));

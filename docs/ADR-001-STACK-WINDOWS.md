@@ -1,10 +1,10 @@
-# ADR-001 — C# / .NET 10 LTS, WPF et SQLite
+﻿# ADR-001 — C# / .NET 10 LTS, WPF et SQLite
 
 Statut : accepté par l'utilisateur le 16 septembre 2026.
 
 ## Décision
 
-L'application desktop est développée en C# sur .NET 10 LTS avec une interface WPF et un stockage local SQLite via Microsoft.Data.Sqlite. Cible actuelle : Windows x64. Le prototype Node reste disponible comme référence pendant la migration.
+L'application desktop est développée en C# sur .NET 10 LTS avec une interface WPF et un stockage local SQLite via Microsoft.Data.Sqlite. Cible actuelle : Windows x64. Le prototype Node a été supprimé le 20 septembre 2026 ; les essais passent désormais par l’application native.
 
 L'utilisateur a choisi cette stack. Les essais comparatifs Tauri/WPF proposés dans le plan initial ne sont donc plus un préalable au développement. Cette décision ne constitue pas une preuve de supériorité en performance ; RC-03 et la campagne de performance restent nécessaires.
 

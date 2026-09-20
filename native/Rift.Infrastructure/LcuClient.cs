@@ -1,4 +1,4 @@
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -62,7 +62,7 @@ public sealed class LcuTransport : ILcuTransport
             var handler = new HttpClientHandler { UseProxy = false, AllowAutoRedirect = false };
             // LCU has a self-signed certificate. Exception is scoped to this fixed loopback origin only.
             handler.ServerCertificateCustomValidationCallback = (request, _, _, _) => request.RequestUri is { Scheme: "https", Host: "127.0.0.1" } uri && uri.Port == credentials.Port;
-            client = new HttpClient(handler) { BaseAddress = new Uri($"https://127.0.0.1:{credentials.Port}"), Timeout = TimeSpan.FromMilliseconds(1500), MaxResponseContentBufferSize = 4_000_000 };
+            client = new HttpClient(new DiagnosticHttpHandler("LCU", handler)) { BaseAddress = new Uri($"https://127.0.0.1:{credentials.Port}"), Timeout = TimeSpan.FromMilliseconds(1500), MaxResponseContentBufferSize = 4_000_000 };
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.UTF8.GetBytes($"riot:{credentials.Password}")));
             current = credentials;
         }

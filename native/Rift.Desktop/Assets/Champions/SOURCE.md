@@ -1,0 +1,1 @@
+Portraits officiels Riot Data Dragon, catalogue 16.18.1, téléchargés le 2026-09-19. Source : https://ddragon.leagueoflegends.com/cdn/16.18.1/data/fr_FR/champion.json. Propriété de Riot Games. Rafraîchir avec native/UpdatePortraits.ps1 (PowerShell 7).

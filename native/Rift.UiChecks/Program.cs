@@ -10,6 +10,12 @@ static class Program
     [STAThread]
     static int Main()
     {
+        // Exercise the same application resources as the shipped window.
+        var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
+        app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary
+        {
+            Source = new Uri("/RiftCompanion;component/Themes/Controls.xaml", UriKind.Relative)
+        });
         var dispatcher = Dispatcher.CurrentDispatcher;
         SynchronizationContext.SetSynchronizationContext(new DispatcherSynchronizationContext(dispatcher));
         int exit = 0;
@@ -89,6 +95,8 @@ static class Program
             if (ticks == 0) throw new Exception("Dispatcher stalled");
             Console.WriteLine($"OK WPF : 160 PNG décodés hors UI, gelés à 48 px, réutilisés et notifications minimales. Ticks pendant décodage : {duringDecode}, écart maximal observé : {maximum:F0} ms. Test synthétique, pas une mesure en jeu.");
             await PersonalProfileUiChecks.Run(folder);
+            await ControlThemeChecks.Run();
+            await MatchDetailsUiChecks.Run();
         }
         finally { Directory.Delete(folder,true); }
     }

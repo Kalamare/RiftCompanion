@@ -1,4 +1,6 @@
-# Rift Companion — plan de projet
+﻿# Rift Companion — plan de projet
+
+> État au 20 septembre 2026 : WPF est la stack retenue. Le prototype web Node et ses lanceurs ont été supprimés ; les comparaisons ci-dessous documentent la réflexion initiale. Pour les essais actuels, utiliser `Lancer-Natif.cmd`.
 
 Mis à jour le 16 septembre 2026. Les comparaisons initiales sont conservées comme historique de décision.
 
