@@ -98,6 +98,9 @@ void checkPreferences()
     }
     finally { if (Directory.Exists(directory)) Directory.Delete(directory,true); }
 }
+await OverlayChecks.Run(Check);
+await OpggChecks.Run(Check);
+await SeasonChecks.Run(Check);
 await DiagnosticChecks.Run(Check);
 await MatchDetailsChecks.Run(Check);
 await PlayerRankChecks.Run(Check);

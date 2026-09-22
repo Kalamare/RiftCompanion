@@ -1,43 +1,60 @@
-# Reprise — 20 septembre 2026
+# Reprise — 22 septembre 2026
 
-## État livré
+## Version active
 
-Version active : **native-profile-v20**, branche `main`, lancement `Lancer-Natif.cmd`. Application native WPF uniquement ; l’ancien prototype web, ses tests et ses lanceurs ont été supprimés.
+**native-profile-v34**, branche `main`. Application WPF .NET 10 ; profil et fluidité prioritaires. Direction active : mode client/serveur privé (ASP.NET Core, Quartz, PostgreSQL, Docker Compose). Le mode serveur ne contacte pas OP.GG.
 
-- Profil personnel, recherche et navigation vers les participants d’une partie, historique paginé et cache local.
-- Fiche de partie compacte : rangs actuels datés, sorts, objectifs, bans barrés, K/D/A coloré, objets, balise et quête de rôle.
-- Une seule rune sous le portrait. Popup détaillée au survol, défilable, fermeture automatique après sortie du pointeur ; toutes les runes primaires et secondaires restent consultables.
-- Infobulles des objets : image, description, prix et composants directs affichés uniquement par leurs icônes, séparées par `+`.
-- Portraits, sorts et runes livrés dans les assets ; images décodées hors UI, cache mémoire partagé.
-- Fenêtre Diagnostic en direct : métriques du processus, requêtes, tâches, images, journal borné et analyse automatique avec seuils explicites.
+- Collecte limitée aux **20 derniers matchs** : `RIFT_HISTORY_BACKFILL=false`. Anciens matchs et curseurs conservés, aucun rattrapage de saison automatique.
+- KDA, bilan, champions et rôles calculés sur les parties chargées et filtrées, hors remakes. « Voir plus » agrandit cet échantillon avec les pages déjà stockées, sans appel Riot supplémentaire.
+- Les compteurs victoires/défaites du classement Riot restent distincts de cet échantillon. Pas de limite de rétention à 30 jours déduite de DeepLoL.
+- Actualiser conserve le profil affiché. Cooldown serveur partagé de **5 minutes** ; budgets privés : **5 actualisations acceptées et 3 nouvelles recherches / 10 minutes**. Consultations connues accessibles.
+- Jobs récents distincts des jobs de saison, notifications SignalR, matchs mutualisés entre participants sans suivi récursif.
+- Schéma PostgreSQL **v2** : ne pas relancer un ancien backend v31/v32 sur cette base.
+- Overlay Ctrl+X, détachement Ctrl+Maj+X, déplacement, transparence, bannière ; détails des parties et profils cliquables ; diagnostic en direct.
 
-## Sur le second PC
+## Sur le second PC : backend réel
 
-Installer Git et le SDK .NET 10 Windows x64 compatible avec `native/global.json` (10.0.401 ou correctif autorisé). Dans le dépôt existant, vérifier `git status` puis :
+Installer Git, le SDK .NET 10 Windows x64 compatible avec `native/global.json` (10.0.401) et Docker Desktop avec conteneurs Linux. Démarrer Docker Desktop. Dans un clone propre :
 
 ```powershell
 git pull --ff-only
 powershell -NoProfile -ExecutionPolicy Bypass -File native/Build.ps1 -Check
+powershell -NoProfile -ExecutionPolicy Bypass -File server/Initialize-Dev.ps1
+notepad .\server\.secrets\riot-key
+```
+
+Placer uniquement la clé Riot valide dans ce fichier. Si nécessaire, cloner auparavant avec `git clone https://github.com/Kalamare/RiftCompanion.git`, puis `cd RiftCompanion`.
+
+Dans **la même fenêtre PowerShell** :
+
+```powershell
+$env:RIFT_FIXTURE_MODE = 'false'
+$env:RIFT_PORT = '5081'
+$env:RIFT_HISTORY_BACKFILL = 'false'
+docker compose -p rift-real -f server/compose.yaml up -d --build
+Invoke-RestMethod http://127.0.0.1:5081/health
+
+$env:RIFT_SERVER_URL = 'http://127.0.0.1:5081/'
+$env:RIFT_SERVER_ACCESS_KEY_FILE = "$PWD\server\.secrets\access-key"
 .\Lancer-Natif.cmd
 ```
 
-Si le dépôt n’existe pas encore : `git clone https://github.com/Kalamare/RiftCompanion.git`, puis `cd RiftCompanion` avant de compiler. Le premier build nécessite Internet pour NuGet. Les scripts de mise à jour des assets nécessitent PowerShell 7, mais ne sont pas nécessaires pour compiler les assets déjà versionnés.
+La santé doit indiquer `data: riot`. Pour conserver la configuration Compose, inscrire `RIFT_PORT=5081`, `RIFT_FIXTURE_MODE=false` et `RIFT_HISTORY_BACKFILL=false` dans `server/.env`.
 
-Les exécutables, `.tools`, rendus de test et caches ne sont pas versionnés. La clé Riot, chiffrée pour le compte Windows local, doit être renseignée à nouveau sur le second PC. Les profils, préférences et autres données de `%LOCALAPPDATA%\RiftCompanion` ne sont pas transférés par Git.
+**Le lanceur `Lancer-Serveur-Local.cmd` cible 5080**, pas 5081. Utiliser les commandes ci-dessus pour `rift-real`. Les variables PowerShell doivent être définies de nouveau dans une nouvelle fenêtre. Sans `RIFT_SERVER_URL`, `Lancer-Natif.cmd` utilise le mode local historique.
 
-## Priorités et limites à conserver
+## Données non transférées par Git
 
-Le profil et sa fluidité restent prioritaires. Les rangs mondial/serveur automatiques restent à intégrer avec une source validée : **aucune saisie manuelle, aucun classement estimé à partir du palier/LP**. Lire `CLASSEMENT-MONDIAL.md` avant ce chantier.
+`server/.secrets`, `server/.env`, le volume PostgreSQL, les exécutables, `.tools`, caches et profils de `%LOCALAPPDATA%\RiftCompanion` restent locaux. La clé chiffrée Windows ne se transfère pas entre PC.
 
-Les rangs participants et descriptions d’objets/runes utilisent les données actuelles, pas celles du patch historique. Les alertes du diagnostic sont des signaux indicatifs, pas une preuve automatique de fuite ou de bug.
+Le second PC aura une nouvelle base, sauf transfert explicite de sauvegarde. Une sauvegarde antérieure à v33 existe uniquement sur le premier PC dans `server/.secrets/before-v33-*.dump` ; elle ne représente pas forcément le dernier état. Pour reprendre les données actuelles, réaliser une nouvelle sauvegarde PostgreSQL et la transférer séparément par un canal privé. Ne pas utiliser `down -v` si les données doivent être conservées.
 
-Dernière validation v20 : compilation sans erreur ni avertissement, **136 contrôles métier et contrôles WPF réussis**. La recette sur le second PC doit notamment confirmer le survol/défilement des runes, les infobulles et les mises à l’échelle Windows. Les tests simulés ne mesurent pas les FPS en jeu ni la disponibilité réelle de Riot.
+## Validation et suite
 
-## Lecture de reprise
+Validation v34 : **172 contrôles métier et contrôles WPF**, compilation sans avertissement (`native/Build.ps1 -Check`) ; **37 contrôles PostgreSQL**, REST/SignalR et cooldown (`server/Check.ps1`, projet fictif isolé). Ces tests ne mesurent pas les FPS en jeu. Les contrôles saisonniers restent présents pour le mode historique optionnel.
 
-1. `README.md` et `native/README.md` : installation et commandes.
-2. `docs/PROFIL-PERSONNEL.md` : décisions et historique des versions.
-3. `docs/DIAGNOSTIC.md` : instrumentation, seuils et portée des métriques.
-4. `docs/CLASSEMENT-MONDIAL.md` et `docs/FLUIDITE-PROFIL.md` : priorités restantes.
+Avant distribution publique : authentification et budgets par compte, TLS, droits Riot Production, rétention, sauvegarde/restauration opérationnelle et tests de charge. Le limiteur Riot reste conservateur. Aucun rang mondial/serveur saisi manuellement ni estimé depuis les LP.
 
-Prompt de reprise possible : « Reprenons Rift Companion. Lis docs/REPRISE.md, docs/PROFIL-PERSONNEL.md, docs/DIAGNOSTIC.md et docs/CLASSEMENT-MONDIAL.md. Vérifie Git et les prérequis, puis lance native/Build.ps1 -Check. Version active native-profile-v20, lancement Lancer-Natif.cmd. Le profil et sa fluidité restent prioritaires ; ne pas ajouter de saisie manuelle des rangs. »
+Lire `server/README.md`, `docs/ACTUALISATION-QUOTAS.md`, `docs/ARCHITECTURE-PUBLIQUE.md`, `docs/PROFIL-PERSONNEL.md`, `docs/OVERLAY.md` et `docs/DIAGNOSTIC.md`.
+
+Prompt de reprise : « Reprenons Rift Companion v34. Lis docs/REPRISE.md et docs/ACTUALISATION-QUOTAS.md. Vérifie Git, .NET et Docker. Backend réel rift-real sur 5081 ; collecte limitée à 20 matchs, statistiques sur les parties affichées, pas de rattrapage saisonnier. Les données et secrets du premier PC ne sont pas dans Git. Le profil et sa fluidité restent prioritaires. »

@@ -1,0 +1,24 @@
+<Window x:Class="Rift.Desktop.OverlayBanner"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Rift Companion — Overlay disponible" Width="340" Height="76"
+        WindowStyle="None" ResizeMode="NoResize" ShowInTaskbar="False"
+        ShowActivated="False" Topmost="True" Background="#233342"
+        Foreground="#EFF6FC" UseLayoutRounding="True">
+    <Border BorderBrush="#47BEE5" BorderThickness="0,3,0,0" Padding="10,6,8,6">
+        <Grid>
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="28"/></Grid.ColumnDefinitions>
+            <StackPanel>
+                <TextBlock Text="Overlay disponible !" FontSize="14" FontWeight="SemiBold" Margin="0,0,0,7"/>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="Appuyez sur" VerticalAlignment="Center" Foreground="#B4C5D3" Margin="0,0,8,0"/>
+                    <Border BorderBrush="#8298AA" BorderThickness="1" CornerRadius="3" Padding="6,0" Height="24" VerticalAlignment="Center"><TextBlock Text="Ctrl" FontWeight="SemiBold" VerticalAlignment="Center"/></Border>
+                    <TextBlock Text=" + " VerticalAlignment="Center" Foreground="#B4C5D3"/>
+                    <Border BorderBrush="#8298AA" BorderThickness="1" CornerRadius="3" Padding="6,0" Height="24" VerticalAlignment="Center"><TextBlock Text="X" FontWeight="SemiBold" VerticalAlignment="Center"/></Border>
+                    <Button x:Name="OpenButton" Content="Afficher" Click="OnOpen" Margin="10,0,0,0" Padding="10,3" Background="#168BB0" BorderBrush="#168BB0" Foreground="White"/>
+                </StackPanel>
+            </StackPanel>
+            <Button x:Name="DismissButton" Grid.Column="1" Content="×" Click="OnDismiss" VerticalAlignment="Top" Padding="4,0" FontSize="18" Background="Transparent" BorderThickness="0" Foreground="#BDCDD9" ToolTip="Fermer ce rappel" AutomationProperties.Name="Fermer le rappel overlay"/>
+        </Grid>
+    </Border>
+</Window>

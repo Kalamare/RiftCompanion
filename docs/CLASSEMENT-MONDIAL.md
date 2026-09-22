@@ -1,5 +1,23 @@
 # Rang mondial et serveur — recherche du 19 septembre 2026
 
+## Nouvelle piste vérifiée — OP.GG, 21 septembre 2026
+
+**Mise à jour v28 :** rang serveur et statistiques saisonnières désormais intégrés automatiquement au profil et à l’overlay, avec cache daté d’une heure. Voir [OPGG.md](OPGG.md). Les réserves sur le mondial, le Flex distinct, le périmètre et la fraîcheur restent valables. La recherche ci-dessous retrace le test initial.
+
+Le serveur officiel [opgg-mcp](https://github.com/opgginc/opgg-mcp) répond à `https://mcp-api.op.gg/mcp`. Test direct sans clé : `tools/list`, puis `tools/call` sur `lol_get_summoner_profile` pour KalAram#ARAM / EUW. Le catalogue expose `data.summoner.ladder_rank.{rank,total}`, décrit comme classement régional.
+
+Résultat observé : rang **112 379 / 3 426 740**, soit environ **Top 3,28 %** calculé sur cette population. Le profil retourné était daté du **19 septembre 2026 à 04:13:42 +09:00**, avec Diamond III 44 LP ; ce résultat est un instantané OP.GG, pas le classement live de la capture du 21 septembre (Diamond III 4 LP). `region` était null dans la réponse malgré EUW dans la requête. Ne pas présenter ces valeurs comme actuelles sans date.
+
+Conclusion : piste techniquement confirmée pour un rang régional OP.GG. Pas de champ mondial identifié. `ladder_rank` est unique au niveau du profil, pas décliné par file ; l’affectation précise Solo/Duo et la couverture Flex restent à confirmer. Le leaderboard de champions concerne les meilleurs joueurs Master+, pas le classement global de tous les comptes.
+
+Le résultat MCP du test contient du texte compact avec déclaration de classes et valeurs imbriquées, pas un objet JSON métier dans `structuredContent`. Une intégration C# nécessite donc de valider le contrat de réponse et son parsing, les champs absents, la fraîcheur, les quotas et les conditions d’utilisation du service. La licence MIT du dépôt porte sur le code ; elle ne constitue pas à elle seule un contrat d’accès durable à toutes les données hébergées. Rien n’a été branché automatiquement dans les profils à ce stade, aucune saisie manuelle.
+
+Intégration envisageable : enrichissement indépendant et annulable, cache daté, requête ciblée aux champs nécessaires, attribution « Rang serveur OP.GG », absence explicite pour mondial/Flex non confirmé. Aucun besoin d’exécuter un modèle IA dans Rift pour appeler un serveur MCP.
+
+Autres éléments utiles : builds, runes, counters et synergies via les outils du même serveur ; historique de LP et statistiques de champions dans le profil. Le dépôt [php-riotapi-request](https://github.com/opgginc/php-riotapi-request) est un client Riot PHP à requêtes asynchrones/concurrence réglable, pas un accès à l’index OP.GG ; son README cite encore des endpoints anciens et les rate limits en TODO. Peu d’intérêt à importer ce runtime dans WPF. [laravel-mcp-server](https://github.com/opgginc/laravel-mcp-server) sert à héberger des outils MCP en PHP, pas à fournir un classement LoL.
+
+Les conclusions ci-dessous décrivent la recherche précédente ; OP.GG constitue désormais une piste régionale vérifiée, sans solution mondiale complète validée.
+
 ## Besoin
 
 Afficher automatiquement la position mondiale, la position sur le serveur et le Top %, pour Solo/Duo et Flex. Pas de saisie manuelle. Aucune estimation à partir du seul palier/LP présentée comme un rang exact.

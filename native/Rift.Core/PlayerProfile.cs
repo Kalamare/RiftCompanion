@@ -14,7 +14,8 @@ public sealed record ProfileMatch(string Id, string Champion, int Queue, string 
     public string Result => Remake ? "Remake" : Win ? "Victoire" : "Défaite";
     public string KdaLine => $"{Kills} / {Deaths} / {Assists}";
     public string PlayedLabel => $"{PlayedAt.ToLocalTime():dd/MM HH:mm} · {(int)(Seconds / 60)}:{(int)(Seconds % 60):00}";
-    public double? Participation => TeamKills > 0 ? 100.0 * (Kills + Assists) / TeamKills : null;
+    // Arena uses subteams; the standard team total cannot be used as its denominator.
+    public double? Participation => Queue != 1700 && TeamKills > 0 ? 100.0 * (Kills + Assists) / TeamKills : null;
 }
 public sealed record PlayerProfile(string RiotId, string Platform, int Level, IReadOnlyList<RankEntry> Ranks,
     IReadOnlyList<ProfileMatch> Matches, DateTimeOffset LoadedAt, bool Demo, int RequestedMatches, string Notice = "")

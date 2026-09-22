@@ -4,9 +4,12 @@ using Rift.Core;
 
 namespace Rift.Infrastructure;
 
-public sealed class RiotApiException(string message) : Exception(message);
+public sealed class RiotApiException(string message, bool playerUnavailable = false) : Exception(message)
+{
+    public bool PlayerUnavailable { get; } = playerUnavailable;
+}
 
-public sealed class RiotProfileClient : IDisposable
+public sealed partial class RiotProfileClient : IDisposable
 {
     // Fixed allowlist: never send the developer key to a user-provided host or redirect.
     public static readonly IReadOnlyDictionary<string, (string Label, string Region)> Platforms = new Dictionary<string, (string, string)>
@@ -77,11 +80,11 @@ public sealed class RiotProfileClient : IDisposable
             var accountPath = targetPuuid is not null ? $"/riot/account/v1/accounts/by-puuid/{Uri.EscapeDataString(targetPuuid)}"
                 : $"/riot/account/v1/accounts/by-riot-id/{Uri.EscapeDataString(riotId[..split])}/{Uri.EscapeDataString(riotId[(split + 1)..])}";
             account = await Get(routing.Region, accountPath, key, token)
-                ?? throw new RiotApiException("Riot ID introuvable. Vérifie le pseudo, le tag et le serveur.");
+                ?? throw new RiotApiException("Riot ID introuvable. Vérifie le pseudo, le tag et le serveur.", playerUnavailable: true);
             puuid = DraftParser.Text(account, "puuid"); if (puuid.Length == 0) throw new JsonException();
             if (targetPuuid is not null && puuid != targetPuuid) throw new RiotApiException("L’identité renvoyée par Riot ne correspond pas au joueur sélectionné.");
             summoner = await Get(platform, $"/lol/summoner/v4/summoners/by-puuid/{Uri.EscapeDataString(puuid)}", key, token)
-                ?? throw new RiotApiException("Compte LoL introuvable sur ce serveur.");
+                ?? throw new RiotApiException("Compte LoL introuvable sur ce serveur.", playerUnavailable: true);
             var leagues = await Get(platform, $"/lol/league/v4/entries/by-puuid/{Uri.EscapeDataString(puuid)}", key, token);
             var entries = new List<RankEntry>();
             if (leagues is { ValueKind: JsonValueKind.Array }) foreach (var entry in leagues.Value.EnumerateArray())

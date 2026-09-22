@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../Rift.Contracts/Rift.Contracts.csproj"/><PackageReference Include="Npgsql" Version="10.0.3"/><FrameworkReference Include="Microsoft.AspNetCore.App"/></ItemGroup><ItemGroup><EmbeddedResource Include="schema.sql"/></ItemGroup></Project>

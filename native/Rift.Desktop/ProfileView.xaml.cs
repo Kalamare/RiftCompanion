@@ -13,6 +13,14 @@ public partial class ProfileView : UserControl
 {
     private void OnDiagnostics(object sender, RoutedEventArgs e) => DiagnosticsWindow.Open(Window.GetWindow(this));
     private readonly RiotProfileClient api = new();
+    internal async Task<PlayerProfile> LoadOverlayProfile(string riotId, string platform, CancellationToken token)
+    {
+        while (isPreparing) await Task.Delay(500, token); // User-requested profile keeps priority.
+        if (remote is not null) return await remote.Load(riotId, platform, token);
+        var key = ApiKeyBox.Password;
+        if (string.IsNullOrWhiteSpace(key)) throw new RiotApiException("Clé Riot absente : renseigne-la dans le profil.");
+        return await Task.Run(() => api.LoadAsync(riotId, platform, key, cache!, null, token, matchCount: 10), token);
+    }
     private ProfileCache? cache;
     private PlayerProfile? profile;
     private CancellationTokenSource? loadCancellation;
@@ -47,6 +55,7 @@ public partial class ProfileView : UserControl
     public ProfileView()
     {
         InitializeComponent();
+        InitializeStatistics();
         MatchesGrid.ItemsSource = matchRows;
 
         ServerBox.ItemsSource = RiotProfileClient.Platforms.ToDictionary(x => x.Key, x => x.Value.Label); ServerBox.SelectedValue = "euw1";
@@ -55,6 +64,8 @@ public partial class ProfileView : UserControl
     public void Configure(string directory)
     {
         dataDirectory = directory;
+        ConfigureRemote();
+        opgg = new OpggClient(directory);
         cache = new ProfileCache(Path.Combine(directory, "profile-cache.db"));
         assets = new RiotAssets(Path.Combine(directory, "riot-assets"), bundledDirectory: Path.Combine(AppContext.BaseDirectory, "Assets", "Champions"));
         queueCatalog = new QueueCatalogUpdater(directory);
@@ -130,6 +141,19 @@ public partial class ProfileView : UserControl
     private async void OnPersonalProfile(object sender, RoutedEventArgs e)
     {
         if (isPreparing || !loading.IsCompleted || !startup.IsCompleted || !preferencesTask.IsCompleted || stopping) return;
+        if (ReferenceEquals(sender, RefreshPersonalButton) && profile is { Demo: false } selected)
+        {
+            RiotIdBox.Text = selected.RiotId; ServerBox.SelectedValue = selected.Platform;
+            if (remote is not null)
+            {
+                loading = RequestRemoteRefresh(selected);
+                await loading; return;
+            }
+            BeginLoading(true);
+            loading = LoadProfile(loadCancellation!.Token, preserveCurrent: true, targetPuuid: selected.Puuid);
+            try { await loading; } finally { EndLoading(); }
+            return;
+        }
         browsingOther = false;
         if (personalProfile is null) { ShowNotice("Ouvre le client LoL pour détecter ton compte, ou recherche un joueur."); return; }
         await OpenPersonal(ReferenceEquals(sender, RefreshPersonalButton));
@@ -153,7 +177,7 @@ public partial class ProfileView : UserControl
             await LoadAssets(token, true);
             RevealProfile(token);
             ProfileStatus.Text = saved.RequestedMatches == 0 ? saved.Notice : $"Profil enregistré le {saved.LoadedAt.ToLocalTime():dd/MM/yyyy à HH:mm}.";
-            if (ApiKeyBox.Password.Length == 0)
+            if (remote is null && ApiKeyBox.Password.Length == 0)
             {
                 ProfileStatus.Text += " Ajoute une clé Riot pour actualiser les statistiques.";
                 ShowNotice("Ajoute une clé Riot dans les paramètres de connexion pour actualiser ton profil.");
@@ -165,7 +189,7 @@ public partial class ProfileView : UserControl
                 }
                 return;
             }
-            if (refresh || saved.RequestedMatches == 0 || saved.LoadedAt < DateTimeOffset.UtcNow.AddMinutes(-5))
+            if (remote is not null || refresh || saved.RequestedMatches == 0 || saved.LoadedAt < DateTimeOffset.UtcNow.AddMinutes(-5))
                 await LoadProfile(token, preserveCurrent: true);
         }
         catch (OperationCanceledException) { ProfileStatus.Text = "Chargement annulé."; ShowNotice(ProfileStatus.Text); }
@@ -224,21 +248,33 @@ public partial class ProfileView : UserControl
             var matchCount = previous is null ? 20 : 10;
             var progress = new Progress<string>(message => { if (isPreparing && !preparingImages) LoadingStage.Text = message; });
             if (preserveCurrent) { LoadingPanel.Visibility = Visibility.Collapsed; LoadingBar.IsIndeterminate = false; ProfileStatus.Text = "Actualisation du profil…"; }
-            profile = await Task.Run(() => api.LoadAsync(id, server, key, cache!, progress, token, matchCount: matchCount, previous: previous, targetPuuid: targetPuuid), token);
-            if (previous is null) await PersistKey(key);
+            profile = remote is not null ? await remote.Load(id, server, token, previous, targetPuuid)
+                : await Task.Run(() => api.LoadAsync(id, server, key, cache!, progress, token, matchCount: matchCount, previous: previous, targetPuuid: targetPuuid), token);
+            if (remote is null && previous is null) await PersistKey(key);
             try { if (history is not null) recent = await Task.Run(() => history.Remember(profile.RiotId, profile.Platform), token); }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { KeyStatus.Text = "Historique des recherches non enregistré."; }
+            if (remote is not null) { UpdateQueueFilters(); Render(); ProfileBody.Visibility = Visibility.Visible; LoadingPanel.Visibility = Visibility.Collapsed; }
             await LoadAssets(token);
             RevealProfile(token); completed = true;
             if (PersonalProfileStore.SameAccount(profile, personalProfile)) await SavePersonal(profile!);
         }
         catch (OperationCanceledException) { ProfileStatus.Text = token.IsCancellationRequested ? "Chargement annulé." : "Riot met trop de temps à répondre. Réessaie plus tard."; }
         catch (Exception ex) when (ex is RiotApiException or ArgumentException) { ProfileStatus.Text = ex.Message; }
-        catch (System.Net.Http.HttpRequestException) { ProfileStatus.Text = "Connexion à Riot impossible. Vérifie ta connexion réseau."; }
+        catch (Rift.Client.ServerWorkLimitException ex) { ProfileStatus.Text = $"Limite de nouvelles recherches atteinte. Réessaie dans {Math.Max(1, Math.Ceiling(ex.Wait.TotalMinutes)):0} min ; les profils déjà connus restent consultables."; }
+        catch (System.Net.Http.HttpRequestException) { ProfileStatus.Text = remote is null ? "Connexion à Riot impossible. Vérifie ta connexion réseau." : "Serveur indisponible ou collecte différée. Les données connues restent conservées."; }
         catch (System.Text.Json.JsonException) { ProfileStatus.Text = "Format de données Riot inattendu. Le profil n’a pas été affiché."; }
         catch (Exception ex) when (ex is Microsoft.Data.Sqlite.SqliteException or IOException or UnauthorizedAccessException)
         { ProfileStatus.Text = "Le cache local est indisponible. Vérifie l’accès au dossier de données."; }
-        finally { if (!completed) { if (token.IsCancellationRequested) diagnosticOperation.Cancelled(); else diagnosticOperation.Failed(); } if (!completed && fallback is not null) profile = fallback; if (!completed && !stopping) ShowNotice(ProfileStatus.Text); }
+        finally
+        {
+            if (!completed) { if (token.IsCancellationRequested) diagnosticOperation.Cancelled(); else diagnosticOperation.Failed(); }
+            if (!completed && fallback is not null)
+            {
+                profile = fallback;
+                if (remote is not null && !stopping && !fallback.Demo) StartRemote(fallback);
+            }
+            if (!completed && !stopping) ShowNotice(ProfileStatus.Text);
+        }
     }
     private async void OnLoadMore(object sender, RoutedEventArgs e)
     {
@@ -272,9 +308,9 @@ public partial class ProfileView : UserControl
         var key = ApiKeyBox.Password;
         var window = new MatchDetailsWindow(token => selected.Demo
             ? Task.FromResult(ProfileDemo.Details(row.Match))
-            : api.LoadDetailsAsync(row.Match.Id, selected.Platform, key, cache, token),
+            : remote is not null ? remote.Details(selected.Platform, row.Match.Id, token) : api.LoadDetailsAsync(row.Match.Id, selected.Platform, key, cache, token),
             Path.Combine(dataDirectory, "riot-assets"), selected.Demo ? "demo-selected" : selected.Puuid, selected.Demo,
-            (puuid, token) => api.LoadPlayerRanksAsync(puuid, selected.Platform, key, cache, token), bitmaps);
+            async (puuid, token) => remote is not null ? await remote.Ranks(selected.Platform, puuid, token) : await api.LoadPlayerRanksAsync(puuid, selected.Platform, key, cache, token), bitmaps);
         window.Owner = Window.GetWindow(this);
         window.DebugEnabled = DebugButton.IsChecked == true;
         detailsWindow = window;
@@ -309,6 +345,9 @@ public partial class ProfileView : UserControl
     }
     private void BeginLoading(bool append = false)
     {
+        remoteCancellation?.Cancel();
+        opggCancellation?.Cancel(); seasonProfile = null;
+        statsCancellation?.Cancel(); if (!append) seasonHistory = null;
         loadCancellation?.Dispose(); loadCancellation = new CancellationTokenSource();
         isPreparing = true; preparingImages = false;
         PersonalButton.IsEnabled = RefreshPersonalButton.IsEnabled = false;
@@ -324,7 +363,7 @@ public partial class ProfileView : UserControl
     }
     private void EndLoading()
     {
-        MoreButton.IsEnabled = true; MoreButton.Content = "Voir plus · 10 parties"; QueueBox.IsEnabled = true;
+        MoreButton.IsEnabled = true; MoreButton.Content = remote is null ? "Voir plus · 10 parties" : "Voir plus · 20 parties enregistrées"; QueueBox.IsEnabled = true;
         MoreButton.Visibility = profile is { HasMore: true, Demo: false } ? Visibility.Visible : Visibility.Collapsed;
         isPreparing = false; LoadingBar.IsIndeterminate = false; LoadingPanel.Visibility = Visibility.Collapsed;
         PersonalButton.IsEnabled = RefreshPersonalButton.IsEnabled = true;
@@ -336,6 +375,7 @@ public partial class ProfileView : UserControl
         token.ThrowIfCancellationRequested();
         if (appending) appendScrollOffset = ProfileScroll.VerticalOffset;
         UpdateQueueFilters(); Render();
+        if (profile is not null) { if (remote is not null && !profile.Demo) StartRemote(profile); else StartOpgg(profile); }
         ProfileBody.Visibility = Visibility.Visible;
     }
     private async void OnDemo(object sender, RoutedEventArgs e)
@@ -415,6 +455,8 @@ public partial class ProfileView : UserControl
         foreach (var m in profile.Matches) { Visual(m.ChampionId, m.Champion, true); foreach (var id in m.Items) Visual(id, "", false); }
         var filter = QueueBox.SelectedValue is int q ? q : 0;
         var selected = profile.Matches.Where(m => filter == 0 || m.Queue == filter).ToArray();
+        if (remote is null || profile.Demo)
+        {
         var usable = selected.Where(m => !m.Remake && m.Seconds > 0).ToArray();
         var s = ProfileSummary.From(usable);
         SampleText.Text = s.Games == 0 ? "Aucune partie pour ce mode" : $"{s.Wins} victoires · {s.Games - s.Wins} défaites";
@@ -438,23 +480,7 @@ public partial class ProfileView : UserControl
         Metric("Kills / partie", $"{s.Kills:F1}"); Metric("Morts / partie", $"{s.Deaths:F1}"); Metric("Assists / partie", $"{s.Assists:F1}");
         Metric("Vision / partie", $"{s.Vision:F1}"); Metric("Balises posées / partie", $"{s.WardsPlaced:F1}"); Metric("Balises détruites / partie", $"{s.WardsKilled:F1}");
         Metric("Balises contrôle achetées", $"{s.ControlWards:F1} / partie");
-        RankPanel.Children.Clear();
-        RankLinks.Children.Clear();
-        foreach (var queue in new[] { ("RANKED_SOLO_5x5", "Solo / Duo"), ("RANKED_FLEX_SR", "Flex") })
-        {
-            var rank = profile.Ranks.FirstOrDefault(r => r.Queue == queue.Item1);
-            var card = new StackPanel { Margin = new Thickness(0, 0, 14, 0) };
-            card.Children.Add(new TextBlock { Text = queue.Item2, Foreground = Brushes.LightSteelBlue, Margin = new Thickness(0, 0, 0, 8) });
-            var line = new StackPanel { Orientation = Orientation.Horizontal };
-            if (rank is not null && ranks.GetValueOrDefault(rank.Tier) is { } emblem)
-                line.Children.Add(new Image { Source = emblem, Width = 60, Height = 60, Margin = new Thickness(0, 0, 8, 0) });
-            var detail = new StackPanel { VerticalAlignment = VerticalAlignment.Center };
-            detail.Children.Add(new TextBlock { Text = rank is null ? "Non classé" : $"{TierLabel(rank.Tier)} {rank.Division}", FontSize = 17, FontWeight = FontWeights.SemiBold });
-            if (rank is not null) detail.Children.Add(new TextBlock { Text = $"{DisplayNumbers.Exact(rank.Lp)} LP", Foreground = Brushes.LightSteelBlue, Margin = new Thickness(0, 5, 0, 0) });
-            line.Children.Add(detail); card.Children.Add(line);
-            if (rank is not null) card.Children.Add(new TextBlock { Text = $"{rank.Wins} V · {rank.Losses} D   {(rank.Wins + rank.Losses == 0 ? 0 : 100.0 * rank.Wins / (rank.Wins + rank.Losses)):F1} %", Margin = new Thickness(0, 10, 0, 0), FontSize = 12 });
-            RankPanel.Children.Add(card);
-        }
+        RenderRankCards();
         HistoryStatus.Text = profile.Demo ? "Historique fictif." : profile.HasMore ? "Chaque clic recherche 10 parties plus anciennes." : "Fin des parties disponibles auprès de Riot.";
         if (!profile.Demo && ProfileLinks.LeagueOfGraphs(profile.RiotId, profile.Platform) is { } rankingPage)
         {
@@ -503,6 +529,13 @@ public partial class ProfileView : UserControl
         if (roleMatches.Length == 0) RolePanel.Children.Add(new TextBlock { Text = "Aucune partie avec rôles classiques pour ce filtre.", TextWrapping = TextWrapping.Wrap });
         ChampionsGrid.ItemsSource = usable.GroupBy(m => m.ChampionId > 0 ? m.ChampionId.ToString() : m.Champion).OrderByDescending(g => g.Count()).Select(g =>
         { var stats = ProfileSummary.From(g); var m = g.First(); return new { ChampionVisual = Visual(m.ChampionId, m.Champion, true), Games = stats.Games, WinRate = $"{stats.WinRate:F0} %", Kda = $"{stats.Kda:F2}" }; }).ToArray();
+        if (!profile.Demo) RenderSeason();
+        }
+        else
+        {
+            RenderRankCards(); RenderRemoteSeason();
+            HistoryStatus.Text = profile.HasMore ? "Voir plus utilise les parties déjà enregistrées, sans nouvelle collecte Riot." : "Fin des parties enregistrées · collecte limitée aux 20 dernières parties.";
+        }
         var wanted = selected.Select(m => m.Id).ToHashSet();
         for (int i = matchRows.Count - 1; i >= 0; i--) if (!wanted.Contains(matchRows[i].Match.Id)) matchRows.RemoveAt(i);
         for (int i = 0; i < selected.Length; i++)
@@ -522,10 +555,15 @@ public partial class ProfileView : UserControl
     public async Task StopAsync()
     {
         stopping = true;
+        remoteCancellation?.Cancel(); await remoteLoading;
+        remoteCancellation?.Dispose();
+        if (remote is not null) await remote.DisposeAsync();
+        statsCancellation?.Cancel(); await statsLoading; statsCancellation?.Dispose();
+        opggCancellation?.Cancel(); seasonProfile = null; await opggLoading; opggCancellation?.Dispose(); opgg?.Dispose();
         if (detailsWindow is { } details) { details.Close(); await details.Loading; }
         await personalLifetime.CancelAsync();
         if (loadCancellation is not null) await loadCancellation.CancelAsync();
-        try { await Task.WhenAll(loading, preferencesTask, startup, personalPolling); } catch (OperationCanceledException) { }
+        try { await Task.WhenAll(loading, preferencesTask, startup, personalPolling, statsRestoring); } catch (OperationCanceledException) { }
         ApiKeyBox.Clear(); loadCancellation?.Dispose();
         await Task.Run(() => { api.Dispose(); assets?.Dispose(); queueCatalog?.Dispose(); personalDetector?.Dispose(); });
         personalLifetime.Dispose();

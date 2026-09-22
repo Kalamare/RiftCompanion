@@ -1,0 +1,51 @@
+name: riftcompanion
+x-backend: &backend
+  POSTGRES_HOST: postgres
+  POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+  RIFT_ACCESS_KEY_FILE: /run/secrets/access_key
+  RIOT_API_KEY_FILE: /run/secrets/riot_key
+  RIFT_FIXTURE_MODE: ${RIFT_FIXTURE_MODE:-false}
+  RIFT_HISTORY_FROM: ${RIFT_HISTORY_FROM:-2026-01-08T00:00:00Z}
+  RIFT_REFRESH_COOLDOWN_SECONDS: ${RIFT_REFRESH_COOLDOWN_SECONDS:-300}
+  RIFT_HISTORY_BACKFILL: ${RIFT_HISTORY_BACKFILL:-false}
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: rift
+      POSTGRES_DB: rift
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    secrets: [postgres_password]
+    volumes: [rift_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U rift -d rift"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  api:
+    build: { context: .., dockerfile: server/Dockerfile, target: api }
+    environment: *backend
+    secrets: [postgres_password, access_key, riot_key]
+    ports: ["127.0.0.1:${RIFT_PORT:-5080}:8080"]
+    depends_on: { postgres: { condition: service_healthy } }
+    restart: unless-stopped
+  worker:
+    build: { context: .., dockerfile: server/Dockerfile, target: worker }
+    environment: *backend
+    secrets: [postgres_password, access_key, riot_key]
+    depends_on: { postgres: { condition: service_healthy } }
+    restart: unless-stopped
+  checks:
+    profiles: [checks]
+    build: { context: .., dockerfile: server/Dockerfile, target: checks }
+    environment: *backend
+    secrets: [postgres_password, access_key, riot_key]
+    depends_on: { postgres: { condition: service_healthy } }
+    restart: "no"
+volumes:
+  rift_data:
+secrets:
+  postgres_password: { file: .secrets/postgres-password }
+  access_key: { file: .secrets/access-key }
+  riot_key: { file: .secrets/riot-key }

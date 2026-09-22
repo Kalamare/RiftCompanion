@@ -2,9 +2,25 @@
 
 > Pour reprendre sur un autre PC : [fiche de reprise](REPRISE.md).
 
+## Overlay natif v29 — 21 septembre 2026
+
+Version active : `artifacts/native-profile-v31`, via `Lancer-Natif.cmd`.
+
+v31 ajoute un mode serveur privé via `Lancer-Serveur-Local.cmd` : [configuration et limites](../server/README.md). Les bilans saisonniers sont alors des agrégats PostgreSQL, mis à jour automatiquement et distincts de l’historique récent. Les indications de synchronisation locale/OP.GG ci-dessous concernent le mode local conservé pendant la migration.
+
+Compléments v28 : [OPGG.md](OPGG.md), rang serveur/Top % automatiques et volet des champions saisonniers. Chargement indépendant, cache persistant une heure, dates de récupération/source et distinction des files. Dans les cartes overlay, les statistiques du champion OP.GG remplacent l’échantillon Riot uniquement si ce champion est présent. Le rang mondial, la maîtrise et le rang serveur Flex distinct restent indisponibles ; les paragraphes historiques ci-dessous précèdent cette intégration.
+
+Overlay à cartes opaques et fond transparent, sans injection : Ctrl+X pour afficher/masquer depuis LoL, Ctrl+Maj+X pour détacher sur un autre écran ou rattacher. Fenêtré sans bordure conseillé ; plein écran exclusif non garanti. Depuis v23, réception événementielle du clavier par Raw Input uniquement dans LoL/overlay, sans blocage ni réinjection des touches. Le dernier raccourci reçu reste affiché après Alt+Tab. Une vérification du focus chaque seconde sert de secours aux événements Windows. Fermer Porofessor pour éviter deux overlays sur la même combinaison. Boutons Overlay et Exemple overlay dans la fenêtre principale.
+
+Dix cartes de participants révélés via Live Client Data API, enrichies avec les profils Riot : rang Solo/Duo actuel, niveau, champion, sorts, rune, historique du champion, bilans 12 h/30 j sur les dix dernières parties chargées et étiquettes calculées. Les bilans ne sont pas exhaustifs. Maîtrise et rangs mondial/serveur restent indisponibles.
+
+Lectures locales toutes les 15 s uniquement pendant l’affichage ; annulation au masquage/minimisation. Profils en mémoire dix minutes, cache SQLite et budget Riot partagés avec le profil principal ; celui-ci reste prioritaire. Rendu fixe, pas de tâche par frame, décodage des images hors UI. Le diagnostic inclut les requêtes Live et les scopes Overlay.
+
+Validation : 155 contrôles métier et contrôles WPF, dont grille de dix joueurs fictifs sans réseau et annulation/arrêt au masquage. Compilation sans erreur ni avertissement. Raccourcis/focus dans LoL, placement sur deux écrans/DPI mixtes et FPS réels restent à valider sur le matériel. Voir [OVERLAY.md](OVERLAY.md) pour les limites et le protocole comparatif.
+
 ## Composants compacts v20 — 20 septembre 2026
 
-Version active : `artifacts/native-profile-v20`, via `Lancer-Natif.cmd`.
+Version historique : `artifacts/native-profile-v20`, via `Lancer-Natif.cmd`.
 
 La section « Créé par » affiche uniquement les icônes des composants, séparées par un signe +. Les noms restent accessibles au survol et aux outils d’accessibilité. Le prix et la description de l’objet restent inchangés.
 
@@ -124,6 +140,8 @@ La détection locale et la lecture du profil sauvegardé ne nécessitent pas de 
 Le profil sauvegardé reste visible pendant cette actualisation. Les statistiques actualisées sont révélées ensemble après préparation des illustrations. Une erreur laisse le profil sauvegardé consultable. Pagination 20 puis +10 conservée, sans limite totale de 100.
 
 ## Vérification
+
+Depuis v30, le bilan saisonnier, les champions et les rôles ont chacun un filtre de mode. Une collecte Match-v5 dédiée calcule les agrégats sur une période explicite, indépendamment de la pagination récente ; cache local, annulation, reprise et couverture visible. Le fournisseur externe n’est plus nommé dans l’interface. Voir [SOURCES-STATISTIQUES.md](SOURCES-STATISTIQUES.md) pour le lancement, les formules et les limites d’exhaustivité.
 
 Contrôles métier : détection simulée, routage indépendant du tag, client absent puis disponible, annulation, erreurs, sauvegarde/restauration de 115 matchs avec curseur et rang, séparation recherches/profil personnel, changement de compte, sauvegarde corrompue, refus des données de démonstration, illustrations sans réseau.
 

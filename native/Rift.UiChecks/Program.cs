@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
@@ -95,8 +95,10 @@ static class Program
             if (ticks == 0) throw new Exception("Dispatcher stalled");
             Console.WriteLine($"OK WPF : 160 PNG décodés hors UI, gelés à 48 px, réutilisés et notifications minimales. Ticks pendant décodage : {duringDecode}, écart maximal observé : {maximum:F0} ms. Test synthétique, pas une mesure en jeu.");
             await PersonalProfileUiChecks.Run(folder);
+            await RemoteProfileUiChecks.Run(folder);
             await ControlThemeChecks.Run();
             await MatchDetailsUiChecks.Run();
+            await OverlayUiChecks.Run(folder);
         }
         finally { Directory.Delete(folder,true); }
     }

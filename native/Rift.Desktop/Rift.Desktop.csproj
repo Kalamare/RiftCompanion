@@ -2,8 +2,10 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <AssemblyName>RiftCompanion</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../Rift.Infrastructure/Rift.Infrastructure.csproj" /></ItemGroup>
+  <ItemGroup><ProjectReference Include="../../server/Rift.Client/Rift.Client.csproj" /></ItemGroup>
   <ItemGroup><InternalsVisibleTo Include="Rift.UiChecks"/></ItemGroup>
   <ItemGroup><Content Include="Assets/Ranks/*.png" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>
   <ItemGroup><Content Include="Assets/Ui/*.png" CopyToOutputDirectory="PreserveNewest"/></ItemGroup>

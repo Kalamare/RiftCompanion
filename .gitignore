@@ -16,6 +16,7 @@ docs/NOTION.md
 **/bin/
 **/obj/
 artifacts/
+server/.secrets/
 *.db
 *.db-shm
 *.db-wal

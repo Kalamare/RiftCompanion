@@ -1,0 +1,13 @@
+**
+!native/
+!native/Directory.Build.props
+!native/Rift.Core/
+!native/Rift.Core/**
+!server/
+!server/**
+**/bin/
+**/obj/
+server/.secrets/
+server/.env
+server/.env.*
+server/artifacts/

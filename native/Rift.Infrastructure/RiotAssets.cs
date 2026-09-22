@@ -47,6 +47,7 @@ public sealed class RiotAssets(string directory, HttpMessageHandler? handler = n
     public string ItemName(int id) => id == 0 ? "Emplacement vide" : items.GetValueOrDefault(id)?.Name ?? $"Objet {id} (catalogue indisponible)";
     public string? ChampionImage(int id, string code) => BundledImage(Champion(id, code)) ?? Image("champion", Champion(id, code));
     public string? ItemImage(int id) => Image("item", items.GetValueOrDefault(id));
+    public int SpellId(string code) => bundledSpells.Values.FirstOrDefault(s => s.Code == code)?.Id ?? 0;
     public string SpellName(int id) => (spells.GetValueOrDefault(id) ?? bundledSpells.GetValueOrDefault(id))?.Name ?? "Sort non disponible";
     public string? SpellImage(int id) => BundledImage(bundledSpells.GetValueOrDefault(id)) ?? Image("spell", spells.GetValueOrDefault(id));
     private string? BundledImage(RiotAsset? asset)

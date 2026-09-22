@@ -8,7 +8,7 @@ public sealed class DiagnosticHttpHandler(string category, HttpMessageHandler in
     {
         // Classify locally, retain no URI or player identifier in the diagnostics.
         var path = request.RequestUri?.AbsolutePath ?? "";
-        var name = category == "LCU" ? "Lecture client LoL" : path.EndsWith(".png") ? "Image CDN" :
+        var name = category == "Profils externes" ? "Profil complémentaire" : category == "Live" ? "Liste des joueurs en partie" : category == "LCU" ? "Lecture client LoL" : path.EndsWith(".png") ? "Image CDN" :
             path.Contains("/account/") ? "Compte Riot" : path.Contains("/summoner/") ? "Niveau du joueur" :
             path.Contains("/league/") ? "Classement" : path.EndsWith("/ids") ? "Liste des parties" :
             path.Contains("/matches/") ? "Détail de partie" : "Catalogue";

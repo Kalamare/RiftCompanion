@@ -1,4 +1,4 @@
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -14,6 +14,9 @@ namespace Rift.Desktop;
 public partial class MainWindow : Window
 {
     private readonly SettingsStore store;
+    private OverlayController? overlay;
+    private void OnOverlay(object sender, RoutedEventArgs e) => overlay?.Toggle();
+    private async void OnOverlayExample(object sender, RoutedEventArgs e) { if (overlay is not null) await overlay.Example(); }
     private readonly LcuMonitor monitor;
     private readonly CancellationTokenSource lifetime = new();
     private CancellationTokenSource? polling;
@@ -57,9 +60,12 @@ public partial class MainWindow : Window
         initialized = true;
         DatabaseText.Text = $"Base locale : {dbPath}";
         UpdateDirectory();
+        ProfilePage.EnableOpgg();
         ProfilePage.StartPersonalProfiles(token => LockfileDiscovery.FindAsync(directory, token), !demo);
         // The profile works independently of the local League client.
         if (draftPageActive) await RestartMode();
+        overlay = new OverlayController(this, Path.GetDirectoryName(dbPath)!, ProfilePage.LoadOverlayProfile,
+            token => LockfileDiscovery.FindAsync(directory, token), text => OverlayStatus.Text = text, ProfilePage.LoadOverlayOpgg);
         metricsTimer.Start(); SampleMetrics();
     }
     private async Task RestartMode()
@@ -161,6 +167,7 @@ public partial class MainWindow : Window
         e.Cancel = true;
         if (closing) return;
         closing = true; Hide(); metricsTimer.Stop();
+        if (overlay is not null) await overlay.StopAsync();
         // Hide immediately; cancellation callbacks and HTTP disposal can take time.
         await Task.WhenAll(lifetime.CancelAsync(), ProfilePage.StopAsync());
         await modeGate.WaitAsync();

@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><ItemGroup><ProjectReference Include="../../native/Rift.Core/Rift.Core.csproj" /></ItemGroup></Project>

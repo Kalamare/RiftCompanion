@@ -82,7 +82,7 @@ static class PersonalProfileUiChecks
             await (Task)typeof(ProfileView).GetMethod("LoadAssets", BindingFlags.Instance | BindingFlags.NonPublic)!.Invoke(view, [CancellationToken.None, true])!;
             typeof(ProfileView).GetMethod("Render", BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly)!.Invoke(view, null);
             Control<Border>("NoticePanel").Visibility = Visibility.Collapsed;
-            if (Control<System.Windows.Controls.Primitives.UniformGrid>("MetricsPanel").Children.Count != 4 || Control<System.Windows.Controls.Primitives.UniformGrid>("RankPanel").Children.Count != 2)
+            if (Control<System.Windows.Controls.Primitives.UniformGrid>("MetricsPanel").Children.Count != 4 || Control<System.Windows.Controls.Panel>("RankPanel").Children.Count != 2)
                 throw new Exception("Compact metrics or rank cards missing");
             var roleRows = Control<StackPanel>("RolePanel").Children.Cast<Grid>().ToArray();
             double BarValue(Grid row, int column) => ((Grid)((StackPanel)row.Children[column]).Children[0]).ColumnDefinitions[0].Width.Value;

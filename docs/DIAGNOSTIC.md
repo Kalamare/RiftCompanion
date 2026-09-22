@@ -43,3 +43,8 @@ Le nouvel onglet fonctionne localement lorsque le diagnostic est visible et que 
 | Décodages lents | Au moins 3 décodages Images ≥ 100 ms dans les 30 dernières secondes |
 
 Chaque signal décrit les observations et une piste de vérification. Les seuils sont des heuristiques explicites, pas des garanties universelles. Un chargement initial, le remplissage d’un cache ou la charge du PC peuvent expliquer certains signaux. Une hausse mémoire n’est pas une preuve de fuite. Le journal étant limité à 200 opérations, une activité très intense peut réduire la profondeur observée des erreurs/décodages. L’absence de signal signifie uniquement qu’aucune règle ne se déclenche sur les observations disponibles.
+
+
+## Overlay (v21)
+
+Les requêtes locales de la Live Client Data API apparaissent dans la catégorie `Live` et le chargement des profils participants dans `Overlay`. Ce dernier inclut les attentes réseau et de quota, pas seulement du CPU. Masquer/minimiser l’overlay arrête ses lectures et annule ses chargements. Le diagnostic ne mesure toujours pas les FPS du jeu ; voir [OVERLAY.md](OVERLAY.md) pour la comparaison.

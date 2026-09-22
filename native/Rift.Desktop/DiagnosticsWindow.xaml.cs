@@ -31,7 +31,7 @@ public partial class DiagnosticsWindow : Window
         Loaded += async (_, _) => { timer.Start(); await Sample(); };
         Closed += (_, _) => { closed = true; timer.Stop(); };
     }
-    private static bool IsHttp(string category) => category is "Riot" or "LCU" or "CDN" or "Catalogue";
+    private static bool IsHttp(string category) => category is "Riot" or "LCU" or "CDN" or "Catalogue" or "Live" or "Profils externes";
     internal async Task Sample()
     {
         if (sampling || closed || WindowState == WindowState.Minimized) return;
