@@ -1,4 +1,4 @@
-﻿using System.Windows;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Media;
@@ -21,40 +21,51 @@ public partial class ProfileView
         {
             var rank = profile.Ranks.FirstOrDefault(r => r.Queue == queue.Item1);
             var grid = new Grid { Margin = new Thickness(0, 8, 0, 8) };
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(126) });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(70) });
             grid.ColumnDefinitions.Add(new ColumnDefinition());
             if (rank is not null && ranks.GetValueOrDefault(rank.Tier) is { } emblem)
-                grid.Children.Add(new Image { Source = emblem, Width = 112, Height = 112, Margin = new Thickness(0, 0, 14, 0), VerticalAlignment = VerticalAlignment.Center });
+                grid.Children.Add(new Image { Source = emblem, Width = 62, Height = 62, Margin = new Thickness(0, 0, 8, 0), VerticalAlignment = VerticalAlignment.Top });
             var detail = new StackPanel(); Grid.SetColumn(detail, 1); grid.Children.Add(detail);
-            detail.Children.Add(new TextBlock { Text = rank is null ? "Non classé" : $"{TierLabel(rank.Tier)} {rank.Division} {rank.Lp} LP", FontSize = 22, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
-            detail.Children.Add(SeasonText(queue.Item2, 14));
+            detail.Children.Add(new TextBlock { Text = rank is null ? (profile.RanksPending ? "Rang en attente…" : "Non classé") : $"{TierLabel(rank.Tier)} {rank.Division}", FontSize = 18, Foreground = ProfileCharts.RankColor(rank?.Tier ?? ""), FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap });
+            detail.Children.Add(SeasonText(rank is null ? queue.Item2 : $"{rank.Lp} LP · {queue.Item2}", 11));
             bool solo = queue.Item1 == "RANKED_SOLO_5x5";
             var regional = solo && seasonProfile?.Rank is > 0 ? $"{RiotProfileClient.Platforms[profile.Platform].Label} : {seasonProfile.Rank:N0}" : "serveur : —";
             var ranking = SeasonText($"Rang mondial : —  ·  {regional}");
             ranking.ToolTip = solo ? "Position régionale, fournie au niveau du profil sans file distincte. Le rang mondial n’est pas disponible." : "Classement régional Flex distinct et mondial non disponibles.";
-            detail.Children.Add(ranking);
-            detail.Children.Add(SeasonText(solo && seasonProfile is { Rank: > 0, Total: > 0 } source ? $"Top {100.0 * source.Rank / source.Total:F2} %" : "Top : —"));
+            grid.ToolTip = $"{ranking.Text}\n{ranking.ToolTip}\n{seasonProfile?.DateLabel ?? "Classement serveur indisponible"}";
+            if (solo && seasonProfile is { Rank: > 0, Total: > 0 } source)
+                detail.Children.Add(SeasonText($"{regional} · Top {100.0 * source.Rank / source.Total:F2} %", 10));
             if (rank is not null)
             {
-                var score = new TextBlock { Margin = new Thickness(0, 12, 0, 0), TextWrapping = TextWrapping.Wrap };
-                score.Inlines.Add(new Run("Victoires : ") { Foreground = Brushes.LightSteelBlue });
+                var score = new TextBlock { Margin = new Thickness(0, 3, 0, 0), FontSize = 11, TextWrapping = TextWrapping.Wrap };
                 score.Inlines.Add(new Run(rank.Wins.ToString()) { Foreground = new SolidColorBrush(Color.FromRgb(50, 217, 160)) });
-                score.Inlines.Add(new Run("  ·  Défaites : ") { Foreground = Brushes.LightSteelBlue });
+                score.Inlines.Add(new Run(" V · ") { Foreground = Brushes.LightSteelBlue });
                 score.Inlines.Add(new Run(rank.Losses.ToString()) { Foreground = new SolidColorBrush(Color.FromRgb(255, 112, 123)) });
+                score.Inlines.Add(new Run(" D") { Foreground = Brushes.LightSteelBlue });
                 detail.Children.Add(score);
+                detail.Children.Add(SeasonText(rank.Wins + rank.Losses > 0 ? $"{100.0 * rank.Wins / (rank.Wins + rank.Losses):F0} % de victoires" : "Aucune partie classée", 11));
+                var road = ProfileCharts.RankRoad(rank); Grid.SetRow(road, 1); Grid.SetColumnSpan(road, 2); grid.Children.Add(road);
             }
             if (solo)
             {
                 var date = SeasonText(seasonProfile?.DateLabel ?? "Rang serveur en attente ou indisponible", 10);
-                detail.Children.Add(date); RankPanel.Children.Add(grid);
+                RankPanel.Children.Add(grid);
             }
-            else RankPanel.Children.Add(new Expander { Header = "Classement Flex", Content = grid, Foreground = Brushes.LightSteelBlue });
+            else
+            {
+                var flex = new StackPanel { Margin = new Thickness(0, 12, 0, 0) };
+                flex.Children.Add(new Border { Height = 1, Background = new SolidColorBrush(Color.FromRgb(65,65,65)), Margin = new Thickness(0,0,0,10) });
+                flex.Children.Add(SeasonText("Flex", 13, Brushes.White)); flex.Children.Add(grid); RankPanel.Children.Add(flex);
+            }
         }
     }
 
     private void RenderSeason()
     {
         if (remote is not null && profile is { Demo: false }) { RenderRemoteSeason(); return; }
+        WinrateChart.Content = null; AverageKda.Inlines.Clear(); CompactMetrics.Text = ""; RoleChart.Content = null; RolePanel.Visibility = Visibility.Visible;
         MetricsPanel.Children.Clear(); ExtraMetricsPanel.Children.Clear(); RolePanel.Children.Clear(); ChampionsGrid.ItemsSource = null;
         var value = seasonProfile;
         var history = seasonHistory is { } saved && saved.Puuid == profile?.Puuid && saved.Platform == profile.Platform && saved.From == StatisticsFrom ? saved : null;
@@ -70,6 +81,7 @@ public partial class ProfileView
         if (history is not null)
         {
             var stats = ProfileSummary.From(history.Select(mode));
+            RenderSummaryChart(stats);
             SeasonScope.Text = history.Coverage;
             SampleText.Text = $"{stats.Games} parties · {stats.Wins} victoires · {stats.Games - stats.Wins} défaites";
             string Number(double n, string format = "F1") => stats.Games > 0 ? n.ToString(format) : "—";
@@ -100,7 +112,7 @@ public partial class ProfileView
         var roleRows = history?.Select(Mode(RolesMode)).Where(m => QueueCatalog.HasStandardRoles(m.Queue)).ToArray() ?? [];
         foreach (var group in roleRows.GroupBy(m => m.RoleLabel).OrderByDescending(g => g.Count()))
         {
-            var row = new Grid { Margin = new Thickness(0, 8, 0, 8) };
+            var row = new Grid { Margin = new Thickness(0, 4, 0, 4) };
             row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(100) });
             row.ColumnDefinitions.Add(new ColumnDefinition()); row.ColumnDefinitions.Add(new ColumnDefinition());
             var name = new StackPanel { Orientation = Orientation.Horizontal, VerticalAlignment = VerticalAlignment.Center };

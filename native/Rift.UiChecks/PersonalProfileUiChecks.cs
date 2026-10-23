@@ -98,6 +98,14 @@ static class PersonalProfileUiChecks
                 view.Measure(new Size(width, 1000)); view.Arrange(new Rect(0, 0, width, 1000)); view.UpdateLayout();
                 if (Control<ScrollViewer>("ProfileScroll").ExtentWidth > Control<ScrollViewer>("ProfileScroll").ViewportWidth + 1)
                     throw new Exception("Profile horizontally overflows at " + width);
+                var strip = Control<Grid>("OverviewStrip");
+                if (Control<Grid>("ProfileColumns").ActualWidth > 1081)
+                    throw new Exception("Profile must retain reference content width on wide screens");
+                var cards = strip.Children.Cast<FrameworkElement>().ToArray();
+                if (cards.Length != 3 || cards.Any(c => Math.Abs(c.TranslatePoint(new Point(), strip).Y) > 1))
+                    throw new Exception("Summary, champions and roles must share one row");
+                if (Control<ListBox>("MatchesGrid").TranslatePoint(new Point(), view).Y > 680)
+                    throw new Exception("Recent matches pushed below compact overview at " + width);
                 if (output is not null)
                 {
                     Directory.CreateDirectory(output);

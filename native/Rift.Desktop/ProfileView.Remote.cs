@@ -10,6 +10,23 @@ namespace Rift.Desktop;
 
 public partial class ProfileView
 {
+    private void ShowPendingProfile(string id, string platform)
+    {
+        profile = new(id, platform, 0, [], [], DateTimeOffset.UtcNow, false, 10) { RanksPending = true, HistoryPending = true };
+        UpdateQueueFilters(); Render();
+        ProfileBody.Visibility = Visibility.Visible; LoadingPanel.Visibility = Visibility.Collapsed; LoadingBar.IsIndeterminate = false;
+    }
+    private void RenderPendingBlocks(string message = "Chargement des parties…")
+    {
+        bool pending = profile is { HistoryPending: true, Matches.Count: 0 };
+        HistoryLoadingText.Visibility = profile?.HistoryPending == true ? Visibility.Visible : Visibility.Collapsed;
+        HistoryLoadingText.Text = profile?.Matches.Count > 0 ? $"{profile.Matches.Count} parties reçues · collecte en cours…" : message;
+        ChampionsScope.Visibility = RolesScope.Visibility = pending ? Visibility.Visible : Visibility.Collapsed;
+        if (!pending) return;
+        SampleText.Text = message; CompactMetrics.Text = "Statistiques en attente";
+        ChampionsScope.Text = RolesScope.Text = message;
+        WinrateChart.Content = null; RoleChart.Content = null;
+    }
     private RiftServerClient? remote;
     private CancellationTokenSource? remoteCancellation;
     private Task remoteLoading = Task.CompletedTask;
@@ -52,9 +69,9 @@ public partial class ProfileView
         SyncStats.Visibility = CancelStats.Visibility = Visibility.Collapsed;
         StatisticsSettings.Header = "Période des statistiques";
         StatisticsSettings.Visibility = Visibility.Collapsed;
-        SummaryHeading.Text = "Bilan des parties affichées";
-        RolesHeading.Text = "Rôles joués · échantillon";
-        ChampionsHeading.Text = "Champions joués · échantillon";
+        SummaryHeading.Text = "Bilan";
+        RolesHeading.Text = "Rôles";
+        ChampionsHeading.Text = "Champions";
         foreach (var box in new[] { SummaryMode, RolesMode, ChampionsMode }) box.SelectedValue = 0;
         StatsProgress.Text = "Mise à jour automatique par le serveur.";
         remote.Changed += () => Interlocked.Exchange(ref remoteDirty, 1);
@@ -100,7 +117,7 @@ public partial class ProfileView
                                 token.ThrowIfCancellationRequested();
                                 // Keep an expanded history; reuse its match rows and image cache.
                                 var merged = latest.Matches.Concat(profile.Matches).DistinctBy(m => m.Id).OrderByDescending(m => m.PlayedAt)
-                                    .Take(Math.Max(20, profile.Matches.Count)).ToArray();
+                                    .Take(Math.Max(10, profile.Matches.Count)).ToArray();
                                 profile = latest with { Matches = merged, NextStart = merged.Length, HasMore = latest.HasMore || profile.HasMore };
                                 UpdateQueueFilters(); Render();
                                 MoreButton.Visibility = profile.HasMore ? Visibility.Visible : Visibility.Collapsed;
@@ -108,6 +125,7 @@ public partial class ProfileView
                                 version = newest; Render();
                             }
                             token.ThrowIfCancellationRequested();
+                            await LoadSidebarSeason(selected, newest, token);
                             RenderRemoteSeason();
                             StatsProgress.Text = "Mise à jour automatique par le serveur.";
                         }
@@ -127,12 +145,13 @@ public partial class ProfileView
     private void RenderRemoteSeason()
     {
         MetricsPanel.Children.Clear(); ExtraMetricsPanel.Children.Clear(); RolePanel.Children.Clear(); ChampionsGrid.ItemsSource = null;
-        StatsSnapshot? Selected(ComboBox box)
+        StatsSnapshot? Selected(ComboBox box, bool recent = false)
         {
             if (profile is null) return null;
             var mode = box.SelectedValue is int id ? id : 0;
             var visibleQueue = QueueBox.SelectedValue is int q ? q : 0;
-            var matches = profile.Matches.Where(m => (visibleQueue == 0 || m.Queue == visibleQueue) &&
+            var source = recent ? profile.Matches.OrderByDescending(m => m.PlayedAt).Take(20) : profile.Matches;
+            var matches = source.Where(m => (visibleQueue == 0 || m.Queue == visibleQueue) &&
                 (mode == 0 || mode == -1 && m.Queue is 420 or 440 || m.Queue == mode) && !m.Remake && m.Seconds > 0).DistinctBy(m => m.Id).ToArray();
             return new(profile.Platform, profile.Puuid, DateTimeOffset.MinValue, DateTimeOffset.UtcNow, mode, ProfileSummary.From(matches),
                 matches.GroupBy(m => m.ChampionId).OrderByDescending(g => g.Count()).Select(g => new ChampionStats(g.Key, g.First().Champion, ProfileSummary.From(g.ToArray()))).ToArray(),
@@ -142,10 +161,11 @@ public partial class ProfileView
         static string Coverage(StatsSnapshot? value) => value is null ? "Aucune partie chargée" :
             $"Échantillon : {value.Summary.Games} parties affichées du filtre · hors remakes · pas un bilan de saison";
         var summary = Selected(SummaryMode);
-        SeasonScope.Text = Coverage(summary); SampleText.Text = summary is null ? "" : $"{summary.Summary.Games} parties · {summary.Summary.Wins} victoires · {summary.Summary.Games - summary.Summary.Wins} défaites";
+        SeasonScope.Text = Coverage(summary); SampleText.Text = summary is null ? "" : $"{summary.Summary.Games} parties\n{summary.Summary.Wins} V · {summary.Summary.Games - summary.Summary.Wins} D";
         if (summary is not null)
         {
             var s = summary.Summary;
+            RenderSummaryChart(s);
             void Metric(Panel panel, string label, double? number, string format = "F1", string suffix = "")
             {
                 var cell = new StackPanel { Margin = new Thickness(0, 8, 10, 10) };
@@ -160,9 +180,11 @@ public partial class ProfileView
             Metric(ExtraMetricsPanel, "Balises posées", s.WardsPlaced); Metric(ExtraMetricsPanel, "Balises détruites", s.WardsKilled); Metric(ExtraMetricsPanel, "Balises contrôle", s.ControlWards);
         }
         var roles = Selected(RolesMode); RolesScope.Text = Coverage(roles);
+        RolePanel.Visibility = Visibility.Collapsed;
+        RoleChart.Content = ProfileCharts.RoleBars((roles?.Roles ?? []).Select(r => (r.Role, r.Summary.Games, r.Summary.Wins)));
         foreach (var role in roles?.Roles ?? [])
         {
-            var row = new Grid { Margin = new Thickness(0, 8, 0, 8) };
+            var row = new Grid { Margin = new Thickness(0, 4, 0, 4) };
             row.ColumnDefinitions.Add(new() { Width = new GridLength(100) }); row.ColumnDefinitions.Add(new()); row.ColumnDefinitions.Add(new());
             var name = new StackPanel { Orientation = Orientation.Horizontal };
             name.Children.Add(ProfileIcons.Create(role.Role, Roles.Labels.GetValueOrDefault(role.Role, "Inconnu"), 24));
@@ -176,11 +198,13 @@ public partial class ProfileView
             Bar(1, 100.0 * role.Summary.Games / Math.Max(1, roles!.Roles.Sum(r => r.Summary.Games)), $"{role.Summary.Games} parties", Brushes.DeepSkyBlue);
             Bar(2, role.Summary.WinRate, $"{role.Summary.WinRate:F1} % V", Brushes.Turquoise); RolePanel.Children.Add(row);
         }
-        var champions = Selected(ChampionsMode); ChampionsScope.Text = Coverage(champions);
-        ChampionsGrid.ItemsSource = champions?.Champions.Select(c => new
+        var champions = Selected(ChampionsMode, true); ChampionsScope.Text = "Top 3 des 20 dernières parties chargées, filtrées · pas un bilan de saison";
+        ChampionsGrid.ItemsSource = champions?.Champions.OrderByDescending(c => c.Summary.Games).ThenBy(c => c.ChampionId).Take(3).Select(c => new
         {
             ChampionVisual = Visual(c.ChampionId, c.Champion, true), Games = c.Summary.Games, WinRate = $"{c.Summary.WinRate:F0} %", Kda = $"{c.Summary.Kda:F2}",
             SeasonDetail = $"{c.Summary.Kills:F1} / {c.Summary.Deaths:F1} / {c.Summary.Assists:F1} · {c.Summary.CsPerMinute:F1} CS/min"
         }).ToArray();
+        RenderSidebarSeason();
+        RenderPendingBlocks();
     }
 }

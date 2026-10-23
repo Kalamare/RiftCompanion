@@ -1,8 +1,22 @@
 # Rift Companion
 
+**v41 : dix matchs par défaut**, collecte récente et pages de consultation limitées à dix ; statistiques de saison sur les données déjà stockées.
+
+**v40 : chargement progressif des profils**, identité publiée avant les rangs et matchs, états de chargement par bloc et refus de clé Riot explicite. Voir `docs/REPRISE.md`.
+
+**v39 : modes communs, top 3 récent et liste de saison serveur**, Flex visible, frise colorée par palier et popup de runes limitée à sa fenêtre active. La liste de saison lit les agrégats existants, sans lancer de rattrapage Riot ; couverture partielle indiquée.
+
+**v38 : disposition compacte mesurée sur DeepLoL**, trois cartes alignées au-dessus de l’historique, largeur centrale fixe maximale, en-tête et classement allégés. Cette passe ne modifie pas les données.
+
+**v37 : graphiques de profil** — anneau de winrate, barres verticales victoires/défaites par rôle, route des divisions Solo/Flex et moyennes K/D/A colorées. [Plan pour le graphique LP et les prochaines fonctions](docs/PROFILE-ROADMAP.md).
+
+**v36 : profil compact inspiré de DeepLoL** : classement à gauche, bilan horizontal, champions et rôles côte à côte, historique dans la colonne principale. Filtres et détails existants conservés ; aucun appel réseau ajouté pour la présentation.
+
+**v35 : lancement serveur par défaut**, port lu depuis la configuration locale, section de clé Riot retirée. La clé Riot se configure sur le backend uniquement. Voir [les consignes actuelles](docs/REPRISE.md). Les indications historiques de mode local ci-dessous ne décrivent plus le lanceur par défaut.
+
 Application Windows en **C# / .NET 10 LTS, WPF et SQLite**. Le profil individuel et sa fluidité sont prioritaires ; la draft reste secondaire.
 
-**v34 : mode client/serveur privé, collecte limitée aux 20 dernières parties.** API ASP.NET Core, worker Quartz, PostgreSQL et Docker Compose, matchs mutualisés et statistiques sur les parties affichées. Aucun import automatique de saison. [Reprise complète sur un autre PC, backend réel sur 5081](docs/REPRISE.md). Le lanceur `Lancer-Serveur-Local.cmd` cible 5080 ; pour 5081, suivre la fiche de reprise. Le mode local historique reste disponible sans `RIFT_SERVER_URL`.
+**v34 : mode client/serveur privé, collecte limitée aux 20 dernières parties.** API ASP.NET Core, worker Quartz, PostgreSQL et Docker Compose, matchs mutualisés et statistiques sur les parties affichées. Aucun import automatique de saison. [Reprise complète sur un autre PC, backend réel sur 5081](docs/REPRISE.md). Les deux lanceurs lisent le port configuré dans `server/.env` (5081 sur cette installation).
 
 ## Reprendre sur un autre PC
 
@@ -16,9 +30,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File native/Build.ps1 -Check
 .\Lancer-Natif.cmd
 ```
 
-La compilation restaure les dépendances NuGet et produit `artifacts/native-profile-v34`. Les SDK locaux, les exécutables et les caches ne sont pas dans Git. Un accès Internet est nécessaire pour la première restauration.
+La compilation restaure les dépendances NuGet et produit `artifacts/native-profile-v41`. Les SDK locaux, les exécutables et les caches ne sont pas dans Git. Un accès Internet est nécessaire pour la première restauration.
 
-3. Dans l'application, renseigner sa clé Riot dans « Connexion aux données Riot ». Elle est chiffrée pour le compte Windows courant : il faut la saisir à nouveau sur le second PC. Ouvrir le client LoL pour détecter son compte, ou rechercher un profil. Configurer le dossier de LoL dans « Connexion et stockage » si nécessaire.
+3. Configurer et démarrer le backend Docker selon `docs/REPRISE.md`, avec la clé Riot côté serveur et la clé d’accès privée du client. Ouvrir le client LoL pour détecter son compte, ou rechercher un profil.
 4. Si le dépôt existe déjà sur le second PC, depuis sa racine :
 
 ```powershell
@@ -27,7 +41,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File native/Build.ps1 -Check
 .\Lancer-Natif.cmd
 ```
 
-État de reprise : **native-profile-v34** ; vérifications métier/WPF et tests PostgreSQL/API/SignalR. Lire [la fiche de reprise](docs/REPRISE.md) avant de continuer.
+État de reprise : **native-profile-v35** ; vérifications métier/WPF et tests PostgreSQL/API/SignalR. Lire [la fiche de reprise](docs/REPRISE.md) avant de continuer.
 
 ## Fonctionnalités du profil
 

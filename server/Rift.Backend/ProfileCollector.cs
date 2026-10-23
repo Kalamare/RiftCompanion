@@ -19,7 +19,14 @@ public sealed class ProfileCollector(RiftStore store, IRiotSource riot, ILogger<
             if (job.Puuid is null || job.Kind == "recent" && job.Cursor == 0 &&
                 ((await store.Player(job.Platform, job.Puuid, token))?.RanksUpdatedAt ?? DateTimeOffset.MinValue) < DateTimeOffset.UtcNow.AddMinutes(-5))
             {
-                var identity = await riot.Identity(job.Platform, job.RiotId, token);
+                async Task Publish(RiotIdentity partial)
+                {
+                    if (job.Puuid is not null && job.Puuid != partial.Puuid) throw new SourceFailure("identity_changed", TimeSpan.FromHours(6));
+                    await store.SetIdentity(job, partial, token);
+                }
+                var identity = riot is RiotSource progressive
+                    ? await progressive.IdentityProgressively(job.Platform, job.RiotId, Publish, token)
+                    : await riot.Identity(job.Platform, job.RiotId, token);
                 if (job.Puuid is not null && job.Puuid != identity.Puuid) throw new SourceFailure("identity_changed", TimeSpan.FromHours(6));
                 await store.SetIdentity(job, identity, token); job = job with { Puuid = identity.Puuid };
             }

@@ -10,7 +10,7 @@ public sealed record HistoryCoverage(DateTimeOffset? From, DateTimeOffset? Until
     int MissingDetails, string Status);
 public sealed record PlayerCard(string Platform, string Puuid, string RiotId, int? Level, int? ProfileIconId,
     RankEntry[] Ranks, DateTimeOffset? RanksUpdatedAt, DateTimeOffset LastSeen, long Version, HistoryCoverage Coverage);
-public sealed record LookupStatus(Guid Id, string Status, string? Error, PlayerCard? Player);
+public sealed record LookupStatus(Guid Id, string Status, string? Error, PlayerCard? Player, DateTimeOffset? RetryAt = null);
 public sealed record ChampionStats(int ChampionId, string Champion, ProfileSummary Summary);
 public sealed record RoleStats(string Role, ProfileSummary Summary);
 public sealed record StatsSnapshot(string Platform, string Puuid, DateTimeOffset From, DateTimeOffset Until,

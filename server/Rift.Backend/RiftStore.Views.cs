@@ -21,9 +21,10 @@ public sealed partial class RiftStore
         await using var reader = await command.ExecuteReaderAsync(token); var rows = new List<ProfileMatch>();
         while (await reader.ReadAsync(token)) rows.Add(JsonSerializer.Deserialize<MatchDetails>(reader.GetString(0))!.Participants.Single(p => p.Puuid == puuid).Stats);
         return new(player.RiotId, platform, player.Level ?? 0, player.Ranks, rows.Take(count).ToArray(), DateTimeOffset.UtcNow, false, count,
-            !HistoryBackfillEnabled ? "Collecte limitée aux 20 dernières parties · statistiques sur les parties affichées." :
+            !HistoryBackfillEnabled ? "Collecte limitée aux 10 dernières parties · statistiques sur les parties affichées." :
             player.Coverage.AccessibleHistoryScanned ? "Historique accessible parcouru par le serveur." : "Historique partiel · mise à jour serveur en cours.")
-        { Puuid = puuid, ProfileIconId = player.ProfileIconId, NextStart = start + Math.Min(rows.Count, count), HasMore = rows.Count > count, HistoryEndTime = end };
+        { Puuid = puuid, ProfileIconId = player.ProfileIconId, NextStart = start + Math.Min(rows.Count, count), HasMore = rows.Count > count, HistoryEndTime = end,
+            RanksPending = player.RanksUpdatedAt is null, HistoryPending = player.Coverage.Until is null && player.Coverage.Status != "ready" };
     }
     public async Task<MatchDetails?> Details(string platform, string id, CancellationToken token)
     {

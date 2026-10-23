@@ -58,14 +58,16 @@ public sealed partial class RiftStore(NpgsqlDataSource source, BackendOptions? o
     public async Task<LookupStatus?> LookupState(Guid id, CancellationToken token)
     {
         await using var connection = await source.OpenConnectionAsync(token);
-        string platform, state; string? puuid, error;
-        await using (var command = Command(connection, "SELECT platform,puuid,state,error FROM profile_jobs WHERE id=$1", id))
+        string platform, state; string? puuid, error; DateTimeOffset retryAt;
+        await using (var command = Command(connection, "SELECT platform,puuid,state,error,due_at FROM profile_jobs WHERE id=$1", id))
         await using (var reader = await command.ExecuteReaderAsync(token))
         {
             if (!await reader.ReadAsync(token)) return null;
             platform = reader.GetString(0); puuid = reader.IsDBNull(1) ? null : reader.GetString(1); state = reader.GetString(2); error = reader.IsDBNull(3) ? null : reader.GetString(3);
+            retryAt = reader.GetFieldValue<DateTimeOffset>(4);
         }
-        return new(id, state, error, puuid is null ? null : await Player(platform, puuid, token));
+        if (puuid is null && await AccessDeniedDelay(token) > TimeSpan.Zero) { state = "paused"; error = "riot_access_denied"; }
+        return new(id, state, error, puuid is null ? null : await Player(platform, puuid, token), state == "paused" ? retryAt : null);
     }
     public async Task<PlayerCard?> Player(string platform, string puuid, CancellationToken token)
     {

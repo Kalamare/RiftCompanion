@@ -24,6 +24,8 @@ public sealed class RiotSource(BackendOptions options, RiftStore store) : IRiotS
     {
         if (!ProfileInput.Regions.ContainsKey(host) && !ProfileInput.Regions.Values.Contains(host)) throw new ArgumentException("Route invalide.");
         if (string.IsNullOrWhiteSpace(options.RiotKey)) throw new SourceFailure("riot_key_missing", TimeSpan.FromMinutes(15));
+        var denied = await store.AccessDeniedDelay(token);
+        if (denied > TimeSpan.Zero) throw new SourceFailure("riot_access_denied", denied);
         var delay = await store.ReserveRequest(host, token);
         // Release the collector instead of sleeping while other profiles await their identity.
         if (delay > TimeSpan.Zero) throw new SourceFailure("riot_quota_wait", delay + TimeSpan.FromMilliseconds(50));
@@ -48,14 +50,18 @@ public sealed class RiotSource(BackendOptions options, RiftStore store) : IRiotS
         if (!response.IsSuccessStatusCode) throw new SourceFailure("riot_unavailable", TimeSpan.FromMinutes(2));
         using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync(token)); return document.RootElement.Clone();
     }
-    public async Task<RiotIdentity> Identity(string platform, string riotId, CancellationToken token)
+    public Task<RiotIdentity> Identity(string platform, string riotId, CancellationToken token) => IdentityProgressively(platform, riotId, _ => Task.CompletedTask, token);
+    public async Task<RiotIdentity> IdentityProgressively(string platform, string riotId, Func<RiotIdentity, Task> publish, CancellationToken token)
     {
         var input = ProfileInput.Normalize(new(platform, riotId)); var split = input.RiotId.LastIndexOf('#');
         var account = await Get(ProfileInput.Regions[platform], $"/riot/account/v1/accounts/by-riot-id/{Uri.EscapeDataString(input.RiotId[..split])}/{Uri.EscapeDataString(input.RiotId[(split + 1)..])}", token)
             ?? throw new SourceFailure("player_not_found", TimeSpan.FromHours(6));
         var puuid = DraftParser.Text(account, "puuid"); ProfileInput.Player(platform, puuid);
+        var partial = new RiotIdentity(puuid, DraftParser.Text(account, "gameName") + "#" + DraftParser.Text(account, "tagLine"), 0, null, [], false);
+        await publish(partial);
         var summoner = await Get(platform, $"/lol/summoner/v4/summoners/by-puuid/{Uri.EscapeDataString(puuid)}", token)
             ?? throw new SourceFailure("player_not_found", TimeSpan.FromHours(6));
+        await publish(partial with { Level = DraftParser.Integer(summoner, "summonerLevel"), Icon = DraftParser.Integer(summoner, "profileIconId") });
         var rawRanks = await Get(platform, $"/lol/league/v4/entries/by-puuid/{Uri.EscapeDataString(puuid)}", token);
         if (rawRanks is not { ValueKind: JsonValueKind.Array }) throw new SourceFailure("ranks_unavailable", TimeSpan.FromMinutes(5));
         var ranks = rawRanks.Value.EnumerateArray().Select(e => new RankEntry(DraftParser.Text(e, "queueType"), DraftParser.Text(e, "tier"), DraftParser.Text(e, "rank"),
@@ -64,7 +70,7 @@ public sealed class RiotSource(BackendOptions options, RiftStore store) : IRiotS
     }
     public async Task<string[]> MatchIds(ProfileJob job, CancellationToken token)
     {
-        var value = await Get(ProfileInput.Regions[job.Platform], $"/lol/match/v5/matches/by-puuid/{Uri.EscapeDataString(job.Puuid!)}/ids?start={job.Cursor}&count={RiftStore.HistoryPageSize}&startTime={job.From.ToUnixTimeSeconds()}&endTime={job.Until.ToUnixTimeSeconds()}", token);
+        var value = await Get(ProfileInput.Regions[job.Platform], $"/lol/match/v5/matches/by-puuid/{Uri.EscapeDataString(job.Puuid!)}/ids?start={job.Cursor}&count={(job.Kind == "recent" && !store.HistoryBackfillEnabled ? RiftStore.RecentPageSize : RiftStore.HistoryPageSize)}&startTime={job.From.ToUnixTimeSeconds()}&endTime={job.Until.ToUnixTimeSeconds()}", token);
         if (value is not { ValueKind: JsonValueKind.Array } || value.Value.GetArrayLength() > 100) throw new SourceFailure("history_unavailable", TimeSpan.FromMinutes(5));
         return value.Value.EnumerateArray().Select(x => x.GetString() ?? throw new JsonException()).ToArray();
     }

@@ -5,6 +5,17 @@ using Rift.Core;
 
 namespace Rift.Client;
 
+public sealed class ProfileCollectionException(string code) : HttpRequestException(code)
+{
+    public string UserMessage => Message switch
+    {
+        "riot_access_denied" => "Riot refuse la clé du serveur (401/403). L’administrateur doit vérifier ou renouveler la clé Riot ; relancer cette recherche ne débloquera pas la collecte.",
+        "riot_key_missing" => "La clé Riot n’est pas configurée sur le serveur.",
+        "player_not_found" => "Compte introuvable auprès de Riot. Vérifie le Riot ID et le serveur.",
+        _ => "Collecte momentanément indisponible. Les données déjà reçues sont conservées."
+    };
+}
+
 public sealed class ServerWorkLimitException(TimeSpan wait) : HttpRequestException("Budget de nouvelles recherches atteint.")
 {
     public TimeSpan Wait { get; } = wait;
@@ -49,7 +60,7 @@ public sealed class RiftServerClient : IAsyncDisposable
     private static string PlayerPath(string platform, string puuid) => $"v1/players/{Segment(platform)}/{Segment(puuid)}";
     private async Task<T> Get<T>(string path, CancellationToken token) =>
         await http.GetFromJsonAsync<T>(path, token) ?? throw new HttpRequestException("Réponse serveur vide.");
-    public async Task<PlayerProfile> Load(string riotId, string platform, CancellationToken token, PlayerProfile? previous = null, string? expectedPuuid = null)
+    public async Task<PlayerProfile> Load(string riotId, string platform, CancellationToken token, PlayerProfile? previous = null, string? expectedPuuid = null, IProgress<LookupStatus>? progress = null)
     {
         string puuid;
         if (previous is not null) puuid = previous.Puuid;
@@ -61,12 +72,13 @@ public sealed class RiftServerClient : IAsyncDisposable
             response.EnsureSuccessStatusCode();
             var receipt = (await response.Content.ReadFromJsonAsync<LookupReceipt>(token))!;
             PlayerCard? player = null;
-            for (int i = 0; i < 45; i++)
+            while (true)
             {
                 var status = await Get<LookupStatus>("v1/lookups/" + receipt.Id, token);
+                progress?.Report(status);
                 if (status.Player is not null) { player = status.Player; break; }
-                if (status.Status == "paused" && status.Error != "riot_quota_wait") throw new HttpRequestException("Collecte serveur différée : " + status.Error);
-                await Task.Delay(TimeSpan.FromSeconds(2), token);
+                if (status.Status == "paused" && status.Error is not ("riot_quota_wait" or "riot_rate_limited")) throw new ProfileCollectionException(status.Error ?? "source_unavailable");
+                await Task.Delay(TimeSpan.FromSeconds(status.Status == "paused" ? 5 : 2), token);
             }
             puuid = player?.Puuid ?? throw new HttpRequestException("Le serveur prépare encore ce profil. Réessaie dans quelques instants.");
         }
@@ -75,7 +87,7 @@ public sealed class RiftServerClient : IAsyncDisposable
         return previous is null ? result : result with { Matches = previous.Matches.Concat(result.Matches).DistinctBy(m => m.Id).ToArray() };
     }
     public Task<PlayerProfile> Profile(string platform, string puuid, int start, long end, CancellationToken token) =>
-        Get<PlayerProfile>(PlayerPath(platform, puuid) + $"/profile?start={start}&count=20&end={end}", token);
+        Get<PlayerProfile>(PlayerPath(platform, puuid) + $"/profile?start={start}&count=10&end={end}", token);
     public Task<PlayerCard> Card(string platform, string puuid, CancellationToken token) => Get<PlayerCard>(PlayerPath(platform, puuid), token);
     public async Task<RefreshStatus> Refresh(string platform, string puuid, bool request, CancellationToken token)
     {

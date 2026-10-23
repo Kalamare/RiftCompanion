@@ -13,18 +13,48 @@ public partial class MatchDetailsView : UserControl
     {
         InitializeComponent();
         runeLeaveTimer.Tick += (_, _) => { if (RuneScroll.IsMouseCaptureWithin) return; runeLeaveTimer.Stop(); if (RunesPopup.PlacementTarget?.IsMouseOver != true && !RunesPopup.Child.IsMouseOver) RunesPopup.IsOpen = false; };
-        Loaded += (_, _) => { runeOwner = System.Windows.Window.GetWindow(this); if (runeOwner is not null) runeOwner.Deactivated += OnOwnerDeactivated; };
-        Unloaded += (_, _) => { runeLeaveTimer.Stop(); RunesPopup.IsOpen = false; if (runeOwner is not null) runeOwner.Deactivated -= OnOwnerDeactivated; runeOwner = null; };
+        Loaded += (_, _) => AttachRuneOwner();
+        Unloaded += (_, _) => { CloseRunes(); DetachRuneOwner(); };
+        IsVisibleChanged += (_, _) => { if (!IsVisible) CloseRunes(); };
+        AddHandler(ScrollViewer.ScrollChangedEvent, new ScrollChangedEventHandler((_, e) =>
+        {
+            if (e.OriginalSource is System.Windows.DependencyObject source && source != RuneScroll && !RuneScroll.IsAncestorOf(source)) CloseRunes();
+        }));
         PreviewMouseDown += (_, _) => { if (RunesPopup.IsOpen && RunesPopup.PlacementTarget?.IsMouseOver != true && !RunesPopup.Child.IsMouseOver) RunesPopup.IsOpen = false; };
     }
-    private void OnOwnerDeactivated(object? sender, EventArgs e) => RunesPopup.IsOpen = false;
+    private void AttachRuneOwner()
+    {
+        DetachRuneOwner(); runeOwner = System.Windows.Window.GetWindow(this);
+        if (runeOwner is null) return;
+        runeOwner.Deactivated += OnOwnerDeactivated; runeOwner.LocationChanged += OnOwnerDeactivated;
+        runeOwner.StateChanged += OnOwnerDeactivated; runeOwner.Closed += OnOwnerDeactivated;
+    }
+    private void DetachRuneOwner()
+    {
+        if (runeOwner is null) return;
+        runeOwner.Deactivated -= OnOwnerDeactivated; runeOwner.LocationChanged -= OnOwnerDeactivated;
+        runeOwner.StateChanged -= OnOwnerDeactivated; runeOwner.Closed -= OnOwnerDeactivated;
+        runeOwner = null;
+    }
+    private void CloseRunes()
+    {
+        runeLeaveTimer.Stop(); RunesPopup.IsOpen = false;
+        if (RunesPopup.PlacementTarget is System.Windows.FrameworkElement target) target.Unloaded -= OnRuneTargetUnloaded;
+        RunesPopup.PlacementTarget = null; RunesPopup.DataContext = null;
+    }
+    private void OnRuneTargetUnloaded(object sender, System.Windows.RoutedEventArgs e) => CloseRunes();
+    private void OnOwnerDeactivated(object? sender, EventArgs e) => CloseRunes();
     private void OnRunesLeave(object sender, System.Windows.Input.MouseEventArgs e) { runeLeaveTimer.Stop(); runeLeaveTimer.Start(); }
     private void OnRunePopupEnter(object sender, System.Windows.Input.MouseEventArgs e) => runeLeaveTimer.Stop();
     private void OpenRunes(object sender)
     {
-        if (sender is not Button { DataContext: DetailPlayerRow row } button) return;
+        if (sender is not Button { DataContext: DetailPlayerRow row } button || !IsLoaded || !IsVisible ||
+            runeOwner is not { IsActive: true, IsVisible: true } || !button.IsLoaded || !button.IsVisible ||
+            System.Windows.PresentationSource.FromVisual(button) is null) return;
+        if (RunesPopup.PlacementTarget != button) CloseRunes();
         runeLeaveTimer.Stop();
         RuneScroll.MaxHeight = Math.Min(540, Math.Max(180, System.Windows.SystemParameters.WorkArea.Height * .65 - 80));
+        button.Unloaded -= OnRuneTargetUnloaded; button.Unloaded += OnRuneTargetUnloaded;
         RunesPopup.DataContext = row; RunesPopup.PlacementTarget = button; RunesPopup.IsOpen = true;
     }
     private void OnRunes(object sender, System.Windows.RoutedEventArgs e) => OpenRunes(sender);

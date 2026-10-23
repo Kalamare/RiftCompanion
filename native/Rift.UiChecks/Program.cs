@@ -29,6 +29,7 @@ static class Program
     }
     static async Task Run()
     {
+        ProfileChartChecks.Run();
         var folder = Path.Combine(Path.GetTempPath(), "RiftUiChecks-" + Guid.NewGuid().ToString("N")); Directory.CreateDirectory(folder);
         try
         {

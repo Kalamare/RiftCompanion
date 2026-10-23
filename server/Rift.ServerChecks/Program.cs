@@ -145,8 +145,22 @@ try
     var sampleCollector = new ProfileCollector(bounded, sampleSource, NullLogger<ProfileCollector>.Instance);
     await Sql("UPDATE profile_jobs SET due_at=now()+interval '1 hour',lease_until=null; UPDATE profile_jobs SET due_at=now()-interval '1 minute',state='queued' WHERE puuid='fixture-player-0'");
     await sampleCollector.Tick(token);
-    Check(sampleSource.Calls == 20 && await Count("matches") == 24, "Sample collector fetches at most twenty details without importing the season");
+    Check(sampleSource.Calls == 10 && await Count("matches") == 14, "Sample collector fetches at most ten details without importing the season");
     Check(await bounded.Claim(token) is null, "Full recent page does not enqueue the rest of the season or resume old history");
+    var partialId = await store.Lookup(new("euw1", "Partial#TEST"), from, token, "partial-check");
+    var partialJob = new ProfileJob(partialId, "euw1", "Partial#TEST", null, 0, from, until);
+    await store.SetIdentity(partialJob, new("partial-player", "Partial#TEST", 0, null, [], false), token);
+    var partialCard = (await store.LookupState(partialId, token))!.Player!;
+    Check(partialCard.Puuid == "partial-player" && partialCard.RanksUpdatedAt is null && (await store.Profile("euw1", "partial-player", 0, 20, 0, token))!.RanksPending,
+        "Account identity is readable before ranks and match details arrive");
+    await store.SetIdentity(partialJob, new("partial-player", "Partial#TEST", 100, 1, [new("RANKED_SOLO_5x5", "DIAMOND", "IV", 10, 2, 3)]), token);
+    await store.SetIdentity(partialJob, new("partial-player", "Partial#TEST", 0, null, [], false), token);
+    partialCard = (await store.Player("euw1", "partial-player", token))!;
+    Check(partialCard.Level == 100 && partialCard.Ranks.Length == 1 && partialCard.RanksUpdatedAt is not null,
+        "Partial identity retry preserves previously known rank and level");
+    await store.Fail(partialJob, "riot_access_denied", TimeSpan.FromMinutes(15), token);
+    Check(await store.AccessDeniedDelay(token) > TimeSpan.FromMinutes(14) && (await store.LookupState(partialId, token))!.RetryAt is not null,
+        "Authentication denial retains its reason and retry time");
     await Sql("DELETE FROM schema_version; INSERT INTO schema_version VALUES(99)");
     bool refusedFuture = false;
     try { await store.Initialize(token); } catch (InvalidOperationException) { refusedFuture = true; }
@@ -167,7 +181,7 @@ sealed class SampleSource : IRiotSource
     public Task<string[]> MatchIds(ProfileJob job, CancellationToken token)
     {
         if (job.Cursor != 0 || job.From != DateTimeOffset.UnixEpoch) throw new Exception("Sample did not query latest matches independently of season date");
-        return Task.FromResult(Enumerable.Range(0,20).Select(i => "EUW1_9100000000" + i.ToString("00")).ToArray());
+        return Task.FromResult(Enumerable.Range(0,RiftStore.RecentPageSize).Select(i => "EUW1_9100000000" + i.ToString("00")).ToArray());
     }
     public Task<MatchDetails?> Match(string region, string id, CancellationToken token)
     { Calls++; return Task.FromResult<MatchDetails?>(FixtureRiotSource.Game(id)); }

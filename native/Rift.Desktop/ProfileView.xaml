@@ -1,58 +1,461 @@
-<UserControl x:Class="Rift.Desktop.ProfileView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Foreground="#E6EDF3" Background="#101820">
- <UserControl.Resources>
-  <DataTemplate x:Key="ChampionCell"><StackPanel Orientation="Horizontal" VerticalAlignment="Center"><Border Width="30" Height="30" Background="#30424E" Margin="0,0,8,0"><Grid><TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center"/><Image Source="{Binding ChampionVisual.Icon}" ToolTip="{Binding ChampionVisual.Name}"/></Grid></Border><TextBlock Text="{Binding ChampionVisual.Name}" VerticalAlignment="Center"/></StackPanel></DataTemplate>
-  <DataTemplate x:Key="ItemCell"><ItemsControl ItemsSource="{Binding Items}"><ItemsControl.ItemsPanel><ItemsPanelTemplate><StackPanel Orientation="Horizontal"/></ItemsPanelTemplate></ItemsControl.ItemsPanel><ItemsControl.ItemTemplate><DataTemplate><Border Width="26" Height="26" Margin="1,0" CornerRadius="4" ToolTip="{Binding}" ToolTipService.ShowDuration="60000"><Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#30424E"/><Style.Triggers><DataTrigger Binding="{Binding IsEmpty}" Value="True"><Setter Property="Background" Value="Transparent"/><Setter Property="Opacity" Value="0"/><Setter Property="IsHitTestVisible" Value="False"/></DataTrigger></Style.Triggers></Style></Border.Style><Grid><TextBlock Text="{Binding Fallback}" HorizontalAlignment="Center" VerticalAlignment="Center"/><Image Source="{Binding Icon}"/></Grid></Border></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></DataTemplate>
-  <Style x:Key="Panel" TargetType="Border"><Setter Property="Background" Value="#192630"/><Setter Property="CornerRadius" Value="10"/><Setter Property="Padding" Value="20"/><Setter Property="BorderBrush" Value="#32424E"/><Setter Property="BorderThickness" Value="1"/></Style>
-  <Style TargetType="DataGrid"><Setter Property="AutoGenerateColumns" Value="False"/><Setter Property="IsReadOnly" Value="True"/><Setter Property="CanUserAddRows" Value="False"/><Setter Property="CanUserDeleteRows" Value="False"/><Setter Property="CanUserReorderColumns" Value="False"/><Setter Property="Background" Value="#192630"/><Setter Property="Foreground" Value="#E6EDF3"/><Setter Property="RowBackground" Value="#192630"/><Setter Property="AlternatingRowBackground" Value="#20303B"/><Setter Property="BorderThickness" Value="0"/><Setter Property="HeadersVisibility" Value="Column"/><Setter Property="GridLinesVisibility" Value="None"/><Setter Property="RowHeight" Value="35"/></Style>
-  <Style TargetType="DataGridColumnHeader"><Setter Property="Background" Value="#111D26"/><Setter Property="Foreground" Value="#A7BECF"/><Setter Property="Padding" Value="9"/><Setter Property="BorderThickness" Value="0"/></Style>
-  <Style TargetType="DataGridCell"><Setter Property="Padding" Value="8,4"/><Setter Property="BorderThickness" Value="0"/><Style.Triggers><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="#304A5B"/><Setter Property="Foreground" Value="#E6EDF3"/></Trigger></Style.Triggers></Style>
-
- <BooleanToVisibilityConverter x:Key="BoolVisibility"/>
- <Style x:Key="Heading" TargetType="TextBlock"><Setter Property="FontSize" Value="16"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,14"/></Style>
- </UserControl.Resources>
- <ScrollViewer x:Name="ProfileScroll" RequestBringIntoView="OnProfileBringIntoView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
- <StackPanel Margin="24,20" MaxWidth="1400">
- <DockPanel Margin="0,0,0,16"><Button Content="Diagnostic en direct" DockPanel.Dock="Right" Click="OnDiagnostics" Margin="8,0,0,0"/><ToggleButton x:Name="DebugButton" DockPanel.Dock="Right" Content="Débug" Padding="12,7"/><StackPanel Orientation="Horizontal"><Button x:Name="PersonalButton" Content="Mon profil" Click="OnPersonalProfile" Margin="0,0,8,0"/><Button x:Name="RefreshPersonalButton" Content="Actualiser" Click="OnPersonalProfile" Margin="0,0,8,0"/><Button x:Name="CancelButton" Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolVisibility}}" Content="Annuler" Click="OnCancel" IsEnabled="False"/></StackPanel></DockPanel>
-  <Expander Header="Rechercher un autre joueur" Foreground="#A7BECF" Margin="0,0,0,12">
-  <WrapPanel VerticalAlignment="Center"><StackPanel Margin="0,0,12,0"><TextBlock Text="Riot ID" FontSize="11"/><TextBox x:Name="RiotIdBox" Width="230" Padding="10,7" ToolTip="Pseudo#TAG" AutomationProperties.Name="Riot ID" TextChanged="OnRiotIdChanged" GotKeyboardFocus="OnRiotIdFocus"/>
-<Popup x:Name="SuggestionsPopup" PlacementTarget="{Binding ElementName=RiotIdBox}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"><Border Background="#20303B" BorderBrush="#405A6A" BorderThickness="1" CornerRadius="5" Padding="6" Width="290"><StackPanel><TextBlock Text="Profils consultés récemment" Foreground="#9FB3C1" FontSize="11" Margin="6"/><ListBox x:Name="Suggestions" DisplayMemberPath="Label" Background="#20303B" Foreground="#E6EDF3" BorderThickness="0" SelectionChanged="OnSuggestionSelected" MaxHeight="200"/></StackPanel></Border></Popup></StackPanel><StackPanel Margin="0,0,12,0"><TextBlock Text="Serveur" FontSize="11"/><ComboBox x:Name="ServerBox" DisplayMemberPath="Value" SelectedValuePath="Key" AutomationProperties.Name="Serveur"/></StackPanel><Button x:Name="LoadButton" Content="Charger le profil" Click="OnLoadProfile" Margin="0,16,10,0"/><Button x:Name="DemoButton" Content="Voir un exemple" Click="OnDemo" Margin="0,16,0,0"/></WrapPanel></Expander>
-  <Expander x:Name="RiotConnection" Header="Connexion aux données Riot" Foreground="#A7BECF" Margin="0,12"><StackPanel><TextBlock Text="Clé Riot · enregistrée après un chargement réussi et chiffrée pour ton compte Windows." FontSize="12" Margin="0,8"/><PasswordBox x:Name="ApiKeyBox" MaxLength="256" Width="440" HorizontalAlignment="Left" Padding="8" AutomationProperties.Name="Clé API Riot"/><StackPanel Orientation="Horizontal" Margin="0,8"><Button x:Name="SaveKeyButton" Content="Enregistrer la clé" Click="OnSaveKey" Margin="0,0,8,0"/><Button x:Name="ForgetKeyButton" Content="Oublier la clé" Click="OnForgetKey"/></StackPanel><TextBlock x:Name="KeyStatus" FontSize="12" Foreground="#B8E0DA" TextWrapping="Wrap"/><TextBlock Text="Obtiens une clé sur developer.riotgames.com. Une clé de développement expire après 24 h. Ne la partage pas dans le chat." FontSize="11" Margin="0,8"/></StackPanel></Expander>
-
- <Border x:Name="NoticePanel" Visibility="Collapsed" Background="#30404B" CornerRadius="6" Padding="12" Margin="0,0,0,12"><TextBlock x:Name="UserNotice" TextWrapping="Wrap"/></Border>
- <Border x:Name="DebugPanel" Visibility="{Binding IsChecked, ElementName=DebugButton, Converter={StaticResource BoolVisibility}}" Style="{StaticResource Panel}" Margin="0,0,0,14"><StackPanel><TextBlock Text="Diagnostic du profil" Style="{StaticResource Heading}"/><TextBlock x:Name="PersonalStatus" Text="Détection du compte LoL…" TextWrapping="Wrap"/><TextBlock x:Name="ProfileStatus" TextWrapping="Wrap" Margin="0,6"/><TextBlock x:Name="ScopeText" TextWrapping="Wrap"/><TextBlock x:Name="AssetsText" TextWrapping="Wrap" Margin="0,6"/><TextBlock x:Name="HistoryStatus" TextWrapping="Wrap"/><TextBlock Text="Filtres sur les parties chargées. Remakes exclus des moyennes. Les classements ne dépendent pas de cet échantillon." TextWrapping="Wrap" Margin="0,6,0,0"/></StackPanel></Border>
- <Border x:Name="LoadingPanel" Visibility="Collapsed" Style="{StaticResource Panel}" Margin="0,0,0,14"><StackPanel><TextBlock Text="Chargement du profil…" FontSize="16"/><TextBlock x:Name="LoadingStage" Visibility="{Binding IsChecked, ElementName=DebugButton, Converter={StaticResource BoolVisibility}}" Margin="0,8"/><ProgressBar x:Name="LoadingBar" Height="4" Margin="0,12,0,0" Foreground="#56BDCD" IsIndeterminate="False"/></StackPanel></Border>
- <StackPanel x:Name="ProfileBody" Visibility="Collapsed">
- <DockPanel Margin="0,4,0,22"><StackPanel DockPanel.Dock="Right" VerticalAlignment="Center"><TextBlock Text="Mode de l’historique" FontSize="11" Foreground="#9FB3C1" Margin="0,0,0,5"/><ComboBox x:Name="QueueBox" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnFilter" AutomationProperties.Name="File de jeu" MinWidth="170"/></StackPanel><StackPanel Orientation="Horizontal"><Border Width="76" Height="76" Margin="0,0,16,0" Background="#30424E" CornerRadius="8"><Grid><TextBlock x:Name="PlayerIconFallback" Text="?" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/><Image x:Name="PlayerIcon" Width="72" Height="72" Stretch="Uniform" ToolTip="Icône de profil du joueur"/></Grid></Border><StackPanel VerticalAlignment="Center"><TextBlock x:Name="IdentityText" FontSize="25" FontWeight="SemiBold"/><TextBlock x:Name="LevelText" Foreground="#9FB3C1" Margin="0,6,0,0"/></StackPanel></StackPanel></DockPanel>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="360"/></Grid.ColumnDefinitions>
- <StackPanel>
- <Border Style="{StaticResource Panel}" Margin="0,0,0,16"><StackPanel><TextBlock Text="Cote personnelle" Style="{StaticResource Heading}"/><StackPanel x:Name="RankPanel"/><StackPanel x:Name="RankLinks" Margin="0,10,0,0"/></StackPanel></Border>
- <Border x:Name="OpggPanel" Style="{StaticResource Panel}" Margin="0,0,0,16" Visibility="Collapsed"><StackPanel>
-  <TextBlock x:Name="OpggRank" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
-  <TextBlock x:Name="OpggDate" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,8"/>
-  <Expander Header="Champions de la saison" Foreground="#E6EDF3"><StackPanel>
-   <TextBlock x:Name="OpggScope" Foreground="#9FB3C1" TextWrapping="Wrap" FontSize="11" Margin="0,8"/>
-   <ItemsControl x:Name="OpggChampions"><ItemsControl.ItemTemplate><DataTemplate><Grid Margin="0,5"><Grid.ColumnDefinitions><ColumnDefinition Width="130"/><ColumnDefinition/></Grid.ColumnDefinitions><TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis"/><TextBlock Grid.Column="1" Text="{Binding Summary}" TextWrapping="Wrap" Foreground="#A8D5D0"/></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
-  </StackPanel></Expander>
- </StackPanel></Border>
- <Border Style="{StaticResource Panel}"><StackPanel><TextBlock Text="Parties récentes" Style="{StaticResource Heading}"/>
- <ListBox x:Name="MatchesGrid" MaxHeight="650" Background="Transparent" BorderThickness="0" Foreground="#E6EDF3" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
- <ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0"/><Setter Property="Margin" Value="0,0,0,8"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><ContentPresenter/></ControlTemplate></Setter.Value></Setter></Style></ListBox.ItemContainerStyle>
- <ListBox.ItemTemplate><DataTemplate><Button Click="OnMatchDetails" Padding="0" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch" ToolTip="Ouvrir le détail de la partie" AutomationProperties.Name="{Binding DetailsLabel}"><Button.Template><ControlTemplate TargetType="Button"><Border x:Name="Card" BorderThickness="1" BorderBrush="Transparent" CornerRadius="7"><ContentPresenter/></Border><ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="#658A9B"/></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="#71D3D7"/></Trigger></ControlTemplate.Triggers></ControlTemplate></Button.Template><Border Padding="10" CornerRadius="6" BorderThickness="3,0,0,0"><Border.Style><Style TargetType="Border"><Setter Property="Background" Value="#2C252D"/><Setter Property="BorderBrush" Value="#D87685"/><Style.Triggers><DataTrigger Binding="{Binding Match.Win}" Value="True"><Setter Property="Background" Value="#1E333B"/><Setter Property="BorderBrush" Value="#4FC9AE"/></DataTrigger><DataTrigger Binding="{Binding Match.Remake}" Value="True"><Setter Property="Background" Value="#29333D"/><Setter Property="BorderBrush" Value="#9FB3C1"/></DataTrigger></Style.Triggers></Style></Border.Style>
- <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="90"/><ColumnDefinition Width="200"/></Grid.ColumnDefinitions>
- <StackPanel><StackPanel Orientation="Horizontal"><Image Source="{Binding ChampionVisual.Icon}" Width="38" Height="38" Margin="0,0,8,0"/><StackPanel><TextBlock Text="{Binding Result}" FontWeight="SemiBold"/><TextBlock Text="{Binding ChampionVisual.Name}" FontSize="12" Margin="0,4,0,0"/></StackPanel></StackPanel><TextBlock Text="{Binding QueueLabel}" FontSize="11" Foreground="#9FB3C1" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding QueueLabel}"/></StackPanel>
- <StackPanel Grid.Column="1" VerticalAlignment="Center" ToolTip="{Binding Statistics}" ToolTipService.ShowDuration="60000"><TextBlock FontWeight="SemiBold" FontSize="15"><Run Text="{Binding Match.Kills}" Foreground="#32D6A0"/><Run Text=" / " Foreground="#9FB3C1"/><Run Text="{Binding Match.Deaths}" Foreground="#FF707B"/><Run Text=" / " Foreground="#9FB3C1"/><Run Text="{Binding Match.Assists}" Foreground="#FFB65C"/></TextBlock><TextBlock Text="{Binding Cs, StringFormat={}{0} CS}" Foreground="#9FB3C1" FontSize="11" Margin="0,6"/><TextBlock Text="{Binding Damage, StringFormat={}{0} dégâts}" Foreground="#9FB3C1" FontSize="11"/></StackPanel>
- <StackPanel Grid.Column="2" VerticalAlignment="Center"><ContentControl Content="{Binding}" ContentTemplate="{StaticResource ItemCell}"/><TextBlock Text="{Binding PlayedLabel}" Foreground="#9FB3C1" FontSize="11" HorizontalAlignment="Right" Margin="0,8,0,0"/></StackPanel>
- </Grid></Border></Button></DataTemplate></ListBox.ItemTemplate></ListBox>
- <Button x:Name="MoreButton" Content="Voir plus · 10 parties" Click="OnLoadMore" HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="Collapsed"/>
- </StackPanel></Border></StackPanel>
- <StackPanel Grid.Column="2">
- <Border Style="{StaticResource Panel}" Margin="0,0,0,16"><StackPanel><TextBlock x:Name="SummaryHeading" Text="Bilan de saison" Style="{StaticResource Heading}"/>
-<ComboBox x:Name="SummaryMode" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" Margin="0,0,0,10" AutomationProperties.Name="Mode du bilan"/>
-<Expander x:Name="StatisticsSettings" Header="Synchroniser les statistiques" Foreground="#9FB3C1" Margin="0,0,0,12"><StackPanel Margin="0,8,0,0"><TextBlock Text="Début de la période"/><DatePicker x:Name="StatsFrom" SelectedDateChanged="OnStatsPeriod" Margin="0,6"/><WrapPanel><Button x:Name="SyncStats" Content="Calculer / actualiser" Click="OnSyncStats"/><Button x:Name="CancelStats" Content="Arrêter" Click="OnCancelStats" IsEnabled="False" Margin="6,0,0,0"/></WrapPanel><TextBlock x:Name="StatsProgress" Text="Chargement indépendant de l’historique récent. La première synchronisation peut prendre plusieurs minutes." TextWrapping="Wrap" FontSize="11" Margin="0,8"/></StackPanel></Expander><TextBlock x:Name="SeasonScope" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/><TextBlock x:Name="SampleText" Foreground="#9FB3C1" FontSize="12" Margin="0,0,0,12" ToolTip="Totaux pour le mode sélectionné"/><UniformGrid x:Name="MetricsPanel" Columns="2"/><Expander Header="Plus de statistiques" Foreground="#9FB3C1" Margin="0,12,0,0"><UniformGrid x:Name="ExtraMetricsPanel" Columns="2" Margin="0,10,0,0"/></Expander></StackPanel></Border>
- <Border Style="{StaticResource Panel}" Margin="0,0,0,16"><StackPanel><TextBlock x:Name="RolesHeading" Text="Rôles joués · saison" Style="{StaticResource Heading}"/><ComboBox x:Name="RolesMode" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" Margin="0,0,0,10" AutomationProperties.Name="Mode des rôles"/><TextBlock x:Name="RolesScope" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap"/><StackPanel x:Name="RolePanel"/></StackPanel></Border>
- <Border Style="{StaticResource Panel}"><StackPanel><TextBlock x:Name="ChampionsHeading" Text="Champions joués · saison" Style="{StaticResource Heading}"/><ComboBox x:Name="ChampionsMode" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" Margin="0,0,0,10" AutomationProperties.Name="Mode des champions"/><TextBlock x:Name="ChampionsScope" FontSize="11" Foreground="#9FB3C1" TextWrapping="Wrap" Margin="0,0,0,8"/><ListBox x:Name="ChampionsGrid" MaxHeight="440" BorderThickness="0" Background="Transparent" Foreground="#E6EDF3" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
-<ListBox.ItemContainerStyle><Style TargetType="ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch"/><Setter Property="Padding" Value="0,7"/><Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ListBoxItem"><ContentPresenter/></ControlTemplate></Setter.Value></Setter></Style></ListBox.ItemContainerStyle>
-<ListBox.ItemTemplate><DataTemplate><Grid Margin="0,4"><Grid.RowDefinitions><RowDefinition/><RowDefinition/></Grid.RowDefinitions><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="65"/><ColumnDefinition Width="58"/></Grid.ColumnDefinitions><TextBlock Grid.Row="1" Grid.ColumnSpan="3" Text="{Binding SeasonDetail}" FontSize="10" Foreground="#9FB3C1" Margin="38,3,0,4" TextWrapping="Wrap"/><StackPanel Orientation="Horizontal"><Image Source="{Binding ChampionVisual.Icon}" Width="30" Height="30" Margin="0,0,8,0"/><StackPanel><TextBlock Text="{Binding ChampionVisual.Name}" FontWeight="SemiBold" FontSize="12"/><TextBlock Text="{Binding Games, StringFormat={}{0} parties}" Foreground="#9FB3C1" FontSize="11"/></StackPanel></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding WinRate}" FontSize="12"/><TextBlock Text="victoires" FontSize="10" Foreground="#9FB3C1"/></StackPanel><StackPanel Grid.Column="2"><TextBlock Text="{Binding Kda}" FontSize="12"/><TextBlock Text="KDA" FontSize="10" Foreground="#9FB3C1"/></StackPanel></Grid></DataTemplate></ListBox.ItemTemplate></ListBox></StackPanel></Border>
- </StackPanel></Grid></StackPanel>
- <TextBlock Text="Rift Companion n’est pas approuvé par Riot Games." Foreground="#8198A7" FontSize="10" Margin="0,22,0,0"/>
- </StackPanel></ScrollViewer></UserControl>
+<UserControl x:Class="Rift.Desktop.ProfileView" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Foreground="#E6EDF3" Background="#191919">
+  <UserControl.Resources>
+    <DataTemplate x:Key="ChampionCell">
+      <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+        <Border Width="30" Height="30" Background="#30424E" Margin="0,0,8,0">
+          <Grid>
+            <TextBlock Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" />
+            <Image Source="{Binding ChampionVisual.Icon}" ToolTip="{Binding ChampionVisual.Name}" />
+          </Grid>
+        </Border>
+        <TextBlock Text="{Binding ChampionVisual.Name}" VerticalAlignment="Center" />
+      </StackPanel>
+    </DataTemplate>
+    <DataTemplate x:Key="ItemCell">
+      <ItemsControl ItemsSource="{Binding Items}">
+        <ItemsControl.ItemsPanel>
+          <ItemsPanelTemplate>
+            <StackPanel Orientation="Horizontal" />
+          </ItemsPanelTemplate>
+        </ItemsControl.ItemsPanel>
+        <ItemsControl.ItemTemplate>
+          <DataTemplate>
+            <Border Width="26" Height="26" Margin="1,0" CornerRadius="4" ToolTip="{Binding}" ToolTipService.ShowDuration="60000">
+              <Border.Style>
+                <Style TargetType="Border">
+                  <Setter Property="Background" Value="#30424E" />
+                  <Style.Triggers>
+                    <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                      <Setter Property="Background" Value="Transparent" />
+                      <Setter Property="Opacity" Value="0" />
+                      <Setter Property="IsHitTestVisible" Value="False" />
+                    </DataTrigger>
+                  </Style.Triggers>
+                </Style>
+              </Border.Style>
+              <Grid>
+                <TextBlock Text="{Binding Fallback}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                <Image Source="{Binding Icon}" />
+              </Grid>
+            </Border>
+          </DataTemplate>
+        </ItemsControl.ItemTemplate>
+      </ItemsControl>
+    </DataTemplate>
+    <Style x:Key="Panel" TargetType="Border">
+      <Setter Property="Background" Value="#262626" />
+      <Setter Property="CornerRadius" Value="5" />
+      <Setter Property="Padding" Value="10" />
+      <Setter Property="BorderBrush" Value="#3D3D3D" />
+      <Setter Property="BorderThickness" Value="1" />
+    </Style>
+    <Style TargetType="DataGrid">
+      <Setter Property="AutoGenerateColumns" Value="False" />
+      <Setter Property="IsReadOnly" Value="True" />
+      <Setter Property="CanUserAddRows" Value="False" />
+      <Setter Property="CanUserDeleteRows" Value="False" />
+      <Setter Property="CanUserReorderColumns" Value="False" />
+      <Setter Property="Background" Value="#262626" />
+      <Setter Property="Foreground" Value="#E6EDF3" />
+      <Setter Property="RowBackground" Value="#262626" />
+      <Setter Property="AlternatingRowBackground" Value="#20303B" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Setter Property="HeadersVisibility" Value="Column" />
+      <Setter Property="GridLinesVisibility" Value="None" />
+      <Setter Property="RowHeight" Value="35" />
+    </Style>
+    <Style TargetType="DataGridColumnHeader">
+      <Setter Property="Background" Value="#111D26" />
+      <Setter Property="Foreground" Value="#A7BECF" />
+      <Setter Property="Padding" Value="9" />
+      <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style TargetType="DataGridCell">
+      <Setter Property="Padding" Value="8,4" />
+      <Setter Property="BorderThickness" Value="0" />
+      <Style.Triggers>
+        <Trigger Property="IsSelected" Value="True">
+          <Setter Property="Background" Value="#304A5B" />
+          <Setter Property="Foreground" Value="#E6EDF3" />
+        </Trigger>
+      </Style.Triggers>
+    </Style>
+    <BooleanToVisibilityConverter x:Key="BoolVisibility" />
+    <Style x:Key="Heading" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="16" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Margin" Value="0,0,0,14" />
+    </Style>
+  </UserControl.Resources>
+  <ScrollViewer x:Name="ProfileScroll" RequestBringIntoView="OnProfileBringIntoView" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="20,12" MaxWidth="1080">
+      <DockPanel Margin="0,0,0,16">
+        <Button Content="Diagnostic en direct" DockPanel.Dock="Right" Click="OnDiagnostics" Margin="8,0,0,0" />
+        <ToggleButton x:Name="DebugButton" DockPanel.Dock="Right" Content="Débug" Padding="12,7" />
+        <StackPanel Orientation="Horizontal">
+          <Button x:Name="PersonalButton" Content="Mon profil" Click="OnPersonalProfile" Margin="0,0,8,0" />
+          <Button x:Name="CancelButton" Visibility="{Binding IsEnabled, RelativeSource={RelativeSource Self}, Converter={StaticResource BoolVisibility}}" Content="Annuler" Click="OnCancel" IsEnabled="False" />
+        </StackPanel>
+      </DockPanel>
+      <Expander Header="Rechercher un autre joueur" Foreground="#A7BECF" Margin="0,0,0,12">
+        <WrapPanel VerticalAlignment="Center">
+          <StackPanel Margin="0,0,12,0">
+            <TextBlock Text="Riot ID" FontSize="11" />
+            <TextBox x:Name="RiotIdBox" Width="230" Padding="10,7" ToolTip="Pseudo#TAG" AutomationProperties.Name="Riot ID" TextChanged="OnRiotIdChanged" GotKeyboardFocus="OnRiotIdFocus" />
+            <Popup x:Name="SuggestionsPopup" PlacementTarget="{Binding ElementName=RiotIdBox}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True">
+              <Border Background="#20303B" BorderBrush="#405A6A" BorderThickness="1" CornerRadius="5" Padding="6" Width="290">
+                <StackPanel>
+                  <TextBlock Text="Profils consultés récemment" Foreground="#9FB3C1" FontSize="11" Margin="6" />
+                  <ListBox x:Name="Suggestions" DisplayMemberPath="Label" Background="#20303B" Foreground="#E6EDF3" BorderThickness="0" SelectionChanged="OnSuggestionSelected" MaxHeight="200" />
+                </StackPanel>
+              </Border>
+            </Popup>
+          </StackPanel>
+          <StackPanel Margin="0,0,12,0">
+            <TextBlock Text="Serveur" FontSize="11" />
+            <ComboBox x:Name="ServerBox" DisplayMemberPath="Value" SelectedValuePath="Key" AutomationProperties.Name="Serveur" />
+          </StackPanel>
+          <Button x:Name="LoadButton" Content="Charger le profil" Click="OnLoadProfile" Margin="0,16,10,0" />
+          <Button x:Name="DemoButton" Content="Voir un exemple" Click="OnDemo" Margin="0,16,0,0" />
+        </WrapPanel>
+      </Expander>
+      <Expander x:Name="RiotConnection" Visibility="Collapsed" Header="Connexion aux données Riot" Foreground="#A7BECF" Margin="0,12">
+        <StackPanel>
+          <TextBlock Text="Clé Riot · enregistrée après un chargement réussi et chiffrée pour ton compte Windows." FontSize="12" Margin="0,8" />
+          <PasswordBox x:Name="ApiKeyBox" MaxLength="256" Width="440" HorizontalAlignment="Left" Padding="8" AutomationProperties.Name="Clé API Riot" />
+          <StackPanel Orientation="Horizontal" Margin="0,8">
+            <Button x:Name="SaveKeyButton" Content="Enregistrer la clé" Click="OnSaveKey" Margin="0,0,8,0" />
+            <Button x:Name="ForgetKeyButton" Content="Oublier la clé" Click="OnForgetKey" />
+          </StackPanel>
+          <TextBlock x:Name="KeyStatus" FontSize="12" Foreground="#B8E0DA" TextWrapping="Wrap" />
+          <TextBlock Text="Obtiens une clé sur developer.riotgames.com. Une clé de développement expire après 24 h. Ne la partage pas dans le chat." FontSize="11" Margin="0,8" />
+        </StackPanel>
+      </Expander>
+      <Border x:Name="NoticePanel" Visibility="Collapsed" Background="#30404B" CornerRadius="6" Padding="12" Margin="0,0,0,12">
+        <TextBlock x:Name="UserNotice" TextWrapping="Wrap" />
+      </Border>
+      <Border x:Name="DebugPanel" Visibility="{Binding IsChecked, ElementName=DebugButton, Converter={StaticResource BoolVisibility}}" Style="{StaticResource Panel}" Margin="0,0,0,14">
+        <StackPanel>
+          <TextBlock Text="Diagnostic du profil" Style="{StaticResource Heading}" />
+          <TextBlock x:Name="PersonalStatus" Text="Détection du compte LoL…" TextWrapping="Wrap" />
+          <TextBlock x:Name="ProfileStatus" TextWrapping="Wrap" Margin="0,6" />
+          <TextBlock x:Name="ScopeText" TextWrapping="Wrap" />
+          <TextBlock x:Name="AssetsText" TextWrapping="Wrap" Margin="0,6" />
+          <TextBlock x:Name="HistoryStatus" TextWrapping="Wrap" />
+          <TextBlock Text="Filtres sur les parties chargées. Remakes exclus des moyennes. Les classements ne dépendent pas de cet échantillon." TextWrapping="Wrap" Margin="0,6,0,0" />
+        </StackPanel>
+      </Border>
+      <Border x:Name="LoadingPanel" Visibility="Collapsed" Style="{StaticResource Panel}" Margin="0,0,0,14">
+        <StackPanel>
+          <TextBlock Text="Chargement du profil…" FontSize="16" />
+          <TextBlock x:Name="LoadingStage" Visibility="{Binding IsChecked, ElementName=DebugButton, Converter={StaticResource BoolVisibility}}" Margin="0,8" />
+          <ProgressBar x:Name="LoadingBar" Height="4" Margin="0,12,0,0" Foreground="#56BDCD" IsIndeterminate="False" />
+        </StackPanel>
+      </Border>
+      <StackPanel x:Name="ProfileBody" Visibility="Collapsed">
+        <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Background="#262626" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="5" Padding="20" Margin="0,0,0,18" MinHeight="175">
+          <DockPanel Margin="0">
+            <StackPanel Orientation="Horizontal">
+              <Border Width="112" Height="112" Margin="0,0,16,0" Background="#30424E" CornerRadius="8">
+                <Grid>
+                  <TextBlock x:Name="PlayerIconFallback" Text="?" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                  <Image x:Name="PlayerIcon" Width="108" Height="108" Stretch="Uniform" ToolTip="Icône de profil du joueur" />
+                </Grid>
+              </Border>
+              <StackPanel VerticalAlignment="Center">
+                <TextBlock x:Name="IdentityText" FontSize="25" FontWeight="SemiBold" />
+                <TextBlock x:Name="LevelText" Foreground="#9FB3C1" Margin="0,6,0,0" />
+                <Button x:Name="RefreshPersonalButton" Content="Actualiser" Click="OnPersonalProfile" Margin="0,12,0,0" HorizontalAlignment="Left" Background="#7266E8" />
+              </StackPanel>
+            </StackPanel>
+          </DockPanel>
+        </Border>
+        <Border xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Background="#262626" BorderBrush="#3D3D3D" BorderThickness="1" CornerRadius="5" Padding="8,6" Margin="0,0,0,10">
+          <Border Background="#50C3AB" CornerRadius="5" Padding="25,5" HorizontalAlignment="Left">
+            <TextBlock Text="Résumé" Foreground="#101820" FontSize="16" FontWeight="SemiBold" />
+          </Border>
+        </Border>
+        <Grid Name="ProfileColumns">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="300" />
+            <ColumnDefinition Width="10" />
+            <ColumnDefinition Width="*" />
+          </Grid.ColumnDefinitions>
+          <StackPanel>
+            <Border Style="{StaticResource Panel}" Margin="0,0,0,16">
+              <StackPanel>
+                <TextBlock Text="Cote personnelle" Style="{StaticResource Heading}" />
+                <StackPanel x:Name="RankPanel" />
+                <StackPanel x:Name="RankLinks" Margin="0,10,0,0" />
+              </StackPanel>
+            </Border>
+            <Border Style="{StaticResource Panel}" Margin="0,0,0,12">
+              <StackPanel>
+                <TextBlock Text="Champions · saison" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <UniformGrid x:Name="SidebarModeButtons" Columns="3" Margin="0,0,0,8">
+                  <Button Content="Classé" Tag="-1" Click="OnSeasonMode" Padding="5" FontSize="11" />
+                  <Button Content="Solo" Tag="420" Click="OnSeasonMode" Padding="5" FontSize="11" />
+                  <Button Content="Flex" Tag="440" Click="OnSeasonMode" Padding="5" FontSize="11" />
+                </UniformGrid>
+                <TextBlock x:Name="SidebarSeasonScope" Text="Données de saison en attente" FontSize="10" Foreground="#9FB3C1" TextWrapping="Wrap" Margin="0,0,0,6" />
+                <ItemsControl x:Name="SidebarChampions">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Grid Margin="0,5" ToolTip="{Binding Detail}">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="35" />
+                          <ColumnDefinition />
+                          <ColumnDefinition Width="65" />
+                        </Grid.ColumnDefinitions>
+                        <Image Source="{Binding Visual.Icon}" Width="30" Height="30" />
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Text="{Binding Visual.Name}" FontWeight="SemiBold" FontSize="12" TextTrimming="CharacterEllipsis" />
+                          <TextBlock Text="{Binding Kda}" Foreground="#55C6AF" FontSize="11" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" HorizontalAlignment="Right">
+                          <TextBlock Text="{Binding WinRate}" FontSize="12" />
+                          <TextBlock Text="{Binding Games}" FontSize="10" Foreground="#9FB3C1" />
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Button x:Name="MoreSeasonChampions" Content="Voir plus" Click="OnMoreSeasonChampions" Visibility="Collapsed" Margin="0,5,0,0" />
+              </StackPanel>
+            </Border>
+            <Border x:Name="OpggPanel" Style="{StaticResource Panel}" Margin="0,0,0,16" Visibility="Collapsed">
+              <StackPanel>
+                <TextBlock x:Name="OpggRank" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock x:Name="OpggDate" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,8" />
+                <Expander Header="Champions de la saison" Foreground="#E6EDF3">
+                  <StackPanel>
+                    <TextBlock x:Name="OpggScope" Foreground="#9FB3C1" TextWrapping="Wrap" FontSize="11" Margin="0,8" />
+                    <ItemsControl x:Name="OpggChampions">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Grid Margin="0,5">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="130" />
+                              <ColumnDefinition />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="{Binding Name}" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="1" Text="{Binding Summary}" TextWrapping="Wrap" Foreground="#A8D5D0" />
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Expander>
+              </StackPanel>
+            </Border>
+          </StackPanel>
+          <StackPanel Grid.Column="2">
+            <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center" HorizontalAlignment="Stretch" Margin="0,0,0,7">
+              <TextBlock Text="Mode de l’historique" FontSize="11" Foreground="#9FB3C1" Margin="0,0,0,5" Visibility="Collapsed" />
+              <ComboBox x:Name="QueueBox" MinHeight="0" Height="36" FontSize="11" Padding="6,2" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnFilter" AutomationProperties.Name="File de jeu" MinWidth="170" Background="#262626" BorderBrush="#454545" Visibility="Collapsed" />
+              <DockPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" LastChildFill="True">
+ <ComboBox x:Name="MoreModes" DockPanel.Dock="Right" Width="145" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnMoreMode" Background="#262626" BorderBrush="#454545" FontSize="11" ToolTip="Autres modes de jeu" />
+ <WrapPanel x:Name="QuickModes">
+  <Button Content="Total" Tag="0" Click="OnQuickMode" Padding="10,6" FontSize="11" Margin="0,0,5,0" />
+  <Button Content="Solo" Tag="420" Click="OnQuickMode" Padding="10,6" FontSize="11" Margin="0,0,5,0" />
+  <Button Content="Flex" Tag="440" Click="OnQuickMode" Padding="10,6" FontSize="11" Margin="0,0,5,0" />
+  <Button Content="ARAM" Tag="450" Click="OnQuickMode" Padding="10,6" FontSize="11" Margin="0,0,5,0" />
+ </WrapPanel>
+</DockPanel>
+            </StackPanel>
+            <Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Name="OverviewStrip" Margin="0,0,0,10">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1.4*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="0.8*" />
+                <ColumnDefinition Width="8" />
+                <ColumnDefinition Width="1*" />
+              </Grid.ColumnDefinitions>
+              <Border Style="{StaticResource Panel}" Margin="0" Grid.Column="0" Padding="9,7" VerticalAlignment="Top" MinHeight="176" ToolTip="{Binding Text, ElementName=SeasonScope}">
+                <StackPanel>
+                  <DockPanel Margin="0,0,0,5">
+                    <ComboBox x:Name="SummaryMode" MinHeight="0" DockPanel.Dock="Right" Width="108" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" AutomationProperties.Name="Mode du bilan" Height="36" FontSize="11" Padding="6,2" Margin="0,0,0,5" Background="#262626" BorderBrush="#454545" Visibility="Collapsed" />
+                    <TextBlock x:Name="SummaryHeading" Text="Bilan" Foreground="#55C6AF" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,0,5" />
+                  </DockPanel>
+                  <TextBlock x:Name="SeasonScope" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8" Visibility="Collapsed" />
+                  <DockPanel Margin="0,2,0,3">
+                    <Viewbox xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Width="65" Height="65" DockPanel.Dock="Left" Margin="0,0,8,0">
+                      <ContentControl xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="WinrateChart" />
+                    </Viewbox>
+                    <StackPanel VerticalAlignment="Center">
+                      <TextBlock x:Name="SampleText" Foreground="#E6EDF3" FontSize="12" FontWeight="SemiBold" ToolTip="Totaux pour le mode sélectionné" TextWrapping="Wrap" />
+                      <TextBlock x:Name="AverageKda" FontSize="12" Margin="0,6,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                  </DockPanel>
+                  <TextBlock xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="CompactMetrics" FontSize="11" TextWrapping="Wrap" Foreground="#9FB3C1" Margin="0,3,0,3" />
+                  <Expander Header="Détails" Foreground="#9FB3C1" Margin="0,2,0,0" FontSize="11">
+                    <StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+                      <UniformGrid x:Name="MetricsPanel" Columns="2" />
+                      <UniformGrid x:Name="ExtraMetricsPanel" Columns="2" Margin="0,10,0,0" />
+                      <Expander x:Name="StatisticsSettings" Header="Synchroniser les statistiques" Foreground="#9FB3C1" Margin="0,0,0,12">
+                        <StackPanel Margin="0,8,0,0">
+                          <TextBlock Text="Début de la période" />
+                          <DatePicker x:Name="StatsFrom" SelectedDateChanged="OnStatsPeriod" Margin="0,6" />
+                          <WrapPanel>
+                            <Button x:Name="SyncStats" Content="Calculer / actualiser" Click="OnSyncStats" />
+                            <Button x:Name="CancelStats" Content="Arrêter" Click="OnCancelStats" IsEnabled="False" Margin="6,0,0,0" />
+                          </WrapPanel>
+                          <TextBlock x:Name="StatsProgress" Text="Chargement indépendant de l’historique récent. La première synchronisation peut prendre plusieurs minutes." TextWrapping="Wrap" FontSize="11" Margin="0,8" />
+                        </StackPanel>
+                      </Expander>
+                    </StackPanel>
+                  </Expander>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Panel}" Grid.Column="2" Margin="0" Padding="9,7" VerticalAlignment="Top" MinHeight="176" ToolTip="{Binding Text, ElementName=ChampionsScope}">
+                <StackPanel>
+                  <TextBlock x:Name="ChampionsHeading" Text="Champions" Style="{StaticResource Heading}" FontSize="12" Margin="0,0,0,5" />
+                  <ComboBox x:Name="ChampionsMode" MinHeight="0" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" Margin="0,0,0,5" AutomationProperties.Name="Mode des champions" Height="36" FontSize="11" Padding="6,2" Background="#262626" BorderBrush="#454545" Visibility="Collapsed" />
+                  <TextBlock x:Name="ChampionsScope" FontSize="11" Foreground="#9FB3C1" TextWrapping="Wrap" Margin="0,0,0,8" Visibility="Collapsed" />
+                  <ListBox x:Name="ChampionsGrid" MaxHeight="140" BorderThickness="0" Background="Transparent" Foreground="#E6EDF3" ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemContainerStyle>
+                      <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                        <Setter Property="Padding" Value="0,3" />
+                        <Setter Property="Template">
+                          <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                              <ContentPresenter />
+                            </ControlTemplate>
+                          </Setter.Value>
+                        </Setter>
+                      </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                      <DataTemplate>
+                        <DockPanel Margin="0,2" ToolTip="{Binding SeasonDetail}">
+                          <Image DockPanel.Dock="Left" Source="{Binding ChampionVisual.Icon}" Width="27" Height="27" Margin="0,0,5,0" ToolTip="{Binding ChampionVisual.Name}" />
+                          <StackPanel>
+                            <TextBlock FontSize="11">
+                              <Run Text="{Binding WinRate, Mode=OneWay}" Foreground="#55C6AF" />
+                              <Run Text=" · " />
+                              <Run Text="{Binding Games, Mode=OneWay}" />
+                              <Run Text=" parties" />
+                            </TextBlock>
+                            <TextBlock FontSize="10" Foreground="#9FB3C1">
+                              <Run Text="{Binding Kda, Mode=OneWay}" />
+                              <Run Text=" KDA" />
+                            </TextBlock>
+                          </StackPanel>
+                        </DockPanel>
+                      </DataTemplate>
+                    </ListBox.ItemTemplate>
+                  </ListBox>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Panel}" Margin="0" Grid.Column="4" Padding="9,7" VerticalAlignment="Top" MinHeight="176" ToolTip="{Binding Text, ElementName=RolesScope}">
+                <StackPanel>
+                  <TextBlock x:Name="RolesHeading" Text="Rôles" Style="{StaticResource Heading}" FontSize="12" Margin="0,0,0,5" />
+                  <ComboBox x:Name="RolesMode" MinHeight="0" DisplayMemberPath="Value" SelectedValuePath="Key" SelectionChanged="OnStatsFilter" Margin="0,0,0,5" AutomationProperties.Name="Mode des rôles" Height="36" FontSize="11" Padding="6,2" Background="#262626" BorderBrush="#454545" Visibility="Collapsed" />
+                  <TextBlock x:Name="RolesScope" Foreground="#9FB3C1" FontSize="11" TextWrapping="Wrap" Visibility="Collapsed" />
+                  <StackPanel x:Name="RolePanel" />
+                  <ContentControl x:Name="RoleChart" />
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Border Style="{StaticResource Panel}" Padding="0" Background="Transparent" BorderThickness="0">
+              <StackPanel>
+                <TextBlock Text="Parties récentes" Style="{StaticResource Heading}" Visibility="Collapsed" />
+                <TextBlock x:Name="HistoryLoadingText" Foreground="#9FB3C1" Margin="10" TextWrapping="Wrap" Visibility="Collapsed" />
+                <ListBox x:Name="MatchesGrid" MaxHeight="720" Background="Transparent" BorderThickness="0" Foreground="#E6EDF3" ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.CanContentScroll="True" VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.VirtualizationMode="Recycling">
+                  <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                      <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                      <Setter Property="Padding" Value="0" />
+                      <Setter Property="Margin" Value="0,0,0,8" />
+                      <Setter Property="Template">
+                        <Setter.Value>
+                          <ControlTemplate TargetType="ListBoxItem">
+                            <ContentPresenter />
+                          </ControlTemplate>
+                        </Setter.Value>
+                      </Setter>
+                    </Style>
+                  </ListBox.ItemContainerStyle>
+                  <ListBox.ItemTemplate>
+                    <DataTemplate>
+                      <Button Click="OnMatchDetails" Padding="0" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Stretch" ToolTip="Ouvrir le détail de la partie" AutomationProperties.Name="{Binding DetailsLabel}">
+                        <Button.Template>
+                          <ControlTemplate TargetType="Button">
+                            <Border x:Name="Card" BorderThickness="1" BorderBrush="Transparent" CornerRadius="7">
+                              <ContentPresenter />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                              <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="#658A9B" />
+                              </Trigger>
+                              <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Card" Property="BorderBrush" Value="#71D3D7" />
+                              </Trigger>
+                            </ControlTemplate.Triggers>
+                          </ControlTemplate>
+                        </Button.Template>
+                        <Border Padding="10" CornerRadius="6" BorderThickness="3,0,0,0">
+                          <Border.Style>
+                            <Style TargetType="Border">
+                              <Setter Property="Background" Value="#482D32" />
+                              <Setter Property="BorderBrush" Value="#D87685" />
+                              <Style.Triggers>
+                                <DataTrigger Binding="{Binding Match.Win}" Value="True">
+                                  <Setter Property="Background" Value="#293A5C" />
+                                  <Setter Property="BorderBrush" Value="#4591FF" />
+                                </DataTrigger>
+                                <DataTrigger Binding="{Binding Match.Remake}" Value="True">
+                                  <Setter Property="Background" Value="#29333D" />
+                                  <Setter Property="BorderBrush" Value="#9FB3C1" />
+                                </DataTrigger>
+                              </Style.Triggers>
+                            </Style>
+                          </Border.Style>
+                          <Grid>
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="*" />
+                              <ColumnDefinition Width="112" />
+                              <ColumnDefinition Width="200" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                              <StackPanel Orientation="Horizontal">
+                                <Image Source="{Binding ChampionVisual.Icon}" Width="38" Height="38" Margin="0,0,8,0" />
+                                <StackPanel>
+                                  <TextBlock Text="{Binding Result}" FontWeight="SemiBold" />
+                                  <TextBlock Text="{Binding ChampionVisual.Name}" FontSize="12" Margin="0,4,0,0" />
+                                </StackPanel>
+                              </StackPanel>
+                              <TextBlock Text="{Binding QueueLabel}" FontSize="11" Foreground="#9FB3C1" Margin="0,8,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding QueueLabel}" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Margin="0,0,12,0" VerticalAlignment="Center" ToolTip="{Binding Statistics}" ToolTipService.ShowDuration="60000">
+                              <TextBlock FontWeight="SemiBold" FontSize="15">
+                                <Run Text="{Binding Match.Kills}" Foreground="#32D6A0" />
+                                <Run Text=" / " Foreground="#9FB3C1" />
+                                <Run Text="{Binding Match.Deaths}" Foreground="#FF707B" />
+                                <Run Text=" / " Foreground="#9FB3C1" />
+                                <Run Text="{Binding Match.Assists}" Foreground="#FFB65C" />
+                              </TextBlock>
+                              <TextBlock Text="{Binding Cs, StringFormat={}{0} CS}" Foreground="#9FB3C1" FontSize="11" Margin="0,6" />
+                              <TextBlock Text="{Binding Damage, StringFormat={}{0} dégâts}" Foreground="#9FB3C1" FontSize="11" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                              <ContentControl Content="{Binding}" ContentTemplate="{StaticResource ItemCell}" />
+                              <TextBlock Text="{Binding PlayedLabel}" Foreground="#9FB3C1" FontSize="11" HorizontalAlignment="Right" Margin="0,8,0,0" />
+                            </StackPanel>
+                          </Grid>
+                        </Border>
+                      </Button>
+                    </DataTemplate>
+                  </ListBox.ItemTemplate>
+                </ListBox>
+                <Button x:Name="MoreButton" Content="Voir plus · 10 parties" Click="OnLoadMore" HorizontalAlignment="Center" Margin="0,12,0,0" Visibility="Collapsed" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </Grid>
+      </StackPanel>
+      <TextBlock Text="Rift Companion n’est pas approuvé par Riot Games." Foreground="#8198A7" FontSize="10" Margin="0,22,0,0" />
+    </StackPanel>
+  </ScrollViewer>
+</UserControl>

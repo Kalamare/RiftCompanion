@@ -25,6 +25,8 @@ public sealed record PlayerProfile(string RiotId, string Platform, int Level, IR
     public int NextStart { get; init; }
     public long HistoryEndTime { get; init; }
     public bool HasMore { get; init; }
+    public bool RanksPending { get; init; }
+    public bool HistoryPending { get; init; }
 }
 public sealed record ProfileSummary(int Games, int Wins, double Kda, double CsPerMinute, double DamagePerMinute,
     double GoldPerMinute, double Vision, double? Participation, double Kills, double Deaths, double Assists,

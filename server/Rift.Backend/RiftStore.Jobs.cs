@@ -6,11 +6,12 @@ using Rift.Core;
 namespace Rift.Backend;
 
 public sealed record ProfileJob(Guid Id, string Platform, string RiotId, string? Puuid, int Cursor, DateTimeOffset From, DateTimeOffset Until, string Kind = "history");
-public sealed record RiotIdentity(string Puuid, string RiotId, int Level, int? Icon, RankEntry[] Ranks);
+public sealed record RiotIdentity(string Puuid, string RiotId, int Level, int? Icon, RankEntry[] Ranks, bool RanksLoaded = true);
 
 public sealed partial class RiftStore
 {
     public const int HistoryPageSize = 20;
+    public const int RecentPageSize = 10;
     // One collector leader initially; persistent quotas also survive process restarts.
     public async Task<NpgsqlConnection?> TryCollectorLock(CancellationToken token)
     {
@@ -54,10 +55,10 @@ public sealed partial class RiftStore
         await using (var gate = Command(connection, "SELECT pg_advisory_xact_lock(84723004)")) await gate.ExecuteNonQueryAsync(token);
         await LockChanges(connection, token);
         await using (var player = Command(connection, """
-            INSERT INTO players(platform,puuid,riot_id,level,icon,ranks,ranks_at,last_seen,version) VALUES($1,$2,$3,$4,$5,$6::jsonb,now(),now(),1)
-            ON CONFLICT(platform,puuid) DO UPDATE SET riot_id=EXCLUDED.riot_id,level=EXCLUDED.level,icon=EXCLUDED.icon,
-              ranks=EXCLUDED.ranks,ranks_at=EXCLUDED.ranks_at,version=players.version+1
-            """, job.Platform, identity.Puuid, identity.RiotId, identity.Level, identity.Icon, JsonSerializer.Serialize(identity.Ranks)))
+            INSERT INTO players(platform,puuid,riot_id,level,icon,ranks,ranks_at,last_seen,version) VALUES($1,$2,$3,$4,$5,$6::jsonb,CASE WHEN $7 THEN now() ELSE NULL END,now(),1)
+            ON CONFLICT(platform,puuid) DO UPDATE SET riot_id=EXCLUDED.riot_id,level=CASE WHEN EXCLUDED.level>0 THEN EXCLUDED.level ELSE players.level END,icon=COALESCE(EXCLUDED.icon,players.icon),
+              ranks=CASE WHEN $7 THEN EXCLUDED.ranks ELSE players.ranks END,ranks_at=CASE WHEN $7 THEN EXCLUDED.ranks_at ELSE players.ranks_at END,version=players.version+1
+            """, job.Platform, identity.Puuid, identity.RiotId, identity.Level, identity.Icon, JsonSerializer.Serialize(identity.Ranks), identity.RanksLoaded))
             await player.ExecuteNonQueryAsync(token);
         await using (var update = Command(connection, "UPDATE profile_jobs SET puuid=$2 WHERE id=$1", job.Id, identity.Puuid)) await update.ExecuteNonQueryAsync(token);
         if (job.Kind == "history") await EnsureRecent(connection, job.Platform, identity.Puuid, token);
@@ -118,6 +119,12 @@ public sealed partial class RiftStore
         var delay = (TimeSpan)(await next.ExecuteScalarAsync(token))!;
         if (delay <= TimeSpan.Zero) { await using var insert = Command(connection, "INSERT INTO riot_requests(host) VALUES($1)", host); await insert.ExecuteNonQueryAsync(token); }
         await tx.CommitAsync(token); return delay;
+    }
+    public async Task<TimeSpan> AccessDeniedDelay(CancellationToken token)
+    {
+        await using var connection = await source.OpenConnectionAsync(token);
+        await using var command = Command(connection, "SELECT COALESCE(max(due_at)-now(),interval '0 seconds') FROM profile_jobs WHERE error='riot_access_denied' AND due_at>now()");
+        return (TimeSpan)(await command.ExecuteScalarAsync(token))!;
     }
     public async Task PauseRequests(string host, TimeSpan delay, CancellationToken token)
     {

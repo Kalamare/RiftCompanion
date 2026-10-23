@@ -68,6 +68,12 @@ static class MatchDetailsUiChecks
             WindowStartupLocation = WindowStartupLocation.Manual, ShowActivated = false, ShowInTaskbar = false };
         runeHost.Show(); await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         var runeButton = Descendants(view).OfType<System.Windows.Controls.Button>().First(b => b.Content is System.Windows.Controls.ItemsControl && b.DataContext is DetailPlayerRow);
+        if (!runeHost.IsActive)
+        {
+            runeButton.RaiseEvent(new System.Windows.Input.MouseEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = System.Windows.Input.Mouse.MouseEnterEvent });
+            if (view.RunesPopup.IsOpen) throw new Exception("Rune popup opened for an inactive owner");
+        }
+        runeHost.Activate(); await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
         jungler.PrimaryRunes[0].Update(jungler.PrimaryRunes[0].Name, jungler.PrimaryRunes[0].Icon, string.Join("\n", Enumerable.Repeat(jungler.PrimaryRunes[0].Description, 5)));
         runeButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
         await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
@@ -79,7 +85,11 @@ static class MatchDetailsUiChecks
         runeButton.RaiseEvent(new System.Windows.Input.MouseEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = System.Windows.Input.Mouse.MouseLeaveEvent });
         await Task.Delay(350);
         if (view.RunesPopup.PlacementTarget?.IsMouseOver != true && !view.RunesPopup.Child.IsMouseOver && view.RunesPopup.IsOpen) throw new Exception("Rune popup did not close after hover leave");
-        view.RunesPopup.IsOpen = false; runeHost.Content = null; runeHost.Close();
+        runeButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Button.ClickEvent));
+        runeHost.Hide(); await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.ApplicationIdle);
+        runeButton.RaiseEvent(new System.Windows.Input.MouseEventArgs(System.Windows.Input.Mouse.PrimaryDevice, Environment.TickCount) { RoutedEvent = System.Windows.Input.Mouse.MouseEnterEvent });
+        if (view.RunesPopup.IsOpen || view.RunesPopup.PlacementTarget is not null) throw new Exception("Rune popup survives or reopens after owner hiding");
+        runeHost.Content = null; runeHost.Close();
         var recipeVisual = new ProfileVisual(3074, "", false);
         recipeVisual.Update("Hydre vorace", jungler.Champion.Icon, "+65 dégâts d’attaque\nEffet de zone sur les ennemis proches.");
         recipeVisual.UpdateRecipe(3300, [new("Composant A", jungler.Champion.Icon), new("Composant B", jungler.Champion.Icon)]);
