@@ -13,7 +13,6 @@ sealed partial class App : Application
     public App()
     {
         InitializeComponent();
-        Suspending += (_, _) => widget = null;
     }
 
     protected override void OnActivated(IActivatedEventArgs args)

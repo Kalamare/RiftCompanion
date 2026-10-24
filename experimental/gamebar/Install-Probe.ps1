@@ -1,6 +1,9 @@
 $ErrorActionPreference = 'Stop'
 if (-not [Environment]::Is64BitOperatingSystem) { throw 'Windows x64 requis.' }
 if (-not (Get-AppxPackage -Name Microsoft.XboxGamingOverlay)) { throw 'Installer ou activer Windows Game Bar avant ce test.' }
+if (-not (Get-AppxPackage -Name Microsoft.VCLibs.140.00 | Where-Object { $_.Architecture -eq 'X64' })) {
+    throw 'Le composant Microsoft VCLibs UWP x64 est requis. Installer le paquet officiel https://aka.ms/Microsoft.VCLibs.x64.14.00.appx puis relancer.'
+}
 $settings = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' -ErrorAction SilentlyContinue
 if ($settings.AllowDevelopmentWithoutDevLicense -ne 1) {
     throw 'Prototype non signe : activer volontairement le Mode developpeur dans les parametres Windows Pour les developpeurs, puis relancer. Aucun certificat a importer.'
