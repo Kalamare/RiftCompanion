@@ -1,3 +1,22 @@
+# Correctif des tests WPF — 24 octobre 2026
+
+Le lanceur local transmet RIFT_SERVER_URL et RIFT_SERVER_ACCESS_KEY_FILE avant
+la compilation. La suite WPF doit isoler ces variables pour que le test du profil
+hors ligne ne démarre pas en mode serveur. Le point d’entrée des contrôles les
+sauvegarde, les efface pour la suite puis les restaure ; les tests distants
+continuent à configurer leur propre backend. La CI vérifie aussi le démarrage
+avec une configuration serveur héritée et une clé synthétique.
+
+# Reprise cloud — 24 octobre 2026
+
+Le blocage de téléchargement Microsoft de l’ancien environnement est levé dans
+la nouvelle instance. Configuration et commandes : [CLOUD-TEST.md](CLOUD-TEST.md).
+Tests synthétiques validés ; aucune collecte Riot réelle. Publication autorisée
+sur `codex/cloud-backend-handoff`, avec un workflow de compilation et contrôles
+Windows. Validation Riot bloquée dans le cloud par une page Cloudflare HTTP 403, même
+après renouvellement ; validité de la clé non établie. Choix utilisateur : backend
+sur son PC, voir [INSTALLATION-PC.md](INSTALLATION-PC.md).
+
 # Reprise — v41, 23 octobre 2026
 
 ## Transfert vers l’autre PC
