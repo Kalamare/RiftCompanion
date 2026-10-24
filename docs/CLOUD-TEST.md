@@ -62,12 +62,12 @@ Les tests synthétiques ne nécessitent aucune clé Riot.
 
 ## Passage au réel
 
-Le 24 octobre, le secret configuré est signalé `ready` et la politique réseau
-`enforced`, mais l’appel de validation EUW retourne HTTP 403. La validation réelle
-reste bloquée jusqu’au renouvellement ou à la vérification des droits de la clé.
-Ne pas confondre disponibilité du secret et autorisation de l’API Riot.
-Aucune collecte de profil réel n’a été lancée. Ne jamais publier de clé dans Git.
+Le 24 octobre, le secret est signale `ready` et la politique reseau `enforced`.
+Le HTTP 403 a ete identifie comme une page Cloudflare « Sorry, you have been
+blocked », et non comme une erreur JSON d'authentification Riot. Le renouvellement
+du secret n'a pas leve ce blocage. La validite de la cle reste donc non etablie
+depuis cette sortie reseau. Aucune collecte de profil reel n'a ete lancee.
 
-Le choix de l’hébergement et du domaine reste à préciser avant un déploiement
-durable. L’environnement de test actuel ne fournit pas à lui seul un hébergement
-permanent accessible depuis le client Windows.
+Choix utilisateur : backend prive sur son PC. Suivre
+[INSTALLATION-PC.md](INSTALLATION-PC.md) et `Lancer-Backend-Local.cmd`.
+Aucun domaine ni exposition Internet necessaire pour ce mode local.

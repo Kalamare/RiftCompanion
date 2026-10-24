@@ -4,8 +4,9 @@ Le blocage de téléchargement Microsoft de l’ancien environnement est levé d
 la nouvelle instance. Configuration et commandes : [CLOUD-TEST.md](CLOUD-TEST.md).
 Tests synthétiques validés ; aucune collecte Riot réelle. Publication autorisée
 sur `codex/cloud-backend-handoff`, avec un workflow de compilation et contrôles
-Windows. Validation Riot bloquée par HTTP 403 : vérifier/renouveler le secret
-avant reprise. Hébergement durable à préciser.
+Windows. Validation Riot bloquée dans le cloud par une page Cloudflare HTTP 403, même
+après renouvellement ; validité de la clé non établie. Choix utilisateur : backend
+sur son PC, voir [INSTALLATION-PC.md](INSTALLATION-PC.md).
 
 # Reprise — v41, 23 octobre 2026
 
