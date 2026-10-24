@@ -1,0 +1,27 @@
+name: GOverlay native qualification
+on:
+  push:
+    branches: [codex/goverlay-qualification]
+    paths: ['experimental/goverlay/**', '.github/workflows/goverlay-qualification.yml']
+  pull_request:
+    paths: ['experimental/goverlay/**', '.github/workflows/goverlay-qualification.yml']
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Compile pinned native source
+        shell: pwsh
+        run: ./experimental/goverlay/Test-Build.ps1
+      - name: Upload qualification evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: GOverlay-qualification-reports
+          path: experimental/goverlay/reports/
+          if-no-files-found: warn
+          retention-days: 14

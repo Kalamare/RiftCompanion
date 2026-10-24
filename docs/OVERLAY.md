@@ -1,5 +1,13 @@
 ﻿# Overlay natif — v30
 
+## Développement du plein écran
+
+La voie retenue est un moteur indépendant d'Overwolf et de Windows Game Bar.
+La [qualification GOverlay](../experimental/goverlay/README.md) suit les sources,
+la licence, la compilation native et les validations encore nécessaires.
+L'overlay WPF décrit ci-dessous conserve son fonctionnement actuel ; le plein
+écran exclusif n'est pas encore corrigé.
+
 ## Utilisation
 
 Depuis v28, compléments [OP.GG](OPGG.md) indépendants de Riot : rang serveur / Top %, statistiques saisonnières du champion lorsqu’il est présent, périmètre et dates au survol. Depuis v30, le fournisseur n’est plus nommé dans l’interface ; la synchronisation saisonnière du profil n’est pas déclenchée par l’overlay. Les bilans 12 h/30 j restent ceux de l’échantillon Riot. Mondial et Flex distinct restent indisponibles.
