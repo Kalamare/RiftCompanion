@@ -1,0 +1,26 @@
+name: Windows native checks
+on:
+  pull_request:
+  push:
+    branches: [main, codex/cloud-backend-handoff]
+permissions:
+  contents: read
+jobs:
+  native:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: native/global.json
+      - name: Build and run domain and WPF checks
+        shell: pwsh
+        run: ./native/Build.ps1 -Check
+      - name: Upload Windows build
+        uses: actions/upload-artifact@v4
+        with:
+          name: RiftCompanion-Windows
+          path: artifacts/native-profile-v41/
+          if-no-files-found: error
+          retention-days: 7

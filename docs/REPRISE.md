@@ -1,3 +1,12 @@
+# Reprise cloud — 24 octobre 2026
+
+Le blocage de téléchargement Microsoft de l’ancien environnement est levé dans
+la nouvelle instance. Configuration et commandes : [CLOUD-TEST.md](CLOUD-TEST.md).
+Tests synthétiques validés ; aucune collecte Riot réelle. Publication autorisée
+sur `codex/cloud-backend-handoff`, avec un workflow de compilation et contrôles
+Windows. Validation Riot bloquée par HTTP 403 : vérifier/renouveler le secret
+avant reprise. Hébergement durable à préciser.
+
 # Reprise — v41, 23 octobre 2026
 
 ## Transfert vers l’autre PC

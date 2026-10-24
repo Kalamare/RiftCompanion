@@ -1,0 +1,34 @@
+# Synthetic tests only; use with compose.yaml and project rift-cloud-test.
+x-cloud-build: &cloud-build
+  secrets: [proxy_ca]
+x-test-env: &test-env
+  RIFT_FIXTURE_MODE: "true"
+  RIFT_HISTORY_BACKFILL: "false"
+services:
+  api:
+    build: *cloud-build
+    environment: *test-env
+  worker:
+    build: *cloud-build
+    environment: *test-env
+  checks:
+    build: *cloud-build
+    environment: *test-env
+  clientchecks:
+    # Share API loopback: the client intentionally requires HTTPS for remote hosts.
+    network_mode: service:api
+    profiles: [checks]
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+      target: clientchecks
+      secrets: [proxy_ca]
+    environment:
+      RIFT_SERVER_URL: http://127.0.0.1:8080/
+      RIFT_SERVER_ACCESS_KEY_FILE: /run/secrets/access_key
+      NO_PROXY: api,postgres,localhost,127.0.0.1
+      no_proxy: api,postgres,localhost,127.0.0.1
+    secrets: [access_key]
+secrets:
+  proxy_ca:
+    file: /etc/ssl/certs/ca-certificates.crt
