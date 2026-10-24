@@ -27,10 +27,38 @@ La génération des icônes fait partie de la compilation. Depuis une console d�
 msbuild experimental/gamebar/Rift.GameBarProbe.csproj /restore /t:Publish /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false
 ```
 
-Le paquet expérimental n'est pas signé et n'est pas une distribution publique.
-Ne pas importer un certificat téléchargé ni désactiver la vérification des signatures.
-Les instructions d'installation seront précisées après validation de la sortie
-de compilation Windows. Le prototype ne s'installe pas automatiquement.
+Après compilation, exécuter `./experimental/gamebar/Prepare-Layout.ps1`.
+La CI valide le dossier avec MakeAppx et publie `Rift-GameBar-Probe-Windows`.
+Il contient l'exécutable autonome compilé en code natif et les fichiers Game Bar.
+
+## Installation expérimentale sur le PC
+
+1. Télécharger l'artefact de la CI et extraire **toute** l'archive dans un dossier
+   permanent, par exemple `Documents/RiftGameBarProbe`. Game Bar doit être installé.
+2. Ce prototype non signé nécessite le **Mode développeur** Windows (paramètres
+   « Pour les développeurs »). L'installateur ne l'active pas automatiquement et
+   n'importe aucun certificat. Ce n'est pas encore une distribution grand public.
+3. Dans PowerShell ouvert dans le dossier extrait :
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\Install-Probe.ps1
+```
+
+4. Dans le jeu, ouvrir Win+G, puis le menu des widgets et choisir
+   « Rift Companion — test plein écran ». Épingler le widget avant de fermer Win+G.
+   Ne pas lancer directement l'exécutable pour valider la superposition.
+
+Le script enregistre uniquement `Rift.GameBarProbe` pour l'utilisateur courant.
+Il ne change ni les paramètres LoL, ni les secrets, ni la base, ni le client WPF.
+Conserver le dossier extrait tant que le widget est installé. Pour le retirer :
+
+```powershell
+Get-AppxPackage -Name Rift.GameBarProbe | Remove-AppxPackage
+```
+
+Le Mode développeur peut ensuite être désactivé s'il n'est pas utilisé ailleurs.
+La validation MakeAppx prouve la structure du paquet, pas son activation dans
+Game Bar ni son affichage dans LoL : ces deux vérifications restent manuelles.
 
 ## Recette requise
 
