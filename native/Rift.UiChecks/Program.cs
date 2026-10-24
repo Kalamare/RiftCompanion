@@ -10,6 +10,21 @@ static class Program
     [STAThread]
     static int Main()
     {
+        // Tests own their backend configuration, even when launched by Start-Local.ps1.
+        var names = new[] { "RIFT_SERVER_URL", "RIFT_SERVER_ACCESS_KEY_FILE" };
+        var saved = names.ToDictionary(name => name, Environment.GetEnvironmentVariable);
+        try
+        {
+            foreach (var name in names) Environment.SetEnvironmentVariable(name, null);
+            return RunApplication();
+        }
+        finally
+        {
+            foreach (var name in names) Environment.SetEnvironmentVariable(name, saved[name]);
+        }
+    }
+    static int RunApplication()
+    {
         // Exercise the same application resources as the shipped window.
         var app = new System.Windows.Application { ShutdownMode = System.Windows.ShutdownMode.OnExplicitShutdown };
         app.Resources.MergedDictionaries.Add(new System.Windows.ResourceDictionary

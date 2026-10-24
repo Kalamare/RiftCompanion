@@ -25,6 +25,18 @@ jobs:
       - name: Build and run domain and WPF checks
         shell: pwsh
         run: ./native/Build.ps1 -Check
+      - name: Check WPF isolation from launcher backend configuration
+        shell: pwsh
+        run: |
+          $env:RIFT_SERVER_URL = 'http://127.0.0.1:1/'
+          $env:RIFT_SERVER_ACCESS_KEY_FILE = Join-Path $env:RUNNER_TEMP 'synthetic-access-key'
+          [IO.File]::WriteAllText($env:RIFT_SERVER_ACCESS_KEY_FILE, ('test-only-key-' * 4))
+          try {
+            dotnet run --project native/Rift.UiChecks/Rift.UiChecks.csproj -c Release --no-build
+            if ($LASTEXITCODE) { throw 'WPF checks failed with inherited backend configuration.' }
+          } finally {
+            Remove-Item -LiteralPath $env:RIFT_SERVER_ACCESS_KEY_FILE
+          }
       - name: Upload Windows build
         uses: actions/upload-artifact@v4
         with:
