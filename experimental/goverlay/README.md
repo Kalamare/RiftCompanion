@@ -41,6 +41,17 @@ sources consultées. Une DLL signée n'est pas à elle seule une approbation Rio
 
 ## Vérification de compilation
 
+Résultat du 24 octobre 2026 : compilation native Release x64 réussie dans
+[la CI Windows](https://github.com/Kalamare/RiftCompanion/actions/runs/40112936386),
+depuis les sources épinglées, sans adaptation du code amont. Le journal confirme
+la compilation de Detours, corelib et du moteur de rendu, puis l'édition de liens
+de `n_overlay.x64.dll`. Des avertissements de conversion (`size_t`, `HWND`,
+`WPARAM`, `LPARAM`) et de variables inutilisées subsistent. Ils nécessitent une
+revue du protocole et des entrées ; ce résultat n'est pas une validation runtime.
+
+Les [questions amont](QUESTIONS-AMONT.md) sont préparées pour clarifier la licence
+et la voie de compatibilité. Aucun message n'a été envoyé.
+
 Depuis une console développeur Visual Studio 2022 avec outils C++ x64 et SDK
 Windows, à la racine du dépôt :
 
