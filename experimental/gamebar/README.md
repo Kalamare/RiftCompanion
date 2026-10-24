@@ -21,10 +21,10 @@ moteur avant d'avoir identifié la cause.
 
 Projet expérimental UWP .NET 9 x64 ; SDK Windows 10.0.26100 et outils de
 compilation Windows requis. La CI `Game Bar fullscreen probe` compile le projet.
-La génération des icônes fait partie de la compilation. Depuis la racine :
+La génération des icônes fait partie de la compilation. Depuis une console développeur Visual Studio, à la racine :
 
 ```powershell
-dotnet publish experimental/gamebar/Rift.GameBarProbe.csproj -c Release -r win-x64 -p:Platform=x64 -p:AppxPackageSigningEnabled=false
+msbuild experimental/gamebar/Rift.GameBarProbe.csproj /restore /t:Publish /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false
 ```
 
 Le paquet expérimental n'est pas signé et n'est pas une distribution publique.
