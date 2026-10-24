@@ -1,0 +1,40 @@
+name: Game Bar fullscreen probe
+on:
+  push:
+    branches: [codex/fullscreen-probe]
+    paths: ['experimental/gamebar/**', '.github/workflows/gamebar-probe.yml']
+  pull_request:
+    paths: ['experimental/gamebar/**', '.github/workflows/gamebar-probe.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build standalone probe
+        shell: pwsh
+        run: msbuild experimental/gamebar/Rift.GameBarProbe.csproj /restore /t:Publish /p:Configuration=Release /p:Platform=x64 /p:RuntimeIdentifier=win-x64 /p:AppxPackageSigningEnabled=false
+      - name: Prepare and validate registration layout
+        shell: pwsh
+        run: |
+          ./experimental/gamebar/Prepare-Layout.ps1
+          $sdk = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits/10/bin'
+          $makeappx = Get-ChildItem $sdk -Filter makeappx.exe -Recurse | Where-Object { $_.Directory.Name -eq 'x64' } | Sort-Object FullName -Descending | Select-Object -First 1
+          if (-not $makeappx) { throw 'Windows packaging validator missing.' }
+          & $makeappx.FullName pack /d experimental/gamebar/package/layout /p "$env:RUNNER_TEMP/Rift.GameBarProbe.msix" /o
+          if ($LASTEXITCODE) { throw 'Package layout validation failed.' }
+          $tokens = $null; $errors = $null
+          [System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path experimental/gamebar/Install-Probe.ps1), [ref]$tokens, [ref]$errors) | Out-Null
+          if ($errors) { throw ($errors | Out-String) }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rift-GameBar-Probe-Windows
+          path: experimental/gamebar/package/
+          if-no-files-found: error
+          retention-days: 7

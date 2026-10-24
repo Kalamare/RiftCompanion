@@ -1,0 +1,13 @@
+<Page x:Class="Rift.GameBarProbe.ProbePage"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+ <Grid Background="#171D27" Padding="20">
+  <StackPanel Spacing="12">
+   <TextBlock Text="Rift Companion — test plein écran" FontSize="21" FontWeight="SemiBold" Foreground="#64E6C4" TextWrapping="Wrap" />
+   <TextBlock x:Name="Mode" Foreground="White" TextWrapping="Wrap" />
+   <TextBlock Text="Épingle ce panneau, referme Win+G, puis vérifie sa visibilité dans LoL en plein écran. Ce prototype ne contient aucune donnée de partie." Foreground="#CBD5E1" TextWrapping="Wrap" />
+   <Button Content="Tester un clic" Click="OnClick" />
+   <TextBlock x:Name="Result" Text="Aucun clic reçu." Foreground="White" />
+  </StackPanel>
+ </Grid>
+</Page>
