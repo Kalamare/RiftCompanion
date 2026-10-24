@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.19041.0</TargetPlatformMinVersion>
+    <RootNamespace>Rift.GameBarProbe</RootNamespace>
+    <UseUwp>true</UseUwp>
+    <Nullable>enable</Nullable>
+    <Platforms>x64</Platforms>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <DefaultLanguage>fr-FR</DefaultLanguage>
+    <PublishAot>true</PublishAot>
+    <DisableRuntimeMarshalling>true</DisableRuntimeMarshalling>
+    <EnableMsixTooling>true</EnableMsixTooling>
+    <AppxPackageSigningEnabled>false</AppxPackageSigningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+    <Content Include="Assets\StoreLogo.png" />
+    <Content Include="Assets\Square150x150Logo.png" />
+    <Content Include="Assets\Square44x44Logo.png" />
+    <Content Include="Assets\SplashScreen.png" />
+    <PackageReference Include="Microsoft.Gaming.XboxGameBar" Version="7.3.2506120" GeneratePathProperty="true" />
+    <PackageReference Include="Microsoft.Windows.CsWinRT" Version="2.2.0" />
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_Gaming_XboxGameBar)\lib\uap10.0\Microsoft.Gaming.XboxGameBar.winmd" />
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_Gaming_XboxGameBar)\runtimes\win10-x64\native\Microsoft.Gaming.XboxGameBar.dll" />
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_Gaming_XboxGameBar)\runtimes\win10-x64\native\Microsoft.Gaming.XboxGameBar.pri" />
+    <ReferenceCopyLocalPaths Include="$(PkgMicrosoft_Gaming_XboxGameBar)\private\Microsoft.Gaming.XboxGameBar.Private.winmd" />
+    <CsWinRTInputs Include="$(PkgMicrosoft_Gaming_XboxGameBar)\lib\uap10.0\Microsoft.Gaming.XboxGameBar.winmd" />
+  </ItemGroup>
+  <PropertyGroup>
+    <CsWinRTIncludes>Microsoft.Gaming.XboxGameBar;Microsoft.Gaming.XboxGameBar.Authentication;Microsoft.Gaming.XboxGameBar.Input;</CsWinRTIncludes>
+  </PropertyGroup>
+  <Target Name="GenerateProbeAssets" BeforeTargets="PrepareForBuild">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Generate-Assets.ps1&quot;" />
+  </Target>
+</Project>

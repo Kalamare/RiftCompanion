@@ -1,0 +1,30 @@
+name: Game Bar fullscreen probe
+on:
+  push:
+    branches: [codex/fullscreen-probe]
+    paths: ['experimental/gamebar/**', '.github/workflows/gamebar-probe.yml']
+  pull_request:
+    paths: ['experimental/gamebar/**', '.github/workflows/gamebar-probe.yml']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - name: Build standalone probe
+        shell: pwsh
+        run: dotnet publish experimental/gamebar/Rift.GameBarProbe.csproj -c Release -r win-x64 -p:Platform=x64 -p:AppxPackageSigningEnabled=false
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rift-GameBar-Probe-Windows
+          path: |
+            experimental/gamebar/bin/
+            experimental/gamebar/README.md
+            experimental/gamebar/NOTICE.txt
+          if-no-files-found: error
+          retention-days: 7
