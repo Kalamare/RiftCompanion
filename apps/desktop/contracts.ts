@@ -43,6 +43,10 @@ export interface Boot {
   version: string;
 }
 export interface RiftBridge {
+  asset(input: {
+    kind: "item" | "profileicon";
+    id: number;
+  }): Promise<import("./ui/assets").PublicAsset>;
   boot(): Promise<Boot>;
   saveSettings(settings: Settings, key: string): Promise<void>;
   chooseLeagueDirectory(): Promise<string | null>;

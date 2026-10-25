@@ -1,11 +1,12 @@
+import { renderProfile as originalProfile } from "./ui/profile";
+import { renderDetails as originalDetails } from "./ui/details";
+import { renderOverlay } from "./ui/overlay";
+import { dismissHints } from "./ui/dom";
 import type { OverlayEntry } from "./overlay-data";
 import championCatalog from "../../native/Rift.Desktop/Assets/Champions/champion-fr.json";
 import {
   Profile,
   Platform,
-  Match,
-  summary,
-  queueLabel,
   roleLabels,
   Details,
 } from "../../packages/core/index";
@@ -17,21 +18,6 @@ const el = (tag: string, text = "", className = "") => {
   node.textContent = text;
   node.className = className;
   return node;
-};
-const button = (text: string, action: () => void) => {
-  const b = el("button", text) as HTMLButtonElement;
-  b.onclick = action;
-  return b;
-};
-const portrait = (champion: string) => {
-  const img = document.createElement("img");
-  img.className = "portrait";
-  img.alt = champion;
-  img.src = "assets/Champions/" + encodeURIComponent(champion) + ".png";
-  img.onerror = () => {
-    img.removeAttribute("src");
-  };
-  return img;
 };
 const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
@@ -55,6 +41,8 @@ function status(text: string, error = false) {
 }
 function view(name: string) {
   activeView = name;
+  $("profile-tools").hidden = name !== "profile";
+  dismissHints();
   document
     .querySelectorAll<HTMLElement>(".view")
     .forEach((n) => (n.hidden = n.id !== name));
@@ -79,6 +67,7 @@ async function lookup(riotId: string, platform: Platform) {
   const token = ++operation;
   profileVersion = -1;
   status("Recherche du profil…");
+  $("cancel-search").hidden = false;
   const cached = boot.profiles.find(
     (p) =>
       p.platform === platform &&
@@ -96,6 +85,7 @@ async function lookup(riotId: string, platform: Platform) {
     await pollLookup(receipt.id, token);
   } catch (e) {
     if (token === operation) {
+      $("cancel-search").hidden = true;
       fail(e);
       if (cached)
         status(
@@ -126,6 +116,7 @@ async function pollLookup(id: string, token: number, attempt = 0) {
       recent();
     }
     if (state.status === "paused") {
+      $("cancel-search").hidden = true;
       status(
         `Collecte différée : ${state.error ?? "serveur indisponible"}${state.retryAt ? " · reprise après " + new Date(state.retryAt).toLocaleTimeString("fr-FR") : ""}`,
         true,
@@ -133,6 +124,7 @@ async function pollLookup(id: string, token: number, attempt = 0) {
       return;
     }
     const pending = !profile || profile.historyPending || profile.ranksPending;
+    $("cancel-search").hidden = !pending;
     status(
       pending
         ? "Chargement progressif du profil…"
@@ -156,206 +148,24 @@ function recent() {
 }
 function renderProfile() {
   if (!profile) return;
-  const p = profile,
-    root = $("profile-content");
-  root.replaceChildren();
-  const head = el("div", "", "panel profile-heading");
-  const avatar = el("div", p.riotId.slice(0, 2).toUpperCase(), "avatar");
-  const title = el("div");
-  title.append(
-    el("h1", p.riotId),
-    el(
-      "small",
-      `${p.platform.toUpperCase()} · Niveau ${p.level || "en attente"}`,
-    ),
-  );
-  const actions = el("div", "", "actions");
-  const refresh = button("Actualiser", () => void refreshProfile());
-  actions.append(refresh);
-  head.append(avatar, title, actions);
-  root.append(head);
-  const layout = el("div", "", "profile-layout"),
-    side = el("aside"),
-    content = el("div");
-  layout.append(side, content);
-  root.append(layout);
-  const rankPanel = el("div", "", "panel");
-  rankPanel.append(el("h2", "Classements"));
-  const ranks = el("div", "", "ranks");
-  for (const [name, label] of [
-    ["RANKED_SOLO_5x5", "Solo / Duo"],
-    ["RANKED_FLEX_SR", "Flex"],
-  ]) {
-    const r = p.ranks.find((r) => r.queue === name);
-    const card = el("div", "", "rank");
-    card.append(el("small", label));
-    if (r) {
-      const badge = document.createElement("img");
-      badge.alt = r.tier;
-      badge.src = "assets/Ranks/" + encodeURIComponent(r.tier) + ".png";
-      badge.onerror = () => badge.remove();
-      card.append(badge);
-      card.append(
-        el("strong", r.tier + " " + r.division),
-        el("span", `${r.lp} LP`),
-        el("small", `${r.wins} V · ${r.losses} D`),
-      );
-    } else
-      card.append(el("strong", p.ranksPending ? "En attente" : "Non classé"));
-    ranks.append(card);
-  }
-  rankPanel.append(ranks);
-  side.append(rankPanel);
-  const champions = el("div", "", "panel");
-  champions.append(
-    el("h2", "Champions récents"),
-    el("small", "Sur les 20 dernières parties chargées, tous modes."),
-  );
-  const latest = p.matches.slice(0, 20);
-  const groups = [...new Set(latest.map((m) => m.champion))]
-    .map((champion) => ({
-      champion,
-      matches: latest.filter((m) => m.champion === champion),
-    }))
-    .sort((a, b) => b.matches.length - a.matches.length)
-    .slice(0, 3);
-  for (const group of groups) {
-    const s = summary(group.matches);
-    const row = el("div", "", "champion-row"),
-      name = el("div");
-    name.append(
-      el("strong", group.champion),
-      el("small", `${s.games} parties`),
-    );
-    row.append(
-      portrait(group.champion),
-      name,
-      el(
-        "div",
-        s.games ? `${Math.round((100 * s.wins) / s.games)} %` : "—",
-        "numbers",
-      ),
-    );
-    champions.append(row);
-  }
-  side.append(champions);
-  const filters = el("div", "", "filters");
-  for (const [id, label] of [
-    [0, "Tous"],
-    [-1, "Classé"],
-    [420, "Solo"],
-    [440, "Flex"],
-    [450, "ARAM"],
-    [1700, "Arena"],
-  ] as const) {
-    const b = button(label, () => {
-      queue = id;
+  const p = profile;
+  originalProfile($("profile-content"), p, queue, {
+    refresh: () => void refreshProfile(),
+    filter: (q) => {
+      queue = q;
       renderProfile();
-    });
-    b.classList.toggle("active", queue === id);
-    filters.append(b);
-  }
-  content.append(filters);
-  const matches = p.matches.filter(
-      (m) =>
-        queue === 0 ||
-        m.queue === queue ||
-        (queue === -1 && [420, 440].includes(m.queue)),
-    ),
-    s = summary(matches);
-  const metrics = el("div", "", "metrics");
-  for (const [value, label] of [
-    [s.games ? `${Math.round((100 * s.wins) / s.games)} %` : "—", "Victoires"],
-    [s.games ? fmt(s.kda, 2) : "—", "KDA"],
-    [s.games ? fmt(s.csPerMinute) : "—", "CS / min"],
-    [
-      s.participation === null ? "—" : fmt(s.participation) + " %",
-      "Participation",
-    ],
-  ]) {
-    const m = el("div", "", "metric");
-    m.append(el("strong", String(value)), el("small", String(label)));
-    metrics.append(m);
-  }
-  content.append(metrics, el("p", p.notice, "muted"));
-  if (!matches.length)
-    content.append(
-      el(
-        "p",
-        p.historyPending
-          ? "Historique en cours de collecte…"
-          : "Aucune partie dans ce filtre.",
-      ),
-    );
-  for (const m of matches) {
-    const row = el(
-      "div",
-      "",
-      "match" + (m.win ? " win" : "") + (m.remake ? " remake" : ""),
-    );
-    row.tabIndex = 0;
-    row.setAttribute("role", "button");
-    row.onclick = () => void details(m.id, p.platform);
-    row.onkeydown = (e) => {
-      if (e.key === "Enter") void details(m.id, p.platform);
-    };
-    const info = el("div");
-    info.append(el("strong", m.champion), el("small", queueLabel(m.queue)));
-    const kda = el("div");
-    kda.append(
-      el("strong", `${m.kills} / ${m.deaths} / ${m.assists}`),
-      el("small", roleLabels[m.role] ?? ""),
-    );
-    const result = el("div");
-    result.append(
-      el(
-        "strong",
-        m.remake ? "Remake" : m.win ? "Victoire" : "Défaite",
-        "result",
-      ),
-      el("small", `${Math.floor(m.seconds / 60)} min`),
-    );
-    row.append(
-      portrait(m.champion),
-      info,
-      kda,
-      result,
-      el(
-        "small",
-        new Date(m.playedAt).toLocaleDateString("fr-FR", {
-          day: "numeric",
-          month: "short",
-        }),
-      ),
-    );
-    content.append(row);
-  }
-  if (p.hasMore) content.append(button("Voir plus", () => void more()));
-  const season = el("div", "", "panel");
-  season.append(
-    el("h2", "Statistiques de saison"),
-    el(
-      "p",
-      "Uniquement sur les parties déjà collectées. Aucun rattrapage implicite.",
-      "muted",
-    ),
-  );
-  const controls = el("div", "", "season-controls");
-  const from = document.createElement("input"),
-    until = document.createElement("input");
-  from.type = until.type = "date";
-  from.value = "2026-01-08";
-  until.value = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
-  controls.append(
-    from,
-    until,
-    button(
-      "Afficher",
-      () => void seasonStats(p, from.value, until.value, season),
-    ),
-  );
-  season.append(controls);
-  root.append(season);
+    },
+    details: (id) => void details(id, p.platform),
+    more: () => void more(),
+    stats: (q) =>
+      window.rift.stats({
+        platform: p.platform,
+        puuid: p.puuid,
+        from: "2026-01-08",
+        until: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+        queue: q,
+      }),
+  });
 }
 async function refreshProfile() {
   if (!profile) return;
@@ -404,54 +214,6 @@ async function more() {
     fail(e);
   }
 }
-async function seasonStats(
-  p: Profile,
-  from: string,
-  until: string,
-  panel: HTMLElement,
-) {
-  try {
-    const stats = await window.rift.stats({
-      platform: p.platform,
-      puuid: p.puuid,
-      from,
-      until,
-      queue,
-    });
-    panel.querySelector(".season-results")?.remove();
-    const results = el("div", "", "season-results");
-    results.append(
-      el(
-        "p",
-        `${stats.summary.games} parties · ${stats.summary.wins} victoires · KDA ${fmt(stats.summary.kda, 2)}`,
-      ),
-    );
-    const max = Math.max(
-      1,
-      ...stats.champions.map((c: any) => c.summary.games),
-    );
-    for (const c of stats.champions) {
-      const row = el("div", "", "champion-row");
-      row.append(
-        portrait(c.champion),
-        el("strong", c.champion),
-        el(
-          "span",
-          `${c.summary.wins} V / ${c.summary.games - c.summary.wins} D`,
-        ),
-      );
-      const bar = document.createElement("progress");
-      bar.max = max;
-      bar.value = c.summary.games;
-      bar.title = `${c.summary.games} parties`;
-      row.append(bar);
-      results.append(row);
-    }
-    panel.append(results);
-  } catch (e) {
-    fail(e);
-  }
-}
 async function details(id: string, platform: Platform) {
   const token = operation;
   try {
@@ -464,91 +226,54 @@ async function details(id: string, platform: Platform) {
   }
 }
 function renderDetails(d: Details) {
-  const root = $("details-content");
-  root.replaceChildren(
-    el("h2", queueLabel(d.queue)),
-    el(
-      "p",
-      new Date(d.playedAt).toLocaleString("fr-FR") +
-        ` · ${Math.floor(d.seconds / 60)} min`,
-    ),
+  originalDetails(
+    $("details-content"),
+    d,
+    profile!.platform,
+    profile!.puuid,
+    (id, platform) => void lookup(id, platform),
   );
-  for (const team of d.teams) {
-    const section = el("section", "", "detail-team");
-    section.append(
-      el(
-        "h3",
-        `Équipe ${team.id} · ${team.win === null ? "Résultat individuel" : team.win ? "Victoire" : "Défaite"}`,
-      ),
-    );
-    const table = document.createElement("table"),
-      head = document.createElement("tr");
-    for (const label of [
-      "Joueur",
-      "K / D / A",
-      "CS",
-      "Dégâts",
-      "Or",
-      "Vision",
-      "Équipement",
-    ])
-      head.append(el("th", label));
-    table.append(head);
-    for (const p of d.participants.filter((p) => p.teamId === team.id)) {
-      const row = document.createElement("tr"),
-        name = document.createElement("td");
-      name.append(
-        portrait(p.stats.champion),
-        el("strong", p.riotId),
-        el("small", `${p.stats.champion} · ${roleLabels[p.stats.role] ?? ""}`),
-      );
-      row.append(name);
-      for (const text of [
-        `${p.stats.kills}/${p.stats.deaths}/${p.stats.assists}`,
-        String(p.stats.cs),
-        fmt(p.stats.damage, 0),
-        fmt(p.stats.gold, 0),
-        String(p.stats.vision),
-        p.stats.items.filter(Boolean).join(" · "),
-      ])
-        row.append(el("td", text));
-      table.append(row);
-    }
-    section.append(
-      table,
-      el(
-        "small",
-        "Objectifs : " +
-          Object.entries(team.objectives)
-            .map(([k, v]) => `${k} ${v}`)
-            .join(" · "),
-      ),
-    );
-    root.append(section);
-  }
 }
 function renderClient(state: ClientState) {
   $("connection").textContent = state.connected
     ? "LoL · " + state.phase
     : "Client déconnecté";
+  if (overlay) {
+    renderOverlay($("overlay-content"), overlayEntries);
+    return;
+  }
   const root = $("draft-content");
   root.replaceChildren();
   if (state.draft) {
     const teams = el("div", "", "teams");
     for (const [label, players, bans] of [
-      ["Alliés", state.draft.allies, state.draft.allyBans],
-      ["Adversaires", state.draft.enemies, state.draft.enemyBans],
+      ["● Ton équipe", state.draft.allies, state.draft.allyBans],
+      ["● Équipe adverse", state.draft.enemies, state.draft.enemyBans],
     ] as const) {
       const panel = el("div", "", "panel");
       panel.append(el("h2", label));
-      for (const p of players)
-        panel.append(
+      for (const p of players) {
+        const row = el("div", "", `draft-player${p.isYou ? " is-you" : ""}`);
+        row.append(
           el(
-            "p",
-            `${p.isYou ? "Toi · " : ""}${roleLabels[p.role] ?? "Rôle inconnu"} · Champion ${championById.get(p.championId || p.intentId) || "en attente"}`,
+            "strong",
+            (championById.get(p.championId || p.intentId) ?? "En attente") +
+              (!p.championId && p.intentId ? " · pré-sélection" : "") +
+              (p.isYou ? " · TOI" : ""),
           ),
+          el("small", roleLabels[p.role] ?? "Rôle non révélé"),
         );
-      panel.append(el("small", "Bans : " + bans.join(", ")));
+        panel.append(row);
+      }
+      panel.append(
+        el(
+          "small",
+          "Bans : " +
+            (bans
+              .map((id) => championById.get(id) ?? `Champion #${id}`)
+              .join(" · ") || "—"),
+        ),
+      );
       teams.append(panel);
     }
     root.append(teams);
@@ -670,8 +395,20 @@ async function start() {
   }
   boot = await window.rift.boot();
   recent();
+  ($("search-expander") as HTMLDetailsElement).open =
+    !boot.owner && !boot.profiles.length;
   for (const b of document.querySelectorAll<HTMLButtonElement>("[data-view]"))
     b.onclick = () => view(b.dataset.view!);
+  $("cancel-search").onclick = () => {
+    ++operation;
+    $("cancel-search").hidden = true;
+    status("Chargement annulé.");
+  };
+  $("debug-toggle").onclick = () => {
+    $("debug-panel").hidden = !$("debug-panel").hidden;
+  };
+  $("diagnostics-open").onclick = () => view("diagnostics");
+  $("top-overlay").onclick = () => void window.rift.toggleOverlay().catch(fail);
   $("search").onsubmit = (e) => {
     e.preventDefault();
     void lookup(
@@ -688,6 +425,10 @@ async function start() {
         else status("Ouvre LoL pour détecter ton compte personnel.");
       })
       .catch(fail);
+  $("details").addEventListener("close", () => {
+    dismissHints();
+    $("details-content").querySelector(".runes-popup")?.remove();
+  });
   $("close-details").onclick = () =>
     ($("details") as HTMLDialogElement).close();
   $("overlay-toggle").onclick = () =>

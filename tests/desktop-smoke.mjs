@@ -162,7 +162,13 @@ try {
   const boot = await page.evaluate(() => window.rift.boot());
   assert.equal(JSON.stringify(boot).includes(key), false);
   assert.equal(boot.hasAccessKey, true);
-  await page.getByRole("button", { name: "Rechercher", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Profil joueur", exact: true })
+    .click();
+  await page.locator("#search-expander").evaluate((e) => (e.open = true));
+  await page
+    .getByRole("button", { name: "Charger le profil", exact: true })
+    .click();
   await page
     .getByText("Profil chargé · historique collecté partiel.", { exact: true })
     .waitFor();
@@ -170,7 +176,9 @@ try {
   await page.locator("#details[open]").waitFor();
   await page.getByRole("button", { name: "Fermer", exact: true }).click();
   await page.locator("#riotId").fill("Missing#TAG");
-  await page.getByRole("button", { name: "Rechercher", exact: true }).click();
+  await page
+    .getByRole("button", { name: "Charger le profil", exact: true })
+    .click();
   await page
     .getByText("Collecte différée : player_not_found", { exact: true })
     .waitFor();

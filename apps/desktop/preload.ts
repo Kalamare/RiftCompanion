@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from "electron";
 import type { RiftBridge } from "./contracts";
 const bridge: RiftBridge = {
+  asset: (value) => ipcRenderer.invoke("rift:asset", value),
   boot: () => ipcRenderer.invoke("rift:boot"),
   saveSettings: (s, k) =>
     ipcRenderer.invoke("rift:settings", { settings: s, key: k }),

@@ -61,12 +61,13 @@ Le format des JSON écrits dans PostgreSQL reste compatible avec .NET. Les ancie
 6. Vérifier la draft puis une partie d'entraînement en **sans bordure**. Activer l'overlay dans les réglages ; `Alt+O` le masque/affiche, les clics traversent la fenêtre.
 7. Fermer l'application : l'overlay et les lectures locales s'arrêtent.
 
-L'overlay Electron standard **ne règle pas le plein écran exclusif**. Il présente le roster, les rangs et les statistiques disponibles sur l’échantillon collecté, avec attente explicite lorsque les budgets retardent une recherche. Les éléments graphiques avancés WPF restent à reprendre. Le moteur plein écran (indépendant ou Overwolf approuvé) doit être qualifié séparément avec LoL/Vanguard.
+L'overlay Electron standard **ne règle pas le plein écran exclusif**. Il présente le roster, les rangs et les statistiques disponibles sur l’échantillon collecté, avec attente explicite lorsque les budgets retardent une recherche. La présentation reprend désormais la grille WPF de cinq joueurs sur deux rangées. Le moteur plein écran (indépendant ou Overwolf approuvé) doit être qualifié séparément avec LoL/Vanguard.
 
 ## Développement et vérifications
 
 - `apps/desktop` : main, preload isolé et renderer TypeScript ; aucun Node.js dans la page.
 - `apps/server` : API HTTP et worker durable ; `packages/core` : modèles et calculs communs.
+- `npm run test:ui` : contrôles visuels et fonctionnels dans Chromium (après `npx playwright install chromium`), captures synthétiques à 1 220 et 1 050 px, détails, runes et overlay.
 - `npm run check` : typage, tests métier/cache, compilation.
 - `npm run test:desktop` : Electron réel, serveur synthétique, chiffrement Windows, recherche, détail et redémarrage hors ligne. À lancer sur Windows avec une session graphique.
 - `RIFT_TEST_DATABASE_URL` + `npm run test:integration` : PostgreSQL de test ; chaque exécution utilise et supprime uniquement son propre schéma `rift_check_*`.
@@ -79,4 +80,4 @@ Le serveur distant privé peut être déployé derrière un reverse proxy HTTPS,
 
 ## État de transition
 
-Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu n'est pas une reproduction pixel à pixel de WPF. Restent notamment : graphiques de rangs et de rôles avancés, infobulles illustrées des runes/objets, placement/focus de l’overlay sur plusieurs écrans, import des préférences SQLite, moteur plein écran et mesures de performances en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.
+Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu n'est pas une reproduction pixel à pixel de WPF. Le profil reprend les dimensions, couleurs, onglets, anneau de victoires, barres de rôles et frises de rangs définis dans le XAML. Les détails de partie retrouvent les deux équipes, le joueur sélectionné, les objets et les panneaux de runes. Les images d’objets et de profils proviennent du CDN public Riot, sans clé, et sont conservées en cache. Restent le placement/focus de l’overlay sur plusieurs écrans, l’import des préférences SQLite, le moteur plein écran et les mesures en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.

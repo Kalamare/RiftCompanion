@@ -15,7 +15,8 @@
     "test:integration": "tsx --test tests/integration/*.test.ts",
     "test:desktop": "node tests/desktop-smoke.mjs",
     "package:win": "npm run build && node scripts/package.mjs",
-    "format": "prettier --write \"apps/**/*.{ts,html,css}\" \"packages/**/*.ts\" \"tests/**/*.{ts,mjs}\" \"scripts/*.mjs\""
+    "format": "prettier --write \"apps/**/*.{ts,html,css}\" \"packages/**/*.ts\" \"tests/**/*.{ts,mjs}\" \"scripts/*.mjs\"",
+    "test:ui": "node tests/ui-browser.mjs"
   },
   "dependencies": {
     "pg": "8.16.3",

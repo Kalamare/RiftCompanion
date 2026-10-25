@@ -1,3 +1,4 @@
+import { PublicAssets } from "./public-assets";
 import { OverlayData } from "./overlay-data";
 import {
   app,
@@ -69,13 +70,13 @@ async function request(path: string, method = "GET", body?: unknown) {
 }
 function createWindow(isOverlay = false) {
   const win = new BrowserWindow({
-    width: isOverlay ? 1000 : 1280,
-    height: isOverlay ? 440 : 850,
-    minWidth: isOverlay ? 600 : 950,
-    minHeight: isOverlay ? 200 : 600,
+    width: isOverlay ? 1280 : 1220,
+    height: isOverlay ? 830 : 900,
+    minWidth: isOverlay ? 480 : 1050,
+    minHeight: isOverlay ? 320 : 650,
     show: false,
     title: "RiftCompanion",
-    backgroundColor: "#111720",
+    backgroundColor: isOverlay ? "#00000000" : "#191919",
     ...(isOverlay
       ? {
           frame: false,
@@ -104,7 +105,7 @@ function createWindow(isOverlay = false) {
     win.setIgnoreMouseEvents(true, { forward: true });
     win.setAlwaysOnTop(true, "screen-saver");
     const area = screen.getPrimaryDisplay().workArea;
-    win.setPosition(Math.round(area.x + (area.width - 1000) / 2), area.y + 20);
+    win.setPosition(Math.round(area.x + (area.width - 1280) / 2), area.y + 20);
   } else win.once("ready-to-show", () => win.show());
   return win;
 }
@@ -234,6 +235,11 @@ async function start() {
     /* Reconfigure if the OS cannot decrypt. */
   }
   main = createWindow();
+  const publicAssets = new PublicAssets(
+    join(dir, "public-assets"),
+    net.fetch as typeof fetch,
+  );
+  handle("asset", (input) => publicAssets.get(input), true);
   handle("boot", () => ({
     settings: cache.state.settings,
     hasAccessKey: !!accessKey,

@@ -6,6 +6,8 @@ import {
 } from "../../packages/core/index";
 export interface OverlayEntry {
   player: LivePlayer;
+  level?: number;
+  profileIconId?: number | null;
   status: string;
   stats: ReturnType<typeof overlayStats> | null;
 }
@@ -32,6 +34,8 @@ export class OverlayData {
       const state = this.entries.get(player.riotId);
       return {
         player,
+        level: state?.profile?.level,
+        profileIconId: state?.profile?.profileIconId,
         status:
           state?.status ??
           (player.canLookup ? "En attente" : "Identité indisponible"),

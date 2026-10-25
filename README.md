@@ -1,6 +1,6 @@
 # Rift Companion
 
-**Nouvelle architecture : Electron + TypeScript**, avec API et worker Node.js et PostgreSQL local ou distant. Le parcours de migration ne dépend pas du SDK .NET. Lancer `Lancer-Electron.cmd` ; voir [installation, transition du serveur et contrôles](docs/ELECTRON.md). La parité graphique et le plein écran exclusif restent en qualification.
+**Nouvelle architecture : Electron + TypeScript**, avec API et worker Node.js et PostgreSQL local ou distant. Le parcours de migration ne dépend pas du SDK .NET. Lancer `Lancer-Electron.cmd` ; voir [installation, transition du serveur et contrôles](docs/ELECTRON.md). L’interface WPF est portée dans Electron (profil, graphiques, détails et grille d’overlay). Le plein écran exclusif reste en qualification.
 
 Les versions ci-dessous décrivent l’application WPF historique, conservée pour comparaison et retour arrière.
 
