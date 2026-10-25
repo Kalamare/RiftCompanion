@@ -158,6 +158,10 @@ export function renderProfile(
   actions: ProfileActions,
 ) {
   dismissHints();
+  const key = `${p.platform}:${p.puuid}:${queue}`;
+  const oldList = root.querySelector<HTMLElement>(".match-list");
+  const scroll = oldList?.dataset.key === key ? oldList.scrollTop : 0;
+  const pageScroll = window.scrollY;
   root.replaceChildren();
   if (seasonKey !== p.platform + ":" + p.puuid) {
     seasonKey = p.platform + ":" + p.puuid;
@@ -279,13 +283,14 @@ export function renderProfile(
         m.queue === queue ||
         (queue === -1 && [420, 440].includes(m.queue)),
     ),
-    s = summary(matches);
+    overviewMatches = p.overviewMatches ?? matches.slice(0, 20),
+    s = summary(overviewMatches);
   const overview = node("div", "", "overview-strip");
   const balance = node("section", "", "panel balance-panel");
-  balance.append(node("h2", "Bilan", "teal"));
+  balance.append(node("h2", "Bilan · 20 récentes", "teal"));
   const body = node("div", "", "balance-body");
   const values = node("div", "", "balance-values");
-  const played = matches.filter((m) => !m.remake && m.seconds > 0);
+  const played = overviewMatches.filter((m) => !m.remake && m.seconds > 0);
   const mean = (key: "kills" | "deaths" | "assists") =>
     played.length
       ? played.reduce((sum, m) => sum + m[key], 0) / played.length
@@ -303,7 +308,7 @@ export function renderProfile(
   );
   body.append(donut(s.wins, s.games), values);
   balance.append(body);
-  balance.title = `${s.games} parties chargées · remakes exclus. Participation : ${s.participation === null ? "indisponible" : number(s.participation) + " %"}`;
+  balance.title = `${s.games} des 20 premières parties du filtre disponibles · remakes exclus. Participation : ${s.participation === null ? "indisponible" : number(s.participation) + " %"}`;
   const detail = node("details", "", "balance-more");
   detail.append(node("summary", "Détails"));
   const metrics = node("div", "", "extra-metrics");
@@ -326,8 +331,8 @@ export function renderProfile(
   balance.append(detail);
   const champions = node("section", "", "panel champions-panel");
   champions.append(node("h2", "Champions"));
-  champions.title = "Top 3 sur les 20 dernières parties chargées, tous modes.";
-  const recent = p.matches.slice(0, 20);
+  champions.title = "Top 3 sur les 20 premières parties du filtre disponibles.";
+  const recent = overviewMatches;
   const top = [...new Set(recent.map((m) => m.champion))]
     .map((champion) => ({
       champion,
@@ -351,10 +356,12 @@ export function renderProfile(
     champions.append(row);
   }
   const roles = node("section", "", "panel roles-panel");
-  roles.append(node("h2", "Rôles"), roleBars(matches));
+  roles.append(node("h2", "Rôles"), roleBars(overviewMatches));
   overview.append(balance, champions, roles);
   right.append(overview);
   const list = node("div", "", "match-list");
+  list.dataset.key = key;
+  list.dataset.count = String(matches.length);
   if (!matches.length)
     list.append(
       node(
@@ -365,7 +372,7 @@ export function renderProfile(
         "muted",
       ),
     );
-  for (const m of matches) {
+  const matchCard = (m: Match) => {
     const card = action(
       "",
       () => actions.details(m.id),
@@ -403,12 +410,52 @@ export function renderProfile(
       ),
     );
     card.append(identity, combat, gear);
-    list.append(card);
-  }
+    return card;
+  };
+  // Keep DOM/bitmap work bounded while retaining every loaded match in memory.
+  const virtual = matches.length > 50;
+  let drawn = -1;
+  const drawWindow = () => {
+    const first = virtual
+      ? Math.max(0, Math.floor(list.scrollTop / 104) - 5)
+      : 0;
+    if (first === drawn || !matches.length) return;
+    drawn = first;
+    const end = virtual ? Math.min(matches.length, first + 24) : matches.length;
+    const before = node("div"),
+      after = node("div");
+    before.style.height = `${first * 104}px`;
+    after.style.height = `${(matches.length - end) * 104}px`;
+    list.replaceChildren(
+      before,
+      ...matches.slice(first, end).map(matchCard),
+      after,
+    );
+  };
+  drawWindow();
   right.append(list);
+  list.scrollTop = scroll;
+  drawWindow();
+  let lastScroll = scroll;
+  list.onscroll = () => {
+    const moved = list.scrollTop > lastScroll;
+    lastScroll = list.scrollTop;
+    drawWindow();
+    if (
+      moved &&
+      p.hasMore &&
+      !actions.loadingMore &&
+      list.scrollHeight - list.scrollTop - list.clientHeight < 260
+    )
+      actions.more();
+  };
   if (p.hasMore) {
     const more = action(
-      actions.loadingMore ? "Chargement…" : "Voir plus · 10 parties",
+      actions.loadingMore
+        ? "Chargement…"
+        : p.historyState === "deferred"
+          ? "Suite en attente · reprise automatique"
+          : "Voir plus de parties",
       actions.more,
       "more-matches",
     );
@@ -418,12 +465,21 @@ export function renderProfile(
     right.append(
       node(
         "p",
-        `${p.matches.length} parties chargées · Toutes les parties actuellement disponibles sur le serveur sont affichées. L’historique collecté peut être partiel.`,
+        `${p.matches.length} parties chargées · ${p.historyState === "complete" ? "Fin de l’historique accessible auprès de Riot pour ce filtre." : "Toutes les parties actuellement disponibles sur le serveur sont affichées. L’historique collecté peut être partiel."}`,
         "history-end",
       ),
     );
   }
+  if (p.historyState === "deferred")
+    right.append(
+      node(
+        "p",
+        "La source est momentanément indisponible. La collecte reprendra automatiquement ; vos parties restent visibles.",
+        "muted",
+      ),
+    );
   root.append(
     node("p", "Rift Companion n’est pas approuvé par Riot Games.", "legal"),
   );
+  window.scrollTo({ top: pageScroll, behavior: "instant" });
 }

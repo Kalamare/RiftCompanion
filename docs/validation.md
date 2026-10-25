@@ -1,15 +1,16 @@
 # Validation
 
-## Dernière preuve automatisée
+## Synchronisation progressive — vérification actuelle
 
-Commit applicatif [adcd1f9](https://github.com/Kalamare/RiftCompanion/commit/adcd1f98e4a870a37c6fc61731b1f82e2a63125d), [CI du 25 octobre 2026](https://github.com/Kalamare/RiftCompanion/actions/runs/40224905591) :
+Le parcours de synchronisation a été vérifié localement sur une base PostgreSQL 17 dédiée et des données entièrement synthétiques :
 
-- 18 tests domaine/cache/logique UI et typage/compilation réussis.
-- 12 contrôles d’intégration PostgreSQL réussis.
-- Contrôles Chromium : disposition à 1220/1050 px, filtres, objets, détails, runes et grille d’overlay ; démarrage automatique, pagination 10→20→30→35 avec mise à jour intermédiaire, cache hors ligne.
-- Tests Electron réels sous Windows depuis les sources et depuis l’exécutable portable : isolation du renderer, secret chiffré, recherche, détails, récupération après erreur et redémarrage hors ligne.
+- 18 tests domaine/cache/logique UI, typage et compilation réussis.
+- 15 contrôles PostgreSQL : migration additive, ancien format, trente consultations simultanées mutualisées, checkpoints, quota/reprise, détails manquants, pages source décalées sans doublon, rotation des profils, admission saturée à 1 000 sessions avec cache toujours lisible.
+- Chromium : cache puis chargement automatique partiel, poursuite d’une page initialement absente, filtres serveur, bilan indépendant des pages, défilement automatique, position conservée et DOM virtualisé sur un historique de 120 parties synthétiques. Les contrôles de disposition, détails, runes et overlay sont conservés.
 
-Les captures utilisent des données synthétiques. L’utilisateur a constaté le lancement et les données de KalAram#ARAM ; les derniers correctifs de démarrage/pagination attendent sa recette réelle. Ces résultats ne mesurent pas les FPS dans LoL.
+La [CI de la branche](https://github.com/Kalamare/RiftCompanion/actions/workflows/electron.yml) rejoue ces tests et les contrôles Electron Windows depuis les sources puis l’exécutable portable. Utiliser une exécution réussie correspondant au commit récupéré. La preuve Windows antérieure, avant ce changement de collecte, est [adcd1f9 / exécution 40224905591](https://github.com/Kalamare/RiftCompanion/actions/runs/40224905591).
+
+La recette de cette nouvelle collecte sur KalAram#ARAM reste à réaliser. Ces contrôles ne sont ni une mesure de charge de milliers d’utilisateurs, ni un test des quotas réels Riot, ni une mesure des FPS dans LoL.
 
 ## Rejouer
 
@@ -38,7 +39,7 @@ Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec 
 1. Démarrer le backend et vérifier `/health` sur le port effectivement publié.
 2. Démarrer Electron : cache immédiat, puis chargement automatique de KalAram#ARAM sans appuyer sur Actualiser.
 3. Comparer niveau/rangs et quelques parties ; tester filtres, objets, runes et navigation vers un participant.
-4. Ajouter plusieurs pages si disponibles ; vérifier fin explicite, défilement et maintien de la liste lors d’une mise à jour.
+4. Faire défiler plusieurs pages au-delà des parties déjà stockées ; vérifier collecte automatique, reprise après quota, filtre Solo/ARAM, bilan stable et position conservée. Relancer le worker pendant une page en cours, puis vérifier la reprise sans doublon. Ne pas effacer de volume.
 5. Rechercher un autre compte puis revenir à Mon profil ; redémarrer sans serveur et vérifier le propriétaire en cache.
 6. En partie d’entraînement sans bordure, tester Alt+O, clics traversants, Alt-Tab, transitions et fermeture.
 7. Vérifier l’arrêt des processus et les performances sur une session prolongée.

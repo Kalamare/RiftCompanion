@@ -1,3 +1,4 @@
+import { syncSchema } from "./sync";
 import { Pool, PoolClient } from "pg";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
@@ -33,6 +34,7 @@ export interface Job {
   window_until: Date;
   kind: string;
   state: string;
+  queue?: number;
 }
 export interface Identity {
   puuid: string;
@@ -81,6 +83,7 @@ export class Store {
         if (version.rows[0].version > 2) throw new Error("schema_too_new");
       }
       await c.query(schema);
+      await c.query(syncSchema);
     });
   }
   async budget(c: PoolClient, kind: string, limit: number) {
@@ -113,7 +116,12 @@ export class Store {
         );
         return { id };
       }
-      await this.budget(c, "lookup", 3);
+      // Queue admission applies only to new work; reads and deduplicated lookups continue.
+      const pending = await c.query(
+        "SELECT count(*) FROM profile_jobs WHERE puuid IS NULL AND active_until>now()",
+      );
+      if (Number(pending.rows[0].count) >= 1000)
+        throw new WorkLimit(new Date(Date.now() + 30000));
       const id = randomUUID();
       await c.query(
         "INSERT INTO profile_jobs(id,platform,riot_id,normalized_id,active_until,coverage_from,window_from,window_until) VALUES($1,$2,$3,$4,now()+interval '30 minutes',$5,$5,date_trunc('second',now()))",
@@ -456,7 +464,7 @@ export class Store {
       await c.query("SELECT pg_advisory_xact_lock(84723004)");
       const { rows } = await c.query(
         `WITH turn AS (UPDATE collector_turn SET value=value+1 WHERE id=1 RETURNING value)
- UPDATE profile_jobs SET state='running',lease_until=now()+interval '30 minutes',error=null,refresh_after=CASE WHEN kind='recent' AND cursor=0 AND (state='ready' OR refresh_after IS NULL) THEN now()+interval '5 minutes' ELSE refresh_after END,window_until=CASE WHEN state='ready' THEN date_trunc('second',now()) ELSE window_until END
+ UPDATE profile_jobs SET state='running',lease_until=now()+interval '30 seconds',error=null,refresh_after=CASE WHEN kind='recent' AND cursor=0 AND (state='ready' OR refresh_after IS NULL) THEN now()+interval '5 minutes' ELSE refresh_after END,window_until=CASE WHEN state='ready' THEN date_trunc('second',now()) ELSE window_until END
  WHERE id=(SELECT id FROM profile_jobs WHERE active_until>now() AND due_at<=now() AND NOT(kind='history' AND scanned) AND ($1 OR kind='recent' OR puuid IS NULL) AND (lease_until IS NULL OR lease_until<now()) ORDER BY CASE WHEN (SELECT value FROM turn)%4=0 THEN (kind='history') ELSE (puuid IS NULL OR kind='recent') END DESC,due_at FOR UPDATE SKIP LOCKED LIMIT 1) RETURNING *`,
         [this.history],
       );
@@ -465,6 +473,7 @@ export class Store {
   }
   async complete(job: Job, count: number) {
     await this.tx(async (c) => {
+      await c.query("DELETE FROM collector_batches WHERE job_id=$1", [job.id]);
       await c.query("SELECT pg_advisory_xact_lock(84723003)");
       const done = count < 20 || (job.kind === "recent" && !this.history);
       await c.query(

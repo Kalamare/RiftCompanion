@@ -4,7 +4,7 @@
 
 ## Disponible en qualification
 
-Client Electron, API/worker Node.js, PostgreSQL compatible avec les données existantes, interface portée depuis WPF, profils/détails/runes, statistiques partielles de saison, cache hors ligne et overlay de dix joueurs. Le démarrage automatique et la pagination conservée sont corrigés et testés ; la recette du dernier correctif sur le PC utilisateur reste à confirmer.
+Client Electron, API/worker Node.js, PostgreSQL compatible avec les données existantes, interface portée depuis WPF, profils/détails/runes, statistiques partielles de saison, cache hors ligne et overlay de dix joueurs. La synchronisation progressive, la collecte au défilement, les filtres serveur, les sessions partagées et le bilan récent indépendant des pages sont implémentés ; la recette du dernier correctif sur le PC utilisateur reste à confirmer.
 
 ## 1. Stabiliser la version personnelle
 
@@ -16,13 +16,21 @@ Client Electron, API/worker Node.js, PostgreSQL compatible avec les données exi
 
 Critère : parcours reproductible sur le PC utilisateur, erreurs compréhensibles et aucune régression de données ou d’interface.
 
-## 2. Mesurer les performances et traiter le plein écran
+## 2. Compléter et qualifier la collecte
+
+- Recetter les pages manquantes et la reprise après quota sur KalAram, puis mesurer latence, attente en file, taux de cache et fraîcheur sur plusieurs profils.
+- Ajouter bilans 30 jours/périodes, couverture et collecte de statistiques indépendantes du défilement, sans présenter les agrégats partiels comme complets.
+- Ajouter profils suivis et signal de fin de partie avec déduplication et admission serveur.
+- Définir rétention/compaction des sessions, observabilité et migration versionnée de l’extension SQL.
+- Avant le public : remplacer la clé partagée par des comptes, établir les budgets/équité par compte, puis tester charge et pannes avec les quotas Riot réellement alloués.
+
+## 3. Mesurer les performances et traiter le plein écran
 
 Comparer LoL seul, application ouverte, overlay masqué et visible : trois passages comparables, CPU/RAM de tous les processus Electron, GPU, temps de frame p95/p99, 1 % low et endurance 60 minutes. Fixer les budgets à partir de la machine de référence, sans annoncer d’impact nul.
 
 Plein écran exclusif : moteur indépendant souhaité, sans Game Bar. Les essais GOverlay/DirectX sont des bancs expérimentaux ; licence, adaptateur Electron, compatibilité Riot/Vanguard et recette réelle restent à établir. Une compilation réussie ne vaut pas qualification LoL. Voir [Overlay](OVERLAY.md).
 
-## 3. Enrichir le profil sans inventer des données
+## 4. Enrichir le profil sans inventer des données
 
 - Observations LP : table additive par joueur/file/saison avec date, tier/division/LP et provenance. Réutiliser les réponses de rang déjà obtenues, dédupliquer, afficher les trous et ne pas attribuer arbitrairement un delta à un match.
 - Graphique LP : lectures bornées 7/30/90 jours, promotions/apex/saisons testés, aucun passé reconstruit avant les premières observations.
@@ -30,13 +38,13 @@ Plein écran exclusif : moteur indépendant souhaité, sans Game Bar. Les essais
 - Variantes Arena : placements réels et agrégats compatibles, sans les déduire du seul booléen victoire.
 - Calendrier de saison explicite et partagé entre collecte et interface.
 
-## 4. Préparer le serveur distant puis le public
+## 5. Préparer le serveur distant puis le public
 
 Le serveur privé distant est une étape intermédiaire, pas un service public prêt à ouvrir. Prévoir HTTPS, sauvegardes restaurées en test, comptes/sessions, quotas individuels, supervision, migrations, confidentialité/rétention, signature et mises à jour du client. Vérifier l’enregistrement du produit, les droits des sources et la clé Riot adaptée.
 
 Le préchargement EUW reste une proposition : population, volume, budget et fraîcheur bornés, priorité aux consultations, curseurs durables et métriques du taux de cache. Les pages de saison de 100 identifiants sont une optimisation à étudier ; le code actuel utilise 20. Pas de dataset externe importé ni d’exploration massive active.
 
-## 5. Revenir aux aides de draft et d’équipement
+## 6. Revenir aux aides de draft et d’équipement
 
 Après stabilisation : pool de champions, caractéristiques éditoriales sourcées, recommandations expliquées et évaluation sur des drafts annotées. Les données de matchups nécessitent un corpus autorisé et une validation séparée.
 

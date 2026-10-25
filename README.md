@@ -13,6 +13,7 @@ git fetch origin
 git switch codex/electron-migration
 git pull --ff-only
 npm ci
+docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d --build api worker
 .\Lancer-Electron.cmd
 ```
 

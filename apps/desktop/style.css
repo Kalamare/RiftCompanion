@@ -553,6 +553,7 @@ summary {
   margin-top: 3px;
 }
 .match-list {
+  overflow-anchor: none;
   max-height: 720px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -570,7 +571,7 @@ summary {
   background: #482d32;
   text-align: left;
   font-weight: 400;
-  min-height: 96px;
+  height: 96px;
 }
 .match.win {
   background: #293a5c;

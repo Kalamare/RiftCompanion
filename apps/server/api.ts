@@ -1,6 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { z } from "zod";
+import { HistorySync } from "./sync";
 import { Store, WorkLimit } from "./store";
 import { platformSchema, puuidSchema } from "../../packages/core/index";
 import { openStore, secret } from "./config";
@@ -27,8 +28,7 @@ export function api(store: Store, key: string) {
   if (key.length < 32 || key.length > 256)
     throw new Error("RIFT_ACCESS_KEY must contain 32–256 characters");
   const expected = hash(key);
-  let requests = 0,
-    window = Date.now();
+  let activeRequests = 0;
   return createServer(async (req, res) => {
     const send = (status: number, data: unknown) => {
       res.writeHead(status, {
@@ -38,6 +38,7 @@ export function api(store: Store, key: string) {
       });
       res.end(JSON.stringify(data));
     };
+    let admitted = false;
     try {
       const url = new URL(req.url ?? "/", "http://localhost");
       const method = req.method ?? "GET";
@@ -58,15 +59,14 @@ export function api(store: Store, key: string) {
         send(401, { error: "unauthorized" });
         return;
       }
-      if (Date.now() - window >= 60000) {
-        window = Date.now();
-        requests = 0;
-      }
-      if (++requests > 180) {
-        res.setHeader("Retry-After", "60");
-        send(429, { error: "rate_limited" });
+      // Backpressure limits concurrent DB work, not pages viewed or refresh time.
+      if (activeRequests >= 64) {
+        res.setHeader("Retry-After", "2");
+        send(503, { error: "server_busy" });
         return;
       }
+      activeRequests++;
+      admitted = true;
       let result: unknown = null;
       if (url.pathname === "/v1/profiles/lookup" && method === "POST") {
         result = await store.lookup(await body(req));
@@ -99,7 +99,27 @@ export function api(store: Store, key: string) {
             );
         } else if (action === "refresh" && ["GET", "POST"].includes(method))
           result = await store.refresh(platform, puuid, method === "POST");
-        else if (action === "profile" && method === "GET") {
+        else if (action === "history" && method === "GET") {
+          result = await new HistorySync(store).browse(
+            platform,
+            puuid,
+            z.coerce
+              .number()
+              .int()
+              .min(-1)
+              .max(10000)
+              .parse(url.searchParams.get("queue") ?? 0),
+            z.coerce
+              .number()
+              .int()
+              .min(0)
+              .max(2147483647)
+              .parse(url.searchParams.get("start") ?? 0),
+            url.searchParams.has("session")
+              ? z.uuid().parse(url.searchParams.get("session"))
+              : undefined,
+          );
+        } else if (action === "profile" && method === "GET") {
           const number = (name: string, fallback: number, max: number) =>
             z.coerce
               .number()
@@ -166,15 +186,21 @@ export function api(store: Store, key: string) {
         error instanceof SyntaxError ||
         error instanceof URIError ||
         (error instanceof Error &&
-          ["invalid_dates", "invalid_match", "body_too_large"].includes(
-            error.message,
-          ))
+          [
+            "invalid_dates",
+            "invalid_match",
+            "body_too_large",
+            "invalid_history_session",
+            "history_cursor_not_ready",
+          ].includes(error.message))
       )
         send(400, { error: "invalid_input" });
       else {
         console.error("API storage/request failure");
         send(503, { error: "storage_unavailable" });
       }
+    } finally {
+      if (admitted) activeRequests--;
     }
   });
 }

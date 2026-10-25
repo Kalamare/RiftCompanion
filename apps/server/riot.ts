@@ -164,7 +164,7 @@ export class Riot {
     const recent = job.kind === "recent" && !this.store.history;
     const ids = await this.get(
       regions[job.platform],
-      `/lol/match/v5/matches/by-puuid/${encodeURIComponent(job.puuid!)}/ids?start=${recent ? 0 : job.cursor}&count=${recent ? 10 : 20}&startTime=${recent ? 0 : Math.floor(job.window_from.getTime() / 1000)}&endTime=${Math.floor(job.window_until.getTime() / 1000)}`,
+      `/lol/match/v5/matches/by-puuid/${encodeURIComponent(job.puuid!)}/ids?start=${recent ? 0 : job.cursor}&count=${recent ? 10 : 20}&startTime=${recent ? 0 : Math.floor(job.window_from.getTime() / 1000)}&endTime=${Math.floor(job.window_until.getTime() / 1000)}${job.queue && job.queue > 0 ? "&queue=" + job.queue : job.queue === -1 ? "&type=ranked" : ""}`,
     );
     if (
       !Array.isArray(ids) ||
@@ -202,8 +202,7 @@ export async function collect(
     if (!locked) return false;
     job = await store.claim();
     if (!job) return false;
-    if (job.cursor >= 10000)
-      throw new SourceFailure("history_limit_reached", 86400000);
+
     const card = job.puuid ? await store.player(job.platform, job.puuid) : null;
     if (
       !job.puuid ||
@@ -222,9 +221,29 @@ export async function collect(
       );
       return true;
     }
-    const ids = await riot.ids(job);
+    let batch = (
+      await store.pool.query(
+        "SELECT * FROM collector_batches WHERE job_id=$1",
+        [job.id],
+      )
+    ).rows[0];
+    if (!batch) {
+      const ids = await riot.ids(job);
+      await store.tx(async (c) => {
+        await c.query(
+          "INSERT INTO collector_batches(job_id,ids) VALUES($1,$2::jsonb)",
+          [job!.id, JSON.stringify(ids)],
+        );
+        await c.query(
+          "UPDATE profile_jobs SET state='queued',lease_until=null,due_at=now() WHERE id=$1",
+          [job!.id],
+        );
+      });
+      return true;
+    }
+    const ids: string[] = batch.ids;
     const region = regions[job.platform];
-    for (const id of new Set(ids)) {
+    for (const id of ids.slice(batch.position, batch.position + 1)) {
       signal?.throwIfAborted();
       if (!(await store.details(job.platform, id))) {
         const details = await riot.match(region, id);
@@ -233,21 +252,36 @@ export async function collect(
             "INSERT INTO unavailable_matches VALUES($1,$2) ON CONFLICT DO NOTHING",
             [job.id, id],
           );
-          continue;
+          // Unavailable details still consume their index position.
+        } else {
+          if (
+            details.id !== id ||
+            !details.participants.some((p) => p.puuid === job!.puuid)
+          )
+            throw new SourceFailure("invalid_match");
+          await store.ingest(region, details);
         }
-        if (
-          details.id !== id ||
-          !details.participants.some((p) => p.puuid === job!.puuid)
-        )
-          throw new SourceFailure("invalid_match");
-        await store.ingest(region, details);
       }
-      await store.pool.query(
-        "DELETE FROM unavailable_matches WHERE job_id=$1 AND match_id=$2",
-        [job.id, id],
-      );
+      if (await store.details(job.platform, id))
+        await store.pool.query(
+          "DELETE FROM unavailable_matches WHERE job_id=$1 AND match_id=$2",
+          [job.id, id],
+        );
     }
-    await store.complete(job, ids.length);
+    if (batch.position + 1 < ids.length) {
+      await store.tx(async (c) => {
+        await c.query(
+          "UPDATE collector_batches SET position=position+1 WHERE job_id=$1",
+          [job!.id],
+        );
+        await c.query(
+          "UPDATE profile_jobs SET state='queued',lease_until=null,due_at=now() WHERE id=$1",
+          [job!.id],
+        );
+      });
+    } else {
+      await store.complete(job, ids.length);
+    }
     return true;
   } catch (error) {
     if (job)

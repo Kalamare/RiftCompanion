@@ -64,6 +64,9 @@ export interface RiftBridge {
     platform: Platform;
     puuid: string;
     start?: number;
+    queue?: number;
+    session?: string;
+    sync?: boolean;
     end?: number;
   }): Promise<Profile>;
   card(input: { platform: Platform; puuid: string }): Promise<Card>;

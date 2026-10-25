@@ -40,7 +40,7 @@ docker compose -p rift-real --env-file server/.env -f server/compose.yaml stop a
 docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d --build api worker
 ```
 
-Le schéma PostgreSQL reste en v2 et les JSON persistants restent compatibles avec les services historiques. Les matchs, agrégats, curseurs et quotas sont conservés. Ne pas faire tourner un ancien worker en parallèle et ne pas utiliser `down -v` sur la base réelle.
+Le schéma de base PostgreSQL reste en v2 et les JSON persistants restent compatibles avec les services historiques. Les services TypeScript ajoutent les tables de synchronisation sans supprimer de données. Les matchs, agrégats, curseurs et quotas sont conservés. Ne pas faire tourner un ancien worker en parallèle et ne pas utiliser `down -v` sur la base réelle.
 
 ## Mises à jour et arrêt
 
@@ -58,9 +58,9 @@ docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f ser
 
 ## Historique et clé Riot
 
-Par défaut, le worker demande les **dix matchs récents**. « Voir plus » consulte uniquement les données présentes en base ; les anciennes collectes et les contributions de participants peuvent fournir davantage de matchs.
+La consultation ouvre une session de synchronisation partagée. Le défilement et « Voir plus » demandent automatiquement les pages manquantes ; les suivantes sont préparées en arrière-plan. Ce parcours fonctionne avec `RIFT_HISTORY_BACKFILL=false`, sans plafond total de matchs imposé par l’application. Les quotas et l’historique accessible auprès de Riot restent contraignants. Le bilan récent utilise vingt positions indépendamment des pages ouvertes.
 
-Pour collecter depuis `RIFT_HISTORY_FROM`, mettre `RIFT_HISTORY_BACKFILL=true` dans `server/.env`, puis appliquer :
+Pour ajouter un parcours de fond de toute la période depuis `RIFT_HISTORY_FROM`, mettre `RIFT_HISTORY_BACKFILL=true` dans `server/.env`, puis appliquer :
 
 ```powershell
 docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d api worker

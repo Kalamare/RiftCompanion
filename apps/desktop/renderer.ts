@@ -34,6 +34,8 @@ let boot: Boot,
   polling = false;
 let profileVersion = -1;
 let loadingMore = false;
+let wanted = 10;
+let historyTimer: ReturnType<typeof setTimeout> | undefined;
 let activeView = "profile";
 const overlay = new URLSearchParams(location.search).has("overlay");
 function status(text: string, error = false) {
@@ -59,6 +61,14 @@ function fail(e: unknown) {
     true,
   );
 }
+function retryable(e: unknown) {
+  return (
+    e instanceof Error &&
+    /Quota serveur|Serveur indisponible|ERR_CONNECTION|ERR_TIMED_OUT|fetch failed|timeout/i.test(
+      e.message,
+    )
+  );
+}
 function showProfile(p: Profile) {
   profile = p;
   view("profile");
@@ -66,6 +76,9 @@ function showProfile(p: Profile) {
 }
 async function lookup(riotId: string, platform: Platform) {
   loadingMore = false;
+  wanted = 10;
+  queue = 0;
+  clearTimeout(historyTimer);
   const token = ++operation;
   profileVersion = -1;
   status("Recherche du profil…");
@@ -75,7 +88,12 @@ async function lookup(riotId: string, platform: Platform) {
       p?.platform === platform &&
       p.riotId.toUpperCase() === riotId.toUpperCase(),
   );
-  if (cached) showProfile(cached);
+  if (cached)
+    showProfile({
+      ...cached,
+      historySession: undefined,
+      historyQueue: undefined,
+    });
   else {
     profile = null;
     view("profile");
@@ -89,6 +107,10 @@ async function lookup(riotId: string, platform: Platform) {
     if (token === operation) {
       $("cancel-search").hidden = true;
       fail(e);
+      if (retryable(e))
+        setTimeout(() => {
+          if (token === operation) void lookup(riotId, platform);
+        }, 30000);
       if (cached)
         status(
           "Serveur inaccessible · profil en cache du " +
@@ -120,6 +142,7 @@ async function pollLookup(id: string, token: number, attempt = 0) {
       }
       profileVersion = state.player.version;
       showProfile(p);
+      scheduleHistory();
       boot.profiles = [
         p,
         ...boot.profiles.filter((x) => x.puuid !== p.puuid),
@@ -132,6 +155,11 @@ async function pollLookup(id: string, token: number, attempt = 0) {
         `Collecte différée : ${state.error ?? "serveur indisponible"}${state.retryAt ? " · reprise après " + new Date(state.retryAt).toLocaleTimeString("fr-FR") : ""}`,
         true,
       );
+      const wait = Math.max(
+        2000,
+        Math.min(60000, Date.parse(state.retryAt ?? "") - Date.now() || 30000),
+      );
+      setTimeout(() => void pollLookup(id, token, attempt + 1), wait);
       return;
     }
     const pending = !profile || profile.historyPending || profile.ranksPending;
@@ -141,10 +169,14 @@ async function pollLookup(id: string, token: number, attempt = 0) {
         ? "Chargement progressif du profil…"
         : "Profil chargé · historique collecté partiel.",
     );
-    if (attempt < 60 && (pending || attempt < 10))
+    if (pending || attempt < 10)
       setTimeout(() => void pollLookup(id, token, attempt + 1), 2000);
   } catch (e) {
-    if (token === operation) fail(e);
+    if (token === operation) {
+      fail(e);
+      if (retryable(e))
+        setTimeout(() => void pollLookup(id, token, attempt + 1), 30000);
+    }
   }
 }
 function recent() {
@@ -163,8 +195,15 @@ function renderProfile() {
   originalProfile($("profile-content"), p, queue, {
     refresh: () => void refreshProfile(),
     filter: (q) => {
+      if (queue === q) return;
       queue = q;
+      wanted = 10;
+      ++operation;
+      loadingMore = false;
+      clearTimeout(historyTimer);
+      // The cached view remains visible while the server resolves this filter.
       renderProfile();
+      void updateHistory();
     },
     details: (id) => void details(id, p.platform),
     more: () => void more(),
@@ -201,37 +240,53 @@ async function refreshProfile() {
     fail(e);
   }
 }
-async function more() {
-  if (!profile || loadingMore || !profile.hasMore) return;
+function scheduleHistory() {
+  clearTimeout(historyTimer);
+  if (
+    (!profile?.historySession && profile?.historyState !== "deferred") ||
+    !profile.hasMore ||
+    profile.nextStart >= wanted
+  )
+    return;
+  const wait = Math.max(
+    1500,
+    Math.min(60000, Date.parse(profile.historyRetryAt ?? "") - Date.now() || 0),
+  );
+  historyTimer = setTimeout(() => void updateHistory(), wait);
+}
+async function updateHistory() {
+  const p = profile,
+    token = operation;
+  if (!p?.puuid || loadingMore || activeView !== "profile") return;
   loadingMore = true;
   renderProfile();
-  const token = operation,
-    p = profile;
   try {
-    const next = await window.rift.profile({
-      platform: p.platform,
-      puuid: p.puuid,
-      start: p.nextStart,
-      end: p.historyEndTime,
-    });
+    const fresh = await readVisibleProfile(p.platform, p.puuid);
     if (token !== operation || profile !== p) return;
-    showProfile({
-      ...next,
-      matches: [
-        ...p.matches,
-        ...next.matches.filter(
-          (m) => !p.matches.some((old) => old.id === m.id),
-        ),
-      ],
-    });
+    profile = fresh;
+    if (!fresh.matches.length && fresh.hasMore)
+      wanted = Math.max(wanted, fresh.nextStart + 10);
+    status(
+      fresh.historyState === "deferred"
+        ? `Collecte différée · reprise automatique${fresh.historyRetryAt ? " après " + new Date(fresh.historyRetryAt).toLocaleTimeString("fr-FR") : ""}. Les données enregistrées restent consultables.`
+        : fresh.historyState === "complete"
+          ? "Historique accessible chargé."
+          : "Profil synchronisé · la suite se prépare en arrière-plan.",
+    );
   } catch (e) {
     if (token === operation) fail(e);
   } finally {
     if (token === operation) {
       loadingMore = false;
       renderProfile();
+      scheduleHistory();
     }
   }
+}
+async function more() {
+  if (!profile || loadingMore || !profile.hasMore) return;
+  wanted = Math.max(wanted, profile.nextStart) + 10;
+  await updateHistory();
 }
 async function details(id: string, platform: Platform) {
   const token = operation;
@@ -375,37 +430,60 @@ async function pollClient() {
     setTimeout(() => void pollClient(), 3000);
   }
 }
-// Re-read the visible window against its original snapshot when paginated.
-// A background update must not collapse the list back to its first ten games.
+// Read metadata/overview once, then only the missing tail. Indexed snapshots
+// keep previously displayed rows stable even while other collectors ingest data.
 async function readVisibleProfile(platform: Platform, puuid: string) {
   const previous = profile;
-  const expanded =
+  const same =
     previous?.puuid === puuid &&
     previous.platform === platform &&
-    previous.nextStart > 10;
-  let result = await window.rift.profile({
+    (previous.historyQueue ?? 0) === queue;
+  const first = await window.rift.profile({
     platform,
     puuid,
-    ...(expanded ? { end: previous.historyEndTime } : {}),
+    sync: true,
+    queue,
+    ...(same && previous.historySession && previous.nextStart > 10
+      ? { session: previous.historySession }
+      : {}),
   });
-  const target = expanded ? previous.nextStart : 10;
+  let result = first;
+  if (
+    same &&
+    previous.historySession === first.historySession &&
+    previous.nextStart > first.nextStart
+  ) {
+    const ids = new Set(previous.matches.map((m) => m.id));
+    result = {
+      ...first,
+      nextStart: previous.nextStart,
+      hasMore: previous.hasMore,
+      matches: [
+        ...previous.matches,
+        ...first.matches.filter((m) => !ids.has(m.id)),
+      ],
+    };
+  }
+  // Compatibility with stored-only fixtures/older server responses.
+  const target = same ? Math.max(wanted, previous.nextStart) : wanted;
   while (result.hasMore && result.nextStart < target) {
     const next = await window.rift.profile({
       platform,
       puuid,
+      sync: true,
+      queue,
+      session: result.historySession,
       start: result.nextStart,
       end: result.historyEndTime,
     });
-    if (next.nextStart <= result.nextStart) break;
+    const old = result.nextStart === 0 ? [] : result.matches;
+    const ids = new Set(old.map((m) => m.id));
+    const advanced = next.nextStart > result.nextStart;
     result = {
       ...next,
-      matches: [
-        ...result.matches,
-        ...next.matches.filter(
-          (m) => !result.matches.some((old) => old.id === m.id),
-        ),
-      ],
+      matches: [...old, ...next.matches.filter((m) => !ids.has(m.id))],
     };
+    if (!advanced) break;
   }
   return result;
 }
@@ -421,19 +499,26 @@ async function watchProfile() {
       if (
         token === operation &&
         profile === p &&
-        card.version !== profileVersion
+        (card.version !== profileVersion ||
+          p.historyState === "deferred" ||
+          (p.historySession &&
+            ((p.nextStart < wanted && p.hasMore) ||
+              ((p.overviewMatches?.length ?? 0) < 20 &&
+                p.historyState !== "complete"))) ||
+          p.historyQueue !== queue)
       ) {
         const fresh = await readVisibleProfile(p.platform, p.puuid);
         if (token === operation && profile === p && !loadingMore) {
           profileVersion = card.version;
           showProfile(fresh);
+          scheduleHistory();
         }
       }
     }
   } catch {
     /* Offline cache stays visible; explicit actions report errors. */
   } finally {
-    setTimeout(() => void watchProfile(), 15000);
+    setTimeout(() => void watchProfile(), 5000);
   }
 }
 async function start() {
@@ -523,7 +608,7 @@ async function start() {
       })
       .catch(fail);
   };
-  setTimeout(() => void watchProfile(), 15000);
+  setTimeout(() => void watchProfile(), 5000);
   if (boot.owner) showProfile(boot.owner);
   else if (boot.profiles[0]) showProfile(boot.profiles[0]);
   if (boot.hasAccessKey && profile)

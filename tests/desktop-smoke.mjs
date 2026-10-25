@@ -73,7 +73,8 @@ const server = createServer(async (req, res) => {
       error: null,
       player: { ...owner, version: 1 },
     };
-  else if (req.url.includes("/profile?")) result = owner;
+  else if (req.url.includes("/profile?") || req.url.includes("/history?"))
+    result = owner;
   else if (req.url.includes("/stats?"))
     result = { summary: { games: 1, wins: 1, kda: 7.5 }, champions: [] };
   else if (req.url.includes("/refresh"))

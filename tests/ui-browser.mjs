@@ -81,6 +81,44 @@ try {
         saveSettings: async () => {},
         chooseLeagueDirectory: async () => null,
       };
+      if (location.search.includes("sync-check")) {
+        const all = Array.from({ length: 120 }, (_, i) => ({
+          ...owner.matches[i % 10],
+          id: "EUW1_sync" + i,
+        }));
+        window.syncCheck = { available: 0, requests: [] };
+        window.rift.profile = async ({ start = 0, queue = 0 }) => {
+          window.syncCheck.requests.push({ start, queue });
+          const filtered = all.filter((m) => queue === 0 || m.queue === queue);
+          const available = Math.min(
+            window.syncCheck.available,
+            filtered.length,
+          );
+          const nextStart = Math.min(start + 10, available);
+          const hasMore = nextStart < filtered.length;
+          await new Promise((r) => setTimeout(r, 20));
+          return {
+            ...owner,
+            matches:
+              !available && !start
+                ? owner.matches
+                : filtered.slice(start, nextStart),
+            nextStart,
+            hasMore,
+            overviewMatches: filtered.slice(0, Math.min(20, available)),
+            historyQueue: queue,
+            historySession: "session-" + queue,
+            historyState:
+              nextStart >= available && hasMore
+                ? "collecting"
+                : hasMore
+                  ? "ready"
+                  : "complete",
+            historyPending: nextStart >= available && hasMore,
+            historyEndTime: 123456,
+          };
+        };
+      }
       if (location.search.includes("regression")) {
         const normalBoot = window.rift.boot;
         const all = Array.from({ length: 35 }, (_, i) => ({
@@ -104,10 +142,21 @@ try {
           if (location.search.includes("offline")) throw new Error("Offline");
           return { id: "test" };
         };
-        window.rift.lookupState = async () => ({
-          player: { ...owner, version: window.regression.version },
-          status: "ready",
-        });
+        let pausedOnce = location.search.includes("pause-once");
+        window.rift.lookupState = async () => {
+          if (pausedOnce) {
+            pausedOnce = false;
+            return {
+              status: "paused",
+              player: null,
+              retryAt: new Date(Date.now() + 100).toISOString(),
+            };
+          }
+          return {
+            player: { ...owner, version: window.regression.version },
+            status: "ready",
+          };
+        };
         window.rift.card = async () => ({
           ...owner,
           version: window.regression.version,
@@ -176,7 +225,7 @@ try {
   });
   await page.getByRole("button", { name: "ARAM", exact: true }).click();
   assert.equal(await page.locator(".match").count(), 2);
-  assert.equal(await page.locator(".recent-champion").count(), 3);
+  assert.equal(await page.locator(".recent-champion").count(), 1);
   await page.getByRole("button", { name: "Total", exact: true }).click();
   await page.locator(".match .item-slot:not(.empty-slot)").first().hover();
   await page.locator(".visual-tooltip").waitFor();
@@ -263,7 +312,7 @@ try {
   await regression.evaluate(() => window.regression.version++);
   // Lookup polling must retain the expanded list when new data arrives.
   await regression.waitForFunction(
-    () => window.regression.requests.filter((r) => r.start === 10).length >= 2,
+    () => window.regression.requests.filter((r) => r.start === 0).length >= 3,
   );
   assert.equal(await regression.locator(".match").count(), 20);
   await regression.locator(".more-matches").click();
@@ -280,6 +329,94 @@ try {
   assert.match(
     await regression.locator(".history-end").innerText(),
     /35 parties chargées/,
+  );
+  const syncPage = await context.newPage();
+  syncPage.on("pageerror", (e) => errors.push(e.message));
+  await syncPage.goto(
+    "http://127.0.0.1:" + server.address().port + "/index.html?sync-check",
+  );
+  await syncPage.waitForFunction(() => window.syncCheck.requests.length >= 2);
+  // The cache remains visible until canonical rows arrive, without a refresh click.
+  assert.equal(await syncPage.locator(".match").count(), 10);
+  await syncPage.evaluate(() => (window.syncCheck.available = 3));
+  await syncPage.waitForFunction(
+    () => document.querySelector(".match-list")?.dataset.count === "3",
+  );
+  await syncPage.evaluate(() => (window.syncCheck.available = 40));
+  await syncPage.waitForFunction(
+    () => document.querySelector(".match-list")?.dataset.count === "10",
+  );
+  await syncPage.waitForFunction(() =>
+    document.querySelector(".balance-panel")?.title.startsWith("18 des"),
+  );
+  const balance = await syncPage.locator(".balance-values").innerText();
+  for (const count of [20, 30, 40]) {
+    await syncPage.locator(".more-matches").click();
+    await syncPage.waitForFunction(
+      (n) => document.querySelector(".match-list")?.dataset.count === String(n),
+      count,
+    );
+  }
+  assert.equal(await syncPage.locator(".balance-values").innerText(), balance);
+  await syncPage.locator(".more-matches").click(); // page not collected yet
+  await syncPage.evaluate(() => (window.syncCheck.available = 120));
+  await syncPage.waitForFunction(
+    () => document.querySelector(".match-list")?.dataset.count === "50",
+  );
+  for (const count of [60, 70, 80]) {
+    await syncPage.locator(".more-matches").click();
+    await syncPage.waitForFunction(
+      (n) => document.querySelector(".match-list")?.dataset.count === String(n),
+      count,
+    );
+  }
+  assert.ok(
+    (await syncPage.locator(".match").count()) <= 24,
+    "large histories virtualize DOM rows",
+  );
+  await syncPage.locator(".match-list").evaluate((e) => (e.scrollTop = 4000));
+  await syncPage.locator(".more-matches").click();
+  await syncPage.waitForFunction(
+    () => document.querySelector(".match-list")?.dataset.count === "90",
+  );
+  assert.equal(
+    await syncPage.locator(".match-list").evaluate((e) => e.scrollTop),
+    4000,
+  );
+  // Near the end, scrolling itself requests the next page.
+  await syncPage
+    .locator(".match-list")
+    .evaluate((e) => (e.scrollTop = e.scrollHeight - e.clientHeight));
+  await syncPage.waitForFunction(
+    () => Number(document.querySelector(".match-list")?.dataset.count) >= 100,
+  );
+  await syncPage.getByRole("button", { name: "ARAM", exact: true }).click();
+  await syncPage.waitForFunction(() =>
+    window.syncCheck.requests.some((r) => r.queue === 450),
+  );
+  await syncPage.waitForFunction(
+    () => document.querySelector(".match-list")?.dataset.count === "10",
+  );
+  assert.equal(
+    await syncPage.locator(".match-list").evaluate((e) => e.scrollTop),
+    0,
+  );
+  await syncPage.screenshot({
+    path: "artifacts/electron-checks/progressive-history.png",
+  });
+  const paused = await context.newPage();
+  await paused.goto(
+    "http://127.0.0.1:" +
+      server.address().port +
+      "/index.html?regression&pause-once",
+  );
+  await paused.waitForFunction(
+    () => document.querySelectorAll(".match").length === 10,
+  );
+  assert.equal(
+    await paused.evaluate(() => window.regression.lookups),
+    1,
+    "paused identity resumes without a manual lookup",
   );
   const offline = await context.newPage();
   await offline.goto(

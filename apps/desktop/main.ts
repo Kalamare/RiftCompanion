@@ -317,7 +317,10 @@ async function start() {
   handle("profile", async (value) => {
     const v = playerInput
       .extend({
-        start: z.number().int().min(0).max(10000).optional(),
+        start: z.number().int().min(0).max(2147483647).optional(),
+        queue: z.number().int().min(-1).max(10000).optional(),
+        session: z.uuid().optional(),
+        sync: z.boolean().optional(),
         end: z
           .number()
           .int()
@@ -327,9 +330,11 @@ async function start() {
       })
       .parse(value);
     const p: Profile = await request(
-      `/v1/players/${v.platform}/${encodeURIComponent(v.puuid)}/profile?start=${v.start ?? 0}&count=10&end=${v.end ?? 0}`,
+      v.sync
+        ? `/v1/players/${v.platform}/${encodeURIComponent(v.puuid)}/history?queue=${v.queue ?? 0}&start=${v.start ?? 0}${v.session ? "&session=" + v.session : ""}`
+        : `/v1/players/${v.platform}/${encodeURIComponent(v.puuid)}/profile?start=${v.start ?? 0}&count=10&end=${v.end ?? 0}`,
     );
-    if (!v.start) {
+    if (!v.start && !v.queue) {
       cache.remember(p);
       await cache.write();
     }

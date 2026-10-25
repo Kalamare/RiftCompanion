@@ -128,6 +128,12 @@ export interface Profile {
   hasMore: boolean;
   ranksPending: boolean;
   historyPending: boolean;
+  overviewMatches?: Match[];
+  historySession?: string;
+  historyQueue?: number;
+  historyState?: "ready" | "collecting" | "deferred" | "complete";
+  historyRetryAt?: string | null;
+  historyError?: string | null;
 }
 export interface Coverage {
   from: string | null;

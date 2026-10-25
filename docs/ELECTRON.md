@@ -49,7 +49,16 @@ La clé est chiffrée par le stockage sécurisé du système et liée à l’adr
 
 Au démarrage, le profil en cache apparaît puis se recharge automatiquement si l’accès serveur est configuré. Hors ligne, le cache reste consultable. **Mon profil** revient au propriétaire détecté par LoL ; rechercher quelqu’un d’autre ne remplace pas ce propriétaire.
 
-La liste affiche dix parties puis ajoute dix parties déjà stockées par clic sur **Voir plus**. Les mises à jour conservent les pages ouvertes. Quand la base n’a plus de parties à fournir, un message le précise. Le filtre ne déclenche pas une collecte dédiée à une file. **Actualiser** demande une collecte récente, sous réserve du délai serveur de cinq minutes. Pour compléter les anciennes parties, voir le [rattrapage historique](../server/README.md#historique-et-clé-riot).
+La liste se complète automatiquement en approchant du bas ; **Voir plus de parties** permet aussi de demander la suite. Le serveur collecte les pages manquantes et prépare les suivantes. Les filtres portent sur l’historique demandé au serveur, pas seulement sur les dix cartes affichées. Les mises à jour conservent la position et les pages ouvertes. Un quota Riot peut différer la suite : la reprise est automatique et le cache reste visible. **Actualiser** garde son délai de cinq minutes.
+
+Cette évolution modifie le client **et** le serveur. Après le `git pull`, reconstruire le backend avant de relancer Electron :
+
+```powershell
+docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d --build api worker
+.\Lancer-Electron.cmd
+```
+
+Le bilan et les champions récents portent sur les vingt premières parties du filtre disponibles ; ouvrir d’autres pages ne change plus la taille de cet échantillon. Les statistiques de saison indiquent encore leur couverture partielle.
 
 L’overlay se masque ou s’affiche avec **Alt+O**. Sa qualification actuelle concerne le mode sans bordure ; voir [ses limites](OVERLAY.md).
 
@@ -68,7 +77,7 @@ Invoke-RestMethod http://127.0.0.1:5080/health
 | `ERR_CONNECTION_REFUSED` ou serveur inaccessible | Docker démarré, service API actif, port publié dans `ps` identique à celui des réglages. `127.0.0.1:5080->8080` signifie utiliser 5080. |
 | « Accès serveur refusé : vérifie la clé » | L’API répond, mais la clé d’accès est refusée. Recopier `access-key`, enregistrer avec la bonne adresse. |
 | `riot_access_denied` dans les logs du worker | Vérifier/renouveler la clé Riot côté serveur. Ce n’est pas la clé d’accès Electron. |
-| Profil partiel ou historique épuisé | Vérifier le worker, les délais de quota et le backfill ; les statistiques ne couvrent que les parties collectées. |
+| Profil partiel ou historique épuisé | Vérifier le worker et les délais de quota ; la collecte au défilement fonctionne sans activer le backfill ; les statistiques ne couvrent que les parties collectées. |
 | Avertissements `safeStorage.* is deprecated` | Dette de compatibilité Electron connue ; migration vers les méthodes asynchrones à faire. Ces avertissements ne sont pas une erreur d’authentification réseau. |
 | Ancienne interface ou ancien comportement | Vérifier la branche, récupérer les modifications et relancer le build, ou remplacer le dossier portable par le nouvel artefact. |
 
