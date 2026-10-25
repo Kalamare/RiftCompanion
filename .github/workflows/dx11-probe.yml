@@ -1,0 +1,44 @@
+name: DirectX 11 probe
+on:
+  push:
+    branches: [codex/dx11-probe]
+    paths: ['experimental/dx11-probe/**', 'experimental/goverlay/**', '.github/workflows/dx11-probe.yml']
+  pull_request:
+    paths: ['experimental/dx11-probe/**', 'experimental/goverlay/**', '.github/workflows/dx11-probe.yml']
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: windows-2022
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: microsoft/setup-msbuild@v2
+      - name: Build baseline and test WARP rendering lifecycle
+        shell: pwsh
+        run: ./experimental/dx11-probe/Build.ps1
+      - name: Compile GOverlay bridge and native renderer
+        shell: pwsh
+        run: ./experimental/dx11-probe/Build-WithGOverlay.ps1
+      - name: Collect baseline executable and instructions
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force probe-artifact | Out-Null
+          Copy-Item experimental/dx11-probe/build/Release/RiftDx11Probe.exe probe-artifact/
+          Copy-Item experimental/dx11-probe/README.md probe-artifact/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rift-DirectX11-baseline-Windows
+          path: probe-artifact/
+          retention-days: 14
+      - name: Upload test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: DirectX11-test-evidence
+          path: |
+            experimental/dx11-probe/build/Testing/Temporary/LastTest.log
+            experimental/goverlay/reports/
+            ${{ runner.temp }}/RiftDx11Probe-*.log
+          if-no-files-found: warn
+          retention-days: 14
