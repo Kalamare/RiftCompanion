@@ -1261,3 +1261,35 @@ dialog::backdrop {
   margin-top: 5px;
   color: #a8bac6;
 }
+
+.objective {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.rank-current {
+  display: flex !important;
+  align-items: center;
+  gap: 3px;
+}
+.rank-current .rank-image {
+  width: 20px;
+  height: 20px;
+}
+.rank-current span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-choices {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 4px 0;
+}
+.overlay-champion .kda {
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+}

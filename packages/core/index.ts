@@ -354,6 +354,8 @@ export interface LivePlayer {
   team: string;
   role: string;
   canLookup: boolean;
+  runeId?: number;
+  spellCodes?: string[];
 }
 export function parseLive(value: unknown): LivePlayer[] {
   return z
@@ -366,13 +368,39 @@ export function parseLive(value: unknown): LivePlayer[] {
         (s(p.riotIdGameName) && s(p.riotIdTagLine)
           ? `${p.riotIdGameName}#${p.riotIdTagLine}`
           : "");
+      const runes = obj.safeParse(p.runes);
+      const keystone = obj.safeParse(
+        runes.success ? runes.data.keystone : null,
+      );
+      const spells = obj.safeParse(p.summonerSpells);
+      const spellCodes = spells.success
+        ? Object.values(spells.data)
+            .slice(0, 2)
+            .map((value) => {
+              const parsed = obj.safeParse(value);
+              return parsed.success
+                ? s(parsed.data.rawDisplayName)
+                    .replace(/^GeneratedTip_SummonerSpell_/, "")
+                    .replace(/_DisplayName$/, "")
+                : "";
+            })
+            .filter(Boolean)
+        : [];
       return {
+        runeId: keystone.success ? n(keystone.data.id) : 0,
+        spellCodes,
         riotId,
         champion:
           s(p.rawChampionName).replace(/^game_character_displayname_/, "") ||
           s(p.championName),
         team: s(p.team),
-        role: s(p.position).toLowerCase(),
+        role:
+          (
+            { mid: "middle", bot: "bottom", support: "utility" } as Record<
+              string,
+              string
+            >
+          )[s(p.position).toLowerCase()] ?? s(p.position).toLowerCase(),
         canLookup:
           riotId.includes("#") && !riotId.toUpperCase().endsWith("#BOT"),
       };
@@ -406,6 +434,16 @@ export function overlayStats(
     )[0] ?? "";
   return {
     champion: championSummary,
+    averages: selected.length
+      ? {
+          kills:
+            selected.reduce((sum, m) => sum + m.kills, 0) / selected.length,
+          deaths:
+            selected.reduce((sum, m) => sum + m.deaths, 0) / selected.length,
+          assists:
+            selected.reduce((sum, m) => sum + m.assists, 0) / selected.length,
+        }
+      : null,
     last12Hours,
     last30Days,
     mainRole,

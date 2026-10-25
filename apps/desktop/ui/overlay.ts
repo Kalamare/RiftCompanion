@@ -1,6 +1,14 @@
+import { kda } from "./profile";
 import { OverlayEntry } from "../overlay-data";
 import { node, number } from "./dom";
-import { portrait, rankImage, profileIcon, championName } from "./assets";
+import {
+  portrait,
+  rankImage,
+  profileIcon,
+  championName,
+  spellFromCode,
+  runeImage,
+} from "./assets";
 import { roleIcon } from "./charts";
 import { roleLabels } from "../../../packages/core/index";
 export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
@@ -54,6 +62,19 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
             ? `${Math.round((100 * stats.champion.wins) / stats.champion.games)} % · ${stats.champion.games} parties`
             : "Aucun match champion",
           "teal",
+        ),
+      );
+    const choices = node("div", "", "overlay-choices");
+    choices.append(...(player.spellCodes ?? []).map(spellFromCode));
+    if (player.runeId) choices.append(runeImage(player.runeId));
+    champion.append(choices);
+    if (stats?.averages)
+      champion.append(
+        kda(
+          stats.averages.kills,
+          stats.averages.deaths,
+          stats.averages.assists,
+          1,
         ),
       );
     const rank = node("div", "", "overlay-rank");

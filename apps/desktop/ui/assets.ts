@@ -1,3 +1,4 @@
+import iconPaths from "./icon-paths.json";
 import champions from "../../../native/Rift.Desktop/Assets/Champions/champion-fr.json";
 import runes from "../../../native/Rift.Desktop/Assets/Runes/runes-fr.json";
 import spells from "../../../native/Rift.Desktop/Assets/Champions/summoner-fr.json";
@@ -161,4 +162,31 @@ export function profileIcon(id: number | null) {
         box.replaceChildren(picture(data.image, "Icône de profil du joueur"));
     });
   return box;
+}
+
+// Geometry copied from ProfileIcons.cs; objective symbols retain their native shapes.
+export function objectiveIcon(key: string, label: string) {
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("width", "21");
+  svg.setAttribute("height", "21");
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", label);
+  const path = document.createElementNS(svg.namespaceURI, "path");
+  path.setAttribute(
+    "d",
+    (iconPaths as Record<string, string>)[key] ?? iconPaths.team,
+  );
+  path.setAttribute("fill", "none");
+  path.setAttribute("stroke", "#D6BE83");
+  path.setAttribute("stroke-width", "1.6");
+  path.setAttribute("stroke-linecap", "round");
+  path.setAttribute("stroke-linejoin", "round");
+  svg.append(path);
+  return svg;
+}
+
+export function spellFromCode(code: string) {
+  const entry = [...spellData.entries()].find(([, s]) => s.id === code);
+  return entry ? spellImage(entry[0]) : node("span", "", "empty-slot");
 }

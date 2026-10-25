@@ -83,3 +83,26 @@ test("public icons use credential-free fixed CDN, deduplicate and survive offlin
     false,
   );
 });
+
+test("live visual metadata uses the published rune/spell fields and normalizes support", async () => {
+  const { parseLive } = await import("../packages/core/index.js");
+  const [player] = parseLive([
+    {
+      riotId: "Visible#TAG",
+      position: "SUPPORT",
+      runes: { keystone: { id: 8010 } },
+      summonerSpells: {
+        summonerSpellOne: {
+          rawDisplayName:
+            "GeneratedTip_SummonerSpell_SummonerFlash_DisplayName",
+        },
+        summonerSpellTwo: {
+          rawDisplayName: "GeneratedTip_SummonerSpell_SummonerDot_DisplayName",
+        },
+      },
+    },
+  ]);
+  assert.equal(player.role, "utility");
+  assert.equal(player.runeId, 8010);
+  assert.deepEqual(player.spellCodes, ["SummonerFlash", "SummonerDot"]);
+});

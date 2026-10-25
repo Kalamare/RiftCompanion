@@ -8,6 +8,8 @@ import {
 import { node, action, number, hint, dismissHints } from "./dom";
 import {
   portrait,
+  objectiveIcon,
+  rankImage,
   item,
   rune,
   runeImage,
@@ -62,7 +64,11 @@ export function renderDetails(
       champion: "Éliminations",
     };
     for (const [key, count] of Object.entries(team.objectives)) {
-      const label = node("span", `${names[key] ?? key} ${count}`);
+      const label = node("span", "", "objective");
+      label.append(
+        objectiveIcon(key, names[key] ?? key),
+        node("span", String(count)),
+      );
       label.title = names[key] ?? key;
       objectives.append(label);
     }
@@ -102,6 +108,37 @@ export function renderDetails(
         node("small", "Rang actuel non chargé", "rank-current"),
         node("small", roleLabels[p.stats.role] ?? ""),
       );
+      const rankLine = identity.querySelector(".rank-current")!;
+      void window.rift
+        .card({ platform, puuid: p.puuid })
+        .then((card) => {
+          if (!row.isConnected) return;
+          const rank = card.ranks.find(
+            (r) =>
+              r.queue ===
+              (match.queue === 440 ? "RANKED_FLEX_SR" : "RANKED_SOLO_5x5"),
+          );
+          rankLine.replaceChildren();
+          if (rank)
+            rankLine.append(
+              rankImage(rank.tier),
+              node("span", `${rank.tier} ${rank.division} · ${rank.lp} LP`),
+            );
+          else
+            rankLine.textContent = card.ranksUpdatedAt
+              ? "Non classé"
+              : "Rang en attente";
+          rankLine.setAttribute(
+            "title",
+            card.ranksUpdatedAt
+              ? "Rang actuel au " +
+                  new Date(card.ranksUpdatedAt).toLocaleString("fr-FR")
+              : "Rang actuel indisponible",
+          );
+        })
+        .catch(() => {
+          rankLine.textContent = "Rang actuel indisponible";
+        });
       const stats = node("div", "", "participant-stats");
       stats.append(
         kda(p.stats.kills, p.stats.deaths, p.stats.assists),
