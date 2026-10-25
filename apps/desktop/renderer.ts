@@ -33,6 +33,7 @@ let boot: Boot,
   operation = 0,
   polling = false;
 let profileVersion = -1;
+let loadingMore = false;
 let activeView = "profile";
 const overlay = new URLSearchParams(location.search).has("overlay");
 function status(text: string, error = false) {
@@ -64,13 +65,14 @@ function showProfile(p: Profile) {
   renderProfile();
 }
 async function lookup(riotId: string, platform: Platform) {
+  loadingMore = false;
   const token = ++operation;
   profileVersion = -1;
   status("Recherche du profil…");
   $("cancel-search").hidden = false;
-  const cached = boot.profiles.find(
+  const cached = [profile, ...boot.profiles].find(
     (p) =>
-      p.platform === platform &&
+      p?.platform === platform &&
       p.riotId.toUpperCase() === riotId.toUpperCase(),
   );
   if (cached) showProfile(cached);
@@ -101,12 +103,21 @@ async function pollLookup(id: string, token: number, attempt = 0) {
   try {
     const state = await window.rift.lookupState(id);
     if (token !== operation) return;
-    if (state.player && state.player.version !== profileVersion) {
-      const p = await window.rift.profile({
-        platform: state.player.platform,
-        puuid: state.player.puuid,
-      });
+    if (
+      state.player &&
+      state.player.version !== profileVersion &&
+      !loadingMore
+    ) {
+      const visible = profile;
+      const p = await readVisibleProfile(
+        state.player.platform,
+        state.player.puuid,
+      );
       if (token !== operation) return;
+      if (profile !== visible || loadingMore) {
+        setTimeout(() => void pollLookup(id, token, attempt + 1), 2000);
+        return;
+      }
       profileVersion = state.player.version;
       showProfile(p);
       boot.profiles = [
@@ -157,6 +168,7 @@ function renderProfile() {
     },
     details: (id) => void details(id, p.platform),
     more: () => void more(),
+    loadingMore,
     stats: (q) =>
       window.rift.stats({
         platform: p.platform,
@@ -190,7 +202,9 @@ async function refreshProfile() {
   }
 }
 async function more() {
-  if (!profile) return;
+  if (!profile || loadingMore || !profile.hasMore) return;
+  loadingMore = true;
+  renderProfile();
   const token = operation,
     p = profile;
   try {
@@ -211,7 +225,12 @@ async function more() {
       ],
     });
   } catch (e) {
-    fail(e);
+    if (token === operation) fail(e);
+  } finally {
+    if (token === operation) {
+      loadingMore = false;
+      renderProfile();
+    }
   }
 }
 async function details(id: string, platform: Platform) {
@@ -356,11 +375,45 @@ async function pollClient() {
     setTimeout(() => void pollClient(), 3000);
   }
 }
+// Re-read the visible window against its original snapshot when paginated.
+// A background update must not collapse the list back to its first ten games.
+async function readVisibleProfile(platform: Platform, puuid: string) {
+  const previous = profile;
+  const expanded =
+    previous?.puuid === puuid &&
+    previous.platform === platform &&
+    previous.nextStart > 10;
+  let result = await window.rift.profile({
+    platform,
+    puuid,
+    ...(expanded ? { end: previous.historyEndTime } : {}),
+  });
+  const target = expanded ? previous.nextStart : 10;
+  while (result.hasMore && result.nextStart < target) {
+    const next = await window.rift.profile({
+      platform,
+      puuid,
+      start: result.nextStart,
+      end: result.historyEndTime,
+    });
+    if (next.nextStart <= result.nextStart) break;
+    result = {
+      ...next,
+      matches: [
+        ...result.matches,
+        ...next.matches.filter(
+          (m) => !result.matches.some((old) => old.id === m.id),
+        ),
+      ],
+    };
+  }
+  return result;
+}
 async function watchProfile() {
   const p = profile,
     token = operation;
   try {
-    if (p?.puuid && activeView === "profile") {
+    if (p?.puuid && activeView === "profile" && !loadingMore) {
       const card = await window.rift.card({
         platform: p.platform,
         puuid: p.puuid,
@@ -370,11 +423,8 @@ async function watchProfile() {
         profile === p &&
         card.version !== profileVersion
       ) {
-        const fresh = await window.rift.profile({
-          platform: p.platform,
-          puuid: p.puuid,
-        });
-        if (token === operation && profile === p) {
+        const fresh = await readVisibleProfile(p.platform, p.puuid);
+        if (token === operation && profile === p && !loadingMore) {
           profileVersion = card.version;
           showProfile(fresh);
         }
@@ -421,8 +471,10 @@ async function start() {
       .owner()
       .then((p) => {
         ++operation;
-        if (p) showProfile(p);
-        else status("Ouvre LoL pour détecter ton compte personnel.");
+        if (p) {
+          showProfile(p);
+          void lookup(p.riotId, p.platform);
+        } else status("Ouvre LoL pour détecter ton compte personnel.");
       })
       .catch(fail);
   $("details").addEventListener("close", () => {
@@ -474,6 +526,8 @@ async function start() {
   setTimeout(() => void watchProfile(), 15000);
   if (boot.owner) showProfile(boot.owner);
   else if (boot.profiles[0]) showProfile(boot.profiles[0]);
+  if (boot.hasAccessKey && profile)
+    void lookup(profile.riotId, profile.platform);
   if (!boot.hasAccessKey)
     status("Configure l’adresse et la clé du serveur dans les réglages.");
   void pollClient();

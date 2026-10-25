@@ -81,3 +81,15 @@ Le serveur distant privé peut être déployé derrière un reverse proxy HTTPS,
 ## État de transition
 
 Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu est porté depuis les vues WPF ; le moteur de texte Chromium peut différer légèrement de WPF. Le profil reprend les dimensions, couleurs, onglets, anneau de victoires, barres de rôles et frises de rangs définis dans le XAML. Les détails de partie retrouvent les deux équipes, le joueur sélectionné, les objets et les panneaux de runes. Les images d’objets et de profils proviennent du CDN public Riot, sans clé, et sont conservées en cache. Restent le placement/focus de l’overlay sur plusieurs écrans, l’import des préférences SQLite, le moteur plein écran et les mesures en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.
+
+### Chargement du profil et historique
+
+Au démarrage, le profil en cache s’affiche immédiatement puis une recherche serveur recharge automatiquement ses données. Le cache reste visible hors ligne. Les mises à jour conservent les pages d’historique déjà ouvertes. « Voir plus » lit dix parties supplémentaires en base ; lorsque toutes les parties disponibles sont affichées, un message indique la fin de cet historique partiel.
+
+Par défaut, `RIFT_HISTORY_BACKFILL=false` limite la collecte aux parties récentes. Pour collecter également l’historique depuis `RIFT_HISTORY_FROM`, mettre `RIFT_HISTORY_BACKFILL=true` dans `server/.env`, puis appliquer la configuration :
+
+```powershell
+docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d api worker
+```
+
+Ouvrir ensuite le profil pour réactiver sa collecte. Les anciennes parties arrivent progressivement selon les quotas Riot ; ce réglage ne les rend pas toutes disponibles immédiatement.

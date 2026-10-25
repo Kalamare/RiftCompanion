@@ -20,6 +20,7 @@ export interface ProfileActions {
   filter(queue: number): void;
   details(id: string): void;
   more(): void;
+  loadingMore?: boolean;
   stats(queue: number): Promise<any>;
 }
 const tierLabels: Record<string, string> = {
@@ -405,10 +406,23 @@ export function renderProfile(
     list.append(card);
   }
   right.append(list);
-  if (p.hasMore)
-    right.append(
-      action("Voir plus · 10 parties", actions.more, "more-matches"),
+  if (p.hasMore) {
+    const more = action(
+      actions.loadingMore ? "Chargement…" : "Voir plus · 10 parties",
+      actions.more,
+      "more-matches",
     );
+    more.disabled = !!actions.loadingMore;
+    right.append(more);
+  } else {
+    right.append(
+      node(
+        "p",
+        `${p.matches.length} parties chargées · Toutes les parties actuellement disponibles sur le serveur sont affichées. L’historique collecté peut être partiel.`,
+        "history-end",
+      ),
+    );
+  }
   root.append(
     node("p", "Rift Companion n’est pas approuvé par Riot Games.", "legal"),
   );

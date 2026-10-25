@@ -81,6 +81,49 @@ try {
         saveSettings: async () => {},
         chooseLeagueDirectory: async () => null,
       };
+      if (location.search.includes("regression")) {
+        const normalBoot = window.rift.boot;
+        const all = Array.from({ length: 35 }, (_, i) => ({
+          ...owner.matches[i % 10],
+          id: "EUW1_page_" + i,
+        }));
+        window.regression = { lookups: 0, version: 1, requests: [] };
+        window.rift.boot = async () => ({
+          ...(await normalBoot()),
+          owner: {
+            ...owner,
+            puuid: "",
+            matches: [],
+            level: 0,
+            ranks: [],
+            historyPending: true,
+          },
+        });
+        window.rift.lookup = async () => {
+          window.regression.lookups++;
+          if (location.search.includes("offline")) throw new Error("Offline");
+          return { id: "test" };
+        };
+        window.rift.lookupState = async () => ({
+          player: { ...owner, version: window.regression.version },
+          status: "ready",
+        });
+        window.rift.card = async () => ({
+          ...owner,
+          version: window.regression.version,
+        });
+        window.rift.profile = async ({ start = 0, end = 123456 }) => {
+          window.regression.requests.push({ start, end });
+          await new Promise((r) => setTimeout(r, 30));
+          return {
+            ...owner,
+            matches: all.slice(start, start + 10),
+            nextStart: Math.min(start + 10, 35),
+            historyEndTime: end,
+            hasMore: start + 10 < 35,
+          };
+        };
+      }
     },
     { owner, detail, client, stats, overlayEntries, icon },
   );
@@ -202,6 +245,54 @@ try {
   await overlay.screenshot({
     path: "artifacts/electron-checks/restored-overlay.png",
   });
+  const regression = await context.newPage();
+  regression.on("pageerror", (e) => errors.push(e.message));
+  await regression.goto(
+    "http://127.0.0.1:" + server.address().port + "/index.html?regression",
+  );
+  await regression.waitForFunction(
+    () => document.querySelectorAll(".match").length === 10,
+  );
+  assert.equal(await regression.evaluate(() => window.regression.lookups), 1);
+  await regression.locator(".more-matches").click();
+  await regression.waitForFunction(
+    () =>
+      document.querySelectorAll(".match").length === 20 &&
+      !document.querySelector(".more-matches").disabled,
+  );
+  await regression.evaluate(() => window.regression.version++);
+  // Lookup polling must retain the expanded list when new data arrives.
+  await regression.waitForFunction(
+    () => window.regression.requests.filter((r) => r.start === 10).length >= 2,
+  );
+  assert.equal(await regression.locator(".match").count(), 20);
+  await regression.locator(".more-matches").click();
+  await regression.waitForFunction(
+    () =>
+      document.querySelectorAll(".match").length === 30 &&
+      !document.querySelector(".more-matches").disabled,
+  );
+  await regression.locator(".more-matches").click();
+  await regression.waitForFunction(
+    () => document.querySelectorAll(".match").length === 35,
+  );
+  assert.equal(await regression.locator(".more-matches").count(), 0);
+  assert.match(
+    await regression.locator(".history-end").innerText(),
+    /35 parties chargées/,
+  );
+  const offline = await context.newPage();
+  await offline.goto(
+    "http://127.0.0.1:" +
+      server.address().port +
+      "/index.html?regression&offline",
+  );
+  await offline
+    .getByRole("heading", { name: "KalAram#ARAM", exact: true })
+    .waitFor();
+  await offline.waitForFunction(() =>
+    document.querySelector("#status").textContent.includes("cache"),
+  );
   assert.deepEqual(errors, []);
   console.log(
     "Restored UI OK: WPF dimensions/colors, charts, filters, items, ten participants, runes, small viewport and 5×2 overlay.",
