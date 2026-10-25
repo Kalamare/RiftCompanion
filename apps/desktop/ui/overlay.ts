@@ -15,7 +15,12 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
   root.replaceChildren();
   const header = node("div", "", "overlay-heading");
   header.append(
-    node("strong", "⠿  RIFT COMPANION · EN PARTIE"),
+    node(
+      "strong",
+      entries.length
+        ? "⠿  RIFT COMPANION · EN PARTIE"
+        : "⠿  RIFT COMPANION · APERÇU",
+    ),
     node(
       "small",
       "Alt + O · afficher / masquer · statistiques sur les parties collectées",
@@ -121,5 +126,13 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
     card.append(periods, node("small", entry.status, "overlay-notice"));
     grid.append(card);
   }
+  if (!entries.length)
+    grid.append(
+      node(
+        "p",
+        "Overlay visible · en attente des joueurs. Lance une partie d’entraînement en sans-bordure. Alt+O pour masquer.",
+        "overlay-notice",
+      ),
+    );
   root.append(header, grid);
 }

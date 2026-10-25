@@ -543,7 +543,7 @@ async function start() {
     $("debug-panel").hidden = !$("debug-panel").hidden;
   };
   $("diagnostics-open").onclick = () => view("diagnostics");
-  $("top-overlay").onclick = () => void window.rift.toggleOverlay().catch(fail);
+  $("top-overlay").onclick = () => $("overlay-toggle").click();
   $("search").onsubmit = (e) => {
     e.preventDefault();
     void lookup(
@@ -571,13 +571,14 @@ async function start() {
   $("overlay-toggle").onclick = () =>
     void window.rift
       .toggleOverlay()
-      .then((visible) =>
+      .then((visible) => {
+        if (visible) $<HTMLInputElement>("overlay-enabled").checked = true;
         status(
           visible
-            ? "Overlay activé : visible pendant une partie si autorisé dans les réglages."
+            ? "Overlay affiché · Alt+O pour masquer. Plein écran exclusif non pris en charge."
             : "Overlay masqué.",
-        ),
-      )
+        );
+      })
       .catch(fail);
   $<HTMLInputElement>("server-url").value = boot.settings.serverUrl;
   $<HTMLInputElement>("league-directory").value = boot.settings.leagueDirectory;

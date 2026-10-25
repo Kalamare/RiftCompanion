@@ -34,6 +34,7 @@ const overlayData = new OverlayData(request);
 let timer: NodeJS.Timeout;
 let stopping = false;
 let overlayVisible = false;
+let overlayPreview = false;
 const base = () => join(__dirname, "index.html");
 const indexUrl = () => pathToFileURL(base()).href;
 const playerInput = z
@@ -113,7 +114,7 @@ function showOverlay() {
   if (
     !overlayVisible ||
     !cache.state.settings.overlayEnabled ||
-    client.phase !== "InProgress"
+    (!overlayPreview && client.phase !== "InProgress")
   ) {
     overlay?.hide();
     return;
@@ -121,11 +122,18 @@ function showOverlay() {
   if (!overlay || overlay.isDestroyed()) overlay = createWindow(true);
   overlay.showInactive();
 }
-function toggleOverlay() {
-  overlayVisible = !overlayVisible;
+async function toggleOverlay() {
+  const visible = !(overlay && !overlay.isDestroyed() && overlay.isVisible());
+  if (visible && !cache.state.settings.overlayEnabled) {
+    cache.state.settings.overlayEnabled = true;
+    await cache.write();
+  }
+  overlayVisible = visible;
+  overlayPreview = visible && client.phase !== "InProgress";
   showOverlay();
-  return overlayVisible;
+  return visible;
 }
+
 function handle(
   name: string,
   fn: (value: any) => Promise<unknown> | unknown,
@@ -193,6 +201,7 @@ async function poll() {
         await cache.write();
       }
     }
+    if (client.phase === "InProgress") overlayPreview = false;
     showOverlay();
     if (
       client.phase === "InProgress" &&
@@ -380,7 +389,9 @@ async function start() {
   handle("client", () => client, true);
   handle("overlayData", () => overlayData.snapshot(client.live), true);
   handle("overlay", () => toggleOverlay());
-  globalShortcut.register("Alt+O", () => toggleOverlay());
+  globalShortcut.register("Alt+O", () => {
+    void toggleOverlay().catch(() => console.warn("Overlay unavailable"));
+  });
   overlayVisible = cache.state.settings.overlayEnabled;
   void poll();
 }

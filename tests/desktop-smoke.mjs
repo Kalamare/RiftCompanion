@@ -160,6 +160,25 @@ try {
     (await readFile(join(directory, "state.json"), "utf8")).includes(key),
     false,
   );
+  await page.locator("#top-overlay").click();
+  await page.waitForFunction(() =>
+    document.querySelector("#status").textContent.includes("Overlay affiché"),
+  );
+  assert.equal(
+    await app.evaluate(
+      ({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows().filter((w) => w.isVisible()).length,
+    ),
+    2,
+  );
+  await page.locator("#top-overlay").click();
+  assert.equal(
+    await app.evaluate(
+      ({ BrowserWindow }) =>
+        BrowserWindow.getAllWindows().filter((w) => w.isVisible()).length,
+    ),
+    1,
+  );
   const boot = await page.evaluate(() => window.rift.boot());
   assert.equal(JSON.stringify(boot).includes(key), false);
   assert.equal(boot.hasAccessKey, true);

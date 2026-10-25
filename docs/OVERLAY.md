@@ -4,7 +4,7 @@ L’overlay actuel affiche cinq joueurs par équipe sur deux rangées : identit�
 
 ## Utilisation
 
-Activer l’overlay dans les réglages. **Alt+O** affiche ou masque la fenêtre. Les clics traversent l’overlay. Le mode **sans bordure** est le parcours à tester ; les anciens raccourcis WPF Ctrl+X et Ctrl+Maj+X ne s’appliquent pas à Electron.
+Le bouton Overlay ou Alt+O active l’option si nécessaire et affiche un aperçu même hors partie. Sans joueurs détectés, un message d’attente reste visible. Un second clic masque la fenêtre. **Alt+O** affiche ou masque la fenêtre. Les clics traversent l’overlay. Le mode **sans bordure** est le parcours à tester ; les anciens raccourcis WPF Ctrl+X et Ctrl+Maj+X ne s’appliquent pas à Electron.
 
 Les identités masquées et les bots ne déclenchent pas de recherche de compte. Une identité/rang indisponible reste indiqué comme tel. Les accès LCU/Live restent locaux ; la clé Riot reste sur le serveur.
 
