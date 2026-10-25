@@ -8,6 +8,7 @@
 #include <wrl/client.h>
 #include <algorithm>
 #include <chrono>
+#include <cstdio>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -281,6 +282,7 @@ int WINAPI wWinMain(HINSTANCE,HINSTANCE,PWSTR,int) {
         if (smoke && overlay) return 2; // baseline CI must never imply hook validation
         Probe probe; return probe.run(smoke,overlay);
     } catch(const std::exception& e) {
+        std::fprintf(stderr,"RiftDx11Probe: %s\n",e.what());
         OutputDebugStringA(e.what());
         if (!smoke) MessageBoxA(nullptr,e.what(),"Rift DX11 probe error",MB_ICONERROR);
         return 1;
