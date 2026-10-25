@@ -39,6 +39,9 @@ jobs:
       - run: npm run check
       - run: npm run test:desktop
       - run: npm run package:win
+      - run: npm run test:desktop
+        env:
+          RIFT_PACKAGED_EXE: artifacts/electron/RiftCompanion-win32-x64/RiftCompanion.exe
       - uses: actions/upload-artifact@v4
         if: always()
         with:

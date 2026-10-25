@@ -1,1 +1,388 @@
-:root{color-scheme:dark;font:15px/1.5 system-ui,sans-serif;color:#dfe7f4;background:#0c1119;--muted:#8d9bb0;--accent:#6de0c1;--line:#273246}*{box-sizing:border-box}body{margin:0}button,input,select{font:inherit;border:1px solid var(--line);border-radius:7px;background:#192335;color:inherit;padding:9px 13px}button{cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.45;cursor:wait}input:focus,select:focus{outline:2px solid var(--accent)}h1,h2,h3,p{margin:0 0 16px}h1{font-size:29px}h2{font-size:19px}small,.muted{color:var(--muted)}#app{display:flex;min-height:100vh}.nav{width:182px;flex-shrink:0;background:#101722;border-right:1px solid var(--line);padding:30px 18px;display:flex;flex-direction:column;gap:9px;position:fixed;height:100vh}.brand{color:var(--accent);font-size:28px;letter-spacing:3px;font-weight:800;margin-bottom:32px}.brand span{color:#edf4ff}.brand small{display:block;letter-spacing:3px;font-size:10px}.nav button{text-align:left;background:transparent;border-color:transparent}.nav button.active{background:#1a3032;color:var(--accent)}.nav-bottom{margin-top:auto;font-size:12px;display:grid;gap:10px}main{margin-left:182px;flex:1;padding:25px 30px;min-width:0}header{display:flex;justify-content:space-between;gap:12px;align-items:center}#search{display:flex;gap:8px}#riotId{width:240px}#status{min-height:26px;margin:16px 0;color:var(--accent);font-size:13px}.panel{background:#131c29;border:1px solid var(--line);border-radius:12px;padding:22px;margin-bottom:18px}.empty{padding:100px 30px;text-align:center}.profile-heading{display:flex;align-items:center;gap:24px}.profile-heading h1{margin:0}.profile-heading .actions{margin-left:auto}.avatar{width:70px;height:70px;border-radius:50%;background:#21394b;display:grid;place-items:center;color:var(--accent);font-size:24px;font-weight:700}.profile-layout{display:grid;grid-template-columns:270px minmax(0,1fr);gap:20px}.ranks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.rank{text-align:center;padding:14px 8px;border:1px solid var(--line);border-radius:8px}.rank img{width:64px;height:64px;object-fit:contain}.rank strong,.rank small{display:block}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:20px 0}.metric{background:#192435;border-radius:8px;text-align:center;padding:14px 6px}.metric strong{display:block;font-size:22px;color:#fff}.metric small{font-size:11px}.filters{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}.filters button.active{border-color:var(--accent);color:var(--accent)}.match{display:grid;grid-template-columns:46px minmax(90px,1fr) 100px 90px 70px;gap:12px;align-items:center;padding:13px 12px;border:1px solid var(--line);border-left:3px solid #d77887;border-radius:8px;margin:8px 0;cursor:pointer;background:#1c202e}.match.win{background:#14282d;border-left-color:var(--accent)}.match.remake{border-left-color:#999}.portrait{width:42px;height:42px;object-fit:cover;border-radius:7px;background:#263344}.match strong,.match small{display:block}.match .result{color:#e598a3;font-size:12px}.match.win .result{color:var(--accent)}.champion-row{display:flex;gap:12px;align-items:center;margin:14px 0}.champion-row strong{display:block}.champion-row .numbers{margin-left:auto;text-align:right}.bar{height:7px;background:#3d2735;border-radius:8px;overflow:hidden;margin-top:5px;display:flex}.bar span{display:block;background:var(--accent)}.settings{max-width:650px;display:grid;gap:16px}label{display:grid;gap:7px}label.check{display:flex;align-items:center}.settings p{margin:0}.teams{display:grid;grid-template-columns:1fr 1fr;gap:20px}table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:10px 7px;border-bottom:1px solid var(--line)}dialog{max-width:1100px;width:90vw;max-height:85vh;border:1px solid var(--line);border-radius:13px;background:#101925;color:inherit;padding:24px}dialog::backdrop{background:#0009}#close-details{float:right}.detail-team{margin:24px 0}.detail-team img{vertical-align:middle;margin-right:8px;width:30px;height:30px}.detail-team td small{display:block}.season-controls{display:flex;gap:10px;margin:12px 0}.season-controls input{min-width:0;width:140px}.overlay-mode{background:transparent}.overlay-mode #app{min-height:0}.overlay-mode main{margin:0;padding:12px;background:#0c1119e8;border:1px solid #33485d;border-radius:12px}.overlay-mode header,.overlay-mode .nav,.overlay-mode #status{display:none}.overlay-mode h1{font-size:18px}.overlay-mode .view{display:none}.overlay-mode #draft{display:block}.overlay-mode #draft>p,.overlay-mode #overlay-toggle{display:none}.overlay-mode td{padding:5px}.error{color:#ee99aa!important}[hidden]{display:none!important}
+:root {
+  color-scheme: dark;
+  font:
+    15px/1.5 system-ui,
+    sans-serif;
+  color: #dfe7f4;
+  background: #0c1119;
+  --muted: #8d9bb0;
+  --accent: #6de0c1;
+  --line: #273246;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #192335;
+  color: inherit;
+  padding: 9px 13px;
+}
+button {
+  cursor: pointer;
+}
+button:hover {
+  border-color: var(--accent);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+input:focus,
+select:focus {
+  outline: 2px solid var(--accent);
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0 0 16px;
+}
+h1 {
+  font-size: 29px;
+}
+h2 {
+  font-size: 19px;
+}
+small,
+.muted {
+  color: var(--muted);
+}
+#app {
+  display: flex;
+  min-height: 100vh;
+}
+.nav {
+  width: 182px;
+  flex-shrink: 0;
+  background: #101722;
+  border-right: 1px solid var(--line);
+  padding: 30px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  position: fixed;
+  height: 100vh;
+}
+.brand {
+  color: var(--accent);
+  font-size: 28px;
+  letter-spacing: 3px;
+  font-weight: 800;
+  margin-bottom: 32px;
+}
+.brand span {
+  color: #edf4ff;
+}
+.brand small {
+  display: block;
+  letter-spacing: 3px;
+  font-size: 10px;
+}
+.nav button {
+  text-align: left;
+  background: transparent;
+  border-color: transparent;
+}
+.nav button.active {
+  background: #1a3032;
+  color: var(--accent);
+}
+.nav-bottom {
+  margin-top: auto;
+  font-size: 12px;
+  display: grid;
+  gap: 10px;
+}
+main {
+  margin-left: 182px;
+  flex: 1;
+  padding: 25px 30px;
+  min-width: 0;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+#search {
+  display: flex;
+  gap: 8px;
+}
+#riotId {
+  width: 240px;
+}
+#status {
+  min-height: 26px;
+  margin: 16px 0;
+  color: var(--accent);
+  font-size: 13px;
+}
+.panel {
+  background: #131c29;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 22px;
+  margin-bottom: 18px;
+}
+.empty {
+  padding: 100px 30px;
+  text-align: center;
+}
+.profile-heading {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.profile-heading h1 {
+  margin: 0;
+}
+.profile-heading .actions {
+  margin-left: auto;
+}
+.avatar {
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: #21394b;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  font-size: 24px;
+  font-weight: 700;
+}
+.profile-layout {
+  display: grid;
+  grid-template-columns: 270px minmax(0, 1fr);
+  gap: 20px;
+}
+.ranks {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.rank {
+  text-align: center;
+  padding: 14px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+.rank img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+.rank strong,
+.rank small {
+  display: block;
+}
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+.metric {
+  background: #192435;
+  border-radius: 8px;
+  text-align: center;
+  padding: 14px 6px;
+}
+.metric strong {
+  display: block;
+  font-size: 22px;
+  color: #fff;
+}
+.metric small {
+  font-size: 11px;
+}
+.filters {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.filters button.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.match {
+  display: grid;
+  grid-template-columns: 46px minmax(90px, 1fr) 100px 90px 70px;
+  gap: 12px;
+  align-items: center;
+  padding: 13px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid #d77887;
+  border-radius: 8px;
+  margin: 8px 0;
+  cursor: pointer;
+  background: #1c202e;
+}
+.match.win {
+  background: #14282d;
+  border-left-color: var(--accent);
+}
+.match.remake {
+  border-left-color: #999;
+}
+.portrait {
+  width: 42px;
+  height: 42px;
+  object-fit: cover;
+  border-radius: 7px;
+  background: #263344;
+}
+.match strong,
+.match small {
+  display: block;
+}
+.match .result {
+  color: #e598a3;
+  font-size: 12px;
+}
+.match.win .result {
+  color: var(--accent);
+}
+.champion-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin: 14px 0;
+}
+.champion-row strong {
+  display: block;
+}
+.champion-row .numbers {
+  margin-left: auto;
+  text-align: right;
+}
+.bar {
+  height: 7px;
+  background: #3d2735;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-top: 5px;
+  display: flex;
+}
+.bar span {
+  display: block;
+  background: var(--accent);
+}
+.settings {
+  max-width: 650px;
+  display: grid;
+  gap: 16px;
+}
+label {
+  display: grid;
+  gap: 7px;
+}
+label.check {
+  display: flex;
+  align-items: center;
+}
+.settings p {
+  margin: 0;
+}
+.teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+th,
+td {
+  text-align: left;
+  padding: 10px 7px;
+  border-bottom: 1px solid var(--line);
+}
+dialog {
+  max-width: 1100px;
+  width: 90vw;
+  max-height: 85vh;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: #101925;
+  color: inherit;
+  padding: 24px;
+}
+dialog::backdrop {
+  background: #0009;
+}
+#close-details {
+  float: right;
+}
+.detail-team {
+  margin: 24px 0;
+}
+.detail-team img {
+  vertical-align: middle;
+  margin-right: 8px;
+  width: 30px;
+  height: 30px;
+}
+.detail-team td small {
+  display: block;
+}
+.season-controls {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+}
+.season-controls input {
+  min-width: 0;
+  width: 140px;
+}
+.overlay-mode {
+  background: transparent;
+}
+.overlay-mode #app {
+  min-height: 0;
+}
+.overlay-mode main {
+  margin: 0;
+  padding: 12px;
+  background: #0c1119e8;
+  border: 1px solid #33485d;
+  border-radius: 12px;
+}
+.overlay-mode header,
+.overlay-mode .nav,
+.overlay-mode #status {
+  display: none;
+}
+.overlay-mode h1 {
+  font-size: 18px;
+}
+.overlay-mode .view {
+  display: none;
+}
+.overlay-mode #draft {
+  display: block;
+}
+.overlay-mode #draft > p,
+.overlay-mode #overlay-toggle {
+  display: none;
+}
+.overlay-mode td {
+  padding: 5px;
+}
+.error {
+  color: #ee99aa !important;
+}
+[hidden] {
+  display: none !important;
+}
