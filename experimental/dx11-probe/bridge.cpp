@@ -52,8 +52,15 @@ class Bridge final : public ProbeBridge, public IIpcHost {
             if (packet.type=="game.process") {
                 overlay::OverlayInit init;
                 init.processEnabled=enabled; init.shareMemMutex=mutexName;
+                overlay::Hotkey toggleKey;
+                toggleKey.name="probe.toggle"; toggleKey.keyCode=VK_SPACE;
+                toggleKey.passthrough=false;
+                init.hotkeys.push_back(toggleKey);
                 init.windows.push_back(panel()); send(init);
                 ipcConnected=true;
+            } else if (packet.type=="game.hotkey.down") {
+                auto key=overlay::json::parse(packet.message);
+                if (key.value("name",std::string{})=="probe.toggle") toggle();
             } else if (packet.type=="graphics.window") {
                 auto state=overlay::json::parse(packet.message);
                 hookReported=state.value("hooked",false);
