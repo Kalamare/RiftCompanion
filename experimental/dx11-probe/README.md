@@ -74,6 +74,9 @@ La CI compile le banc et le pont GOverlay. Le test `--smoke`, limité à 30 seco
 par CTest, utilise **WARP** (rendu logiciel), lit des pixels réellement rendus,
 redimensionne la fenêtre puis recrée la swap chain. Il ne charge pas GOverlay,
 ne teste pas le plein écran physique et ne permet aucune conclusion sur Vanguard.
+Le contrôle distinct `--bridge-check` charge GOverlay dans le banc, attend la
+connexion IPC pendant cinq secondes et vérifie l'arrêt du processus sous une
+limite de 30 secondes. Il ne prétend pas vérifier la visibilité du panneau.
 
 La recette interactive GOverlay et le portage WPF restent nécessaires. Même une
 recette réussie sur ce banc ne certifierait pas la compatibilité avec LoL.

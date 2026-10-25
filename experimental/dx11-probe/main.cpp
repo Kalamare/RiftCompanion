@@ -251,7 +251,11 @@ public:
             if (smoke) {
                 if (frames>=20 && step==0) { SetWindowPos(window,nullptr,0,0,800,600,SWP_NOMOVE|SWP_NOZORDER); ++step; }
                 if (frames>=40 && step==1) { recreate(); ++step; }
-                if (frames>=60) running=false;
+                if (frames>=60 && (!withOverlay || Clock::now()-start>std::chrono::seconds(5))) {
+                    if (withOverlay && !bridge->connected()) throw std::runtime_error("GOverlay IPC handshake failed");
+                    if (withOverlay) event("goverlay_ipc_pass; visual_rendering_not_asserted");
+                    running=false;
+                }
                 if (Clock::now()-start>std::chrono::seconds(20)) throw std::runtime_error("Smoke test timed out");
             }
         }
@@ -275,11 +279,11 @@ int WINAPI wWinMain(HINSTANCE,HINSTANCE,PWSTR,int) {
         if (!argv) return 2;
         for (int i=1;i<argc;++i) {
             if (std::wstring(argv[i])==L"--smoke") smoke=true;
+            else if (std::wstring(argv[i])==L"--bridge-check") { smoke=true; overlay=true; }
             else if (std::wstring(argv[i])==L"--goverlay") overlay=true;
             else { LocalFree(argv); return 2; }
         }
         LocalFree(argv);
-        if (smoke && overlay) return 2; // baseline CI must never imply hook validation
         Probe probe; return probe.run(smoke,overlay);
     } catch(const std::exception& e) {
         std::fprintf(stderr,"RiftDx11Probe: %s\n",e.what());

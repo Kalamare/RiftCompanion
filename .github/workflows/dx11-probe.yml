@@ -38,6 +38,7 @@ jobs:
           name: DirectX11-test-evidence
           path: |
             experimental/dx11-probe/build/Testing/Temporary/LastTest.log
+            experimental/dx11-probe/build-goverlay/Testing/Temporary/LastTest.log
             experimental/goverlay/reports/
             ${{ runner.temp }}/RiftDx11Probe-*.log
           if-no-files-found: warn

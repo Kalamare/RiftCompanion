@@ -21,7 +21,7 @@ class Bridge final : public ProbeBridge, public IIpcHost {
     void* memory{};
     HMODULE module{};
     std::string mutexName, memoryName;
-    bool enabled=true, connected=false, hookReported=false, failed=false;
+    bool enabled=true, ipcConnected=false, hookReported=false, failed=false;
     unsigned updates=0;
 
     template<class T> void send(const T& message) {
@@ -43,7 +43,7 @@ class Bridge final : public ProbeBridge, public IIpcHost {
         if (client->remoteIdentity()==GetCurrentProcessId()) link=client;
     }
     void onClientClose(IIpcLink* client) override {
-        if (client==link) { link=nullptr; connected=false; }
+        if (client==link) { link=nullptr; ipcConnected=false; }
     }
     void onMessage(IIpcLink* client,int,int,const std::string& data) override {
         if (client!=link) return;
@@ -53,7 +53,7 @@ class Bridge final : public ProbeBridge, public IIpcHost {
                 overlay::OverlayInit init;
                 init.processEnabled=enabled; init.shareMemMutex=mutexName;
                 init.windows.push_back(panel()); send(init);
-                connected=true;
+                ipcConnected=true;
             } else if (packet.type=="graphics.window") {
                 auto state=overlay::json::parse(packet.message);
                 hookReported=state.value("hooked",false);
@@ -130,10 +130,11 @@ public:
         catch (...) { failed=true; }
     }
     std::wstring status() const override {
-        return std::wstring(L"GOverlay : IPC ")+(connected?L"connecté":L"en attente")+
+        return std::wstring(L"GOverlay : IPC ")+(ipcConnected?L"connecté":L"en attente")+
             L" | hook signalé : "+(hookReported?L"oui":L"non")+L" | panneau : "+(enabled?L"actif":L"masqué")+
             L" | trames : "+std::to_wstring(updates)+(failed?L" | ERREUR IPC/pixels":L"");
     }
+    bool connected() const override { return ipcConnected && !failed; }
 };
 }
 std::unique_ptr<ProbeBridge> startBridge() {

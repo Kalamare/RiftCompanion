@@ -11,4 +11,6 @@ $output = Join-Path $PSScriptRoot 'build-goverlay/Release'
 Copy-Item (Join-Path $source 'game-overlay/sln/bin/Release/n_overlay.x64.dll') $output -Force
 # Keep the upstream attribution beside this local development build.
 Copy-Item (Join-Path $source 'LICENSE') (Join-Path $output 'GOverlay-LICENSE.txt') -Force
+& ctest --test-dir (Join-Path $PSScriptRoot 'build-goverlay') -C Release --output-on-failure
+if ($LASTEXITCODE) { throw 'GOverlay local-load or lifecycle test failed.' }
 Write-Host "Compiled locally. Run $output/RiftDx11Probe.exe --goverlay for manual rendering checks."
