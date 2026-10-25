@@ -218,7 +218,13 @@ try {
     fullPage: true,
   });
   assert.equal(errors.length, 0, errors.join("\n"));
-  await app.close();
+  await page.locator("#top-overlay").click();
+  const exited = app.waitForEvent("close", { timeout: 15000 });
+  await page.evaluate(() => {
+    window.rift.overlayData().catch(() => {});
+  });
+  await page.close();
+  await exited;
   app = null;
   await new Promise((r) => server.close(r));
   app = await launch();

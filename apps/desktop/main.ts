@@ -111,18 +111,20 @@ function createWindow(isOverlay = false) {
   return win;
 }
 function showOverlay() {
+  if (stopping) return;
   if (
     !overlayVisible ||
     !cache.state.settings.overlayEnabled ||
     (!overlayPreview && client.phase !== "InProgress")
   ) {
-    overlay?.hide();
+    if (overlay && !overlay.isDestroyed()) overlay.hide();
     return;
   }
   if (!overlay || overlay.isDestroyed()) overlay = createWindow(true);
   overlay.showInactive();
 }
 async function toggleOverlay() {
+  if (stopping) return false;
   const visible = !(overlay && !overlay.isDestroyed() && overlay.isVisible());
   if (visible && !cache.state.settings.overlayEnabled) {
     cache.state.settings.overlayEnabled = true;
@@ -140,9 +142,10 @@ function handle(
   overlayAllowed = false,
 ) {
   ipcMain.handle("rift:" + name, async (event, value) => {
+    if (stopping || event.sender.isDestroyed()) return;
     const sender = event.senderFrame;
     const trusted =
-      event.sender === main.webContents ||
+      (main && !main.isDestroyed() && event.sender === main.webContents) ||
       (overlayAllowed &&
         overlay &&
         !overlay.isDestroyed() &&
@@ -244,6 +247,7 @@ async function start() {
     /* Reconfigure if the OS cannot decrypt. */
   }
   main = createWindow();
+  main.on("closed", () => app.quit());
   const publicAssets = new PublicAssets(
     join(dir, "public-assets"),
     net.fetch as typeof fetch,
@@ -398,8 +402,10 @@ async function start() {
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on("second-instance", () => {
-    main?.show();
-    main?.focus();
+    if (main && !main.isDestroyed()) {
+      main.show();
+      main.focus();
+    }
   });
   void start().catch(() => {
     dialog.showErrorBox(
@@ -414,5 +420,6 @@ app.on("before-quit", () => {
   stopping = true;
   clearTimeout(timer);
   globalShortcut.unregisterAll();
-  overlay?.destroy();
+  if (overlay && !overlay.isDestroyed()) overlay.destroy();
+  overlay = null;
 });
