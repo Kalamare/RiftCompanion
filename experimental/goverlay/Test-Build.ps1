@@ -36,6 +36,7 @@ if (Test-Path $native) { [System.IO.Directory]::Delete($native) }
 Get-PinnedSource $pins.nativeRepository $pins.nativeCommit $native
 
 $result = [ordered]@{
+    sourceDirectory = $source
     upstreamCommit = $pins.commit
     nativeCommit = $pins.nativeCommit
     configuration = 'Release|x64'
