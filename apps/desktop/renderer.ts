@@ -1,3 +1,5 @@
+import type { OverlayEntry } from "./overlay-data";
+import championCatalog from "../../native/Rift.Desktop/Assets/Champions/champion-fr.json";
 import {
   Profile,
   Platform,
@@ -35,6 +37,10 @@ const fmt = (n: number, d = 1) =>
   Number.isFinite(n)
     ? n.toLocaleString("fr-FR", { maximumFractionDigits: d })
     : "—";
+const championById = new Map(
+  Object.values(championCatalog.data).map((c) => [Number(c.key), c.id]),
+);
+let overlayEntries: OverlayEntry[] = [];
 let boot: Boot,
   profile: Profile | null = null,
   queue = 0,
@@ -179,6 +185,11 @@ function renderProfile() {
     const card = el("div", "", "rank");
     card.append(el("small", label));
     if (r) {
+      const badge = document.createElement("img");
+      badge.alt = r.tier;
+      badge.src = "assets/Ranks/" + encodeURIComponent(r.tier) + ".png";
+      badge.onerror = () => badge.remove();
+      card.append(badge);
       card.append(
         el("strong", r.tier + " " + r.division),
         el("span", `${r.lp} LP`),
@@ -529,7 +540,7 @@ function renderClient(state: ClientState) {
         panel.append(
           el(
             "p",
-            `${p.isYou ? "Toi · " : ""}${roleLabels[p.role] ?? "Rôle inconnu"} · Champion ${p.championId || p.intentId || "en attente"}`,
+            `${p.isYou ? "Toi · " : ""}${roleLabels[p.role] ?? "Rôle inconnu"} · Champion ${championById.get(p.championId || p.intentId) || "en attente"}`,
           ),
         );
       panel.append(el("small", "Bans : " + bans.join(", ")));
@@ -551,6 +562,33 @@ function renderClient(state: ClientState) {
           el("td", p.riotId || "Identité masquée"),
           el("td", roleLabels[p.role] ?? p.role),
         );
+        const data = overlayEntries.find((e) => e.player.riotId === p.riotId);
+        const stats = data?.stats;
+        const statCell = el("td");
+        if (stats) {
+          const champ = stats.champion;
+          statCell.append(
+            el(
+              "strong",
+              champ.games
+                ? `${fmt(champ.kda, 2)} KDA · ${Math.round((100 * champ.wins) / champ.games)} %`
+                : "Aucun match champion",
+            ),
+            el(
+              "small",
+              `${champ.games} matchs champion · ${stats.last30Days.games} sur 30 j collectés`,
+            ),
+            el(
+              "small",
+              stats.rank
+                ? `${stats.rank.tier} ${stats.rank.division} · ${stats.rank.lp} LP`
+                : stats.ranksPending
+                  ? "Rang en attente"
+                  : "Non classé",
+            ),
+          );
+        } else statCell.textContent = data?.status ?? "En attente";
+        row.append(statCell);
         table.append(row);
       }
       panel.append(table);
@@ -579,6 +617,7 @@ async function pollClient() {
   if (polling) return;
   polling = true;
   try {
+    overlayEntries = await window.rift.overlayData();
     renderClient(await window.rift.client());
   } catch {
     /* Main process may be shutting down. */

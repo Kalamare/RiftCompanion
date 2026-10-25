@@ -1,3 +1,5 @@
+import { overlayStats } from "../packages/core/index";
+import { OverlayData } from "../apps/desktop/overlay-data";
 import test from "node:test";
 import assert from "node:assert/strict";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
@@ -162,4 +164,36 @@ test("cache writes serialize; corrupt old cache is tolerated and bounded", async
   assert.equal(next.state.profiles.length, 20);
   await writeFile(join(dir, "state.json"), "broken");
   await next.read();
+});
+
+test("overlay samples exclude future games and remakes, with explicit empty champion sample", async () => {
+  const p = profile("KalAram#ARAM");
+  const m = parseDetails(fixtureMatch())!.participants[0].stats;
+  p.matches = [
+    m,
+    { ...m, remake: true },
+    { ...m, playedAt: "2030-01-01T00:00:00Z" },
+  ];
+  const stats = overlayStats(p, "Ahri", Date.UTC(2026, 9, 21));
+  assert.equal(stats.champion.games, 1);
+  assert.equal(stats.last12Hours.games, 0);
+  assert.equal(stats.last30Days.games, 1);
+  assert.equal(stats.mainRole, "");
+  assert.equal(overlayStats(p, "Zed", Date.UTC(2026, 9, 21)).champion.games, 0);
+});
+test("overlay collector never resolves masked players and backs off failed lookups", async () => {
+  let calls = 0;
+  const data = new OverlayData(async () => {
+    calls++;
+    throw new Error("limited");
+  });
+  const players = parseLive([
+    { summonerName: "hidden" },
+    { riotId: "KalAram#ARAM" },
+  ]);
+  await data.update(players, "euw1");
+  await data.update(players, "euw1");
+  assert.equal(calls, 1);
+  assert.equal(data.snapshot(players)[0].stats, null);
+  assert.equal(data.snapshot(players)[1].status, "Collecte différée");
 });

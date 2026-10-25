@@ -143,16 +143,14 @@ export async function detect(directory: string): Promise<ClientState> {
       );
       const team = (rows: any[]) =>
         Array.isArray(rows)
-          ? rows
-              .slice(0, 5)
-              .map((p) => ({
-                championId: Number(p.championId) || 0,
-                intentId: Number(p.championPickIntent) || 0,
-                role: String(p.assignedPosition ?? ""),
-                isYou:
-                  raw.localPlayerCellId >= 0 &&
-                  p.cellId === raw.localPlayerCellId,
-              }))
+          ? rows.slice(0, 5).map((p) => ({
+              championId: Number(p.championId) || 0,
+              intentId: Number(p.championPickIntent) || 0,
+              role: String(p.assignedPosition ?? ""),
+              isYou:
+                raw.localPlayerCellId >= 0 &&
+                p.cellId === raw.localPlayerCellId,
+            }))
           : [];
       const bans = (v: unknown) =>
         Array.isArray(v) ? v.filter((x) => Number.isInteger(x) && x > 0) : [];

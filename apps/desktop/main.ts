@@ -1,3 +1,4 @@
+import { OverlayData } from "./overlay-data";
 import {
   app,
   BrowserWindow,
@@ -28,6 +29,7 @@ let main: BrowserWindow,
   cache: Cache,
   client: ClientState = offline();
 let accessKey = "";
+const overlayData = new OverlayData(request);
 let timer: NodeJS.Timeout;
 let stopping = false;
 let overlayVisible = false;
@@ -191,6 +193,13 @@ async function poll() {
       }
     }
     showOverlay();
+    if (
+      client.phase === "InProgress" &&
+      client.owner &&
+      cache.state.settings.overlayEnabled &&
+      accessKey
+    )
+      void overlayData.update(client.live, client.owner.platform);
   } catch {
     client = offline();
   } finally {
@@ -358,6 +367,7 @@ async function start() {
   });
   handle("owner", () => cache.state.owner);
   handle("client", () => client, true);
+  handle("overlayData", () => overlayData.snapshot(client.live), true);
   handle("overlay", () => toggleOverlay());
   globalShortcut.register("Alt+O", () => toggleOverlay());
   overlayVisible = cache.state.settings.overlayEnabled;

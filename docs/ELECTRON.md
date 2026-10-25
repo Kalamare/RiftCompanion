@@ -7,6 +7,9 @@ L'application de bureau est Electron ; l'API et le worker sont des processus Nod
 Sur la branche `codex/electron-migration`, installer Node.js 24 LTS, puis à la racine :
 
 ```powershell
+git fetch origin
+git switch codex/electron-migration
+git pull --ff-only
 npm ci
 npm run check
 .\Lancer-Electron.cmd
@@ -58,7 +61,7 @@ Le format des JSON écrits dans PostgreSQL reste compatible avec .NET. Les ancie
 6. Vérifier la draft puis une partie d'entraînement en **sans bordure**. Activer l'overlay dans les réglages ; `Alt+O` le masque/affiche, les clics traversent la fenêtre.
 7. Fermer l'application : l'overlay et les lectures locales s'arrêtent.
 
-L'overlay Electron standard **ne règle pas le plein écran exclusif**. Il présente actuellement le roster ; la présentation complète des statistiques par joueur et les éléments graphiques avancés WPF restent à reprendre. Le moteur plein écran (indépendant ou Overwolf approuvé) doit être qualifié séparément avec LoL/Vanguard.
+L'overlay Electron standard **ne règle pas le plein écran exclusif**. Il présente le roster, les rangs et les statistiques disponibles sur l’échantillon collecté, avec attente explicite lorsque les budgets retardent une recherche. Les éléments graphiques avancés WPF restent à reprendre. Le moteur plein écran (indépendant ou Overwolf approuvé) doit être qualifié séparément avec LoL/Vanguard.
 
 ## Développement et vérifications
 
@@ -76,4 +79,4 @@ Le serveur distant privé peut être déployé derrière un reverse proxy HTTPS,
 
 ## État de transition
 
-Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu n'est pas une reproduction pixel à pixel de WPF. Restent notamment : graphiques de rangs et de rôles avancés, infobulles illustrées des runes/objets, statistiques du roster overlay, import des préférences SQLite, moteur plein écran et mesures de performances en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.
+Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu n'est pas une reproduction pixel à pixel de WPF. Restent notamment : graphiques de rangs et de rôles avancés, infobulles illustrées des runes/objets, placement/focus de l’overlay sur plusieurs écrans, import des préférences SQLite, moteur plein écran et mesures de performances en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.

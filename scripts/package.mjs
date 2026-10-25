@@ -1,4 +1,4 @@
-import packager from "@electron/packager";
+import { packager } from "@electron/packager";
 import { mkdir, cp, readFile, writeFile, rm } from "node:fs/promises";
 const source = "artifacts/electron-source";
 await rm(source, { recursive: true, force: true });

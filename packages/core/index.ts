@@ -378,3 +378,38 @@ export function parseLive(value: unknown): LivePlayer[] {
       };
     });
 }
+
+export function overlayStats(
+  profile: Profile,
+  champion: string,
+  now = Date.now(),
+) {
+  const matches = profile.matches.filter(
+    (m) => !m.remake && m.seconds > 0 && Date.parse(m.playedAt) <= now,
+  );
+  const selected = matches.filter(
+    (m) => m.champion.toLowerCase() === champion.toLowerCase(),
+  );
+  const championSummary = summary(selected);
+  const last12Hours = summary(
+    matches.filter((m) => Date.parse(m.playedAt) >= now - 12 * 3600000),
+  );
+  const last30Days = summary(
+    matches.filter((m) => Date.parse(m.playedAt) >= now - 30 * 86400000),
+  );
+  const roles = matches.filter((m) => standardRoles(m.queue) && m.role);
+  const mainRole =
+    [...new Set(roles.map((m) => m.role))].sort(
+      (a, b) =>
+        roles.filter((m) => m.role === b).length -
+        roles.filter((m) => m.role === a).length,
+    )[0] ?? "";
+  return {
+    champion: championSummary,
+    last12Hours,
+    last30Days,
+    mainRole,
+    rank: profile.ranks.find((r) => r.queue === "RANKED_SOLO_5x5") ?? null,
+    ranksPending: profile.ranksPending,
+  };
+}

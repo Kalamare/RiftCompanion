@@ -15,5 +15,6 @@ const bridge: RiftBridge = {
   owner: () => ipcRenderer.invoke("rift:owner"),
   toggleOverlay: () => ipcRenderer.invoke("rift:overlay"),
   client: () => ipcRenderer.invoke("rift:client"),
+  overlayData: () => ipcRenderer.invoke("rift:overlayData"),
 };
 contextBridge.exposeInMainWorld("rift", bridge);

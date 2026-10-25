@@ -1,3 +1,4 @@
+import type { OverlayEntry } from "./overlay-data";
 import type {
   Platform,
   Profile,
@@ -49,9 +50,7 @@ export interface RiftBridge {
     platform: Platform;
     riotId: string;
   }): Promise<{ id: string }>;
-  lookupState(
-    id: string,
-  ): Promise<{
+  lookupState(id: string): Promise<{
     status: string;
     error: string | null;
     retryAt: string | null;
@@ -64,10 +63,7 @@ export interface RiftBridge {
     end?: number;
   }): Promise<Profile>;
   card(input: { platform: Platform; puuid: string }): Promise<Card>;
-  refresh(input: {
-    platform: Platform;
-    puuid: string;
-  }): Promise<{
+  refresh(input: { platform: Platform; puuid: string }): Promise<{
     status: string;
     accepted: boolean;
     nextAllowedAt: string | null;
@@ -83,6 +79,7 @@ export interface RiftBridge {
   owner(): Promise<Profile | null>;
   toggleOverlay(): Promise<boolean>;
   client(): Promise<ClientState>;
+  overlayData(): Promise<OverlayEntry[]>;
 }
 declare global {
   interface Window {
