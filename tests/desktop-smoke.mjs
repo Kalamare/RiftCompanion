@@ -47,7 +47,7 @@ const owner = {
   ranksPending: false,
   historyPending: false,
 };
-const server = createServer((req, res) => {
+const server = createServer(async (req, res) => {
   res.setHeader("Content-Type", "application/json");
   if (req.headers["x-rift-key"] !== key) {
     res.writeHead(401);
@@ -55,8 +55,18 @@ const server = createServer((req, res) => {
     return;
   }
   let result = {};
-  if (req.url === "/v1/profiles/lookup")
-    result = { id: "ae8bf660-0f0c-4b09-beb1-bc136c723041" };
+  if (req.url === "/v1/profiles/lookup") {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const input = JSON.parse(Buffer.concat(chunks).toString());
+    result = {
+      id:
+        input.riotId === "Missing#TAG"
+          ? "ae8bf660-0f0c-4b09-beb1-bc136c723042"
+          : "ae8bf660-0f0c-4b09-beb1-bc136c723041",
+    };
+  } else if (req.url.endsWith("ae8bf660-0f0c-4b09-beb1-bc136c723042"))
+    result = { status: "paused", error: "player_not_found", player: null };
   else if (req.url.startsWith("/v1/lookups/"))
     result = {
       status: "limited",
@@ -159,6 +169,21 @@ try {
   await page.locator(".match").first().click();
   await page.locator("#details[open]").waitFor();
   await page.getByRole("button", { name: "Fermer", exact: true }).click();
+  await page.locator("#riotId").fill("Missing#TAG");
+  await page.getByRole("button", { name: "Rechercher", exact: true }).click();
+  await page
+    .getByText("Collecte différée : player_not_found", { exact: true })
+    .waitFor();
+  assert.equal(
+    await page
+      .getByRole("heading", { name: "KalAram#ARAM", exact: true })
+      .count(),
+    0,
+  );
+  await page.getByRole("button", { name: "Mon profil", exact: true }).click();
+  await page
+    .getByRole("heading", { name: "KalAram#ARAM", exact: true })
+    .waitFor();
   await mkdir("artifacts/electron-checks", { recursive: true });
   await page.screenshot({
     path: "artifacts/electron-checks/profile.png",

@@ -85,6 +85,11 @@ async function lookup(riotId: string, platform: Platform) {
       p.riotId.toUpperCase() === riotId.toUpperCase(),
   );
   if (cached) showProfile(cached);
+  else {
+    profile = null;
+    view("profile");
+    $("profile-content").replaceChildren(el("p", "Recherche du profil…"));
+  }
   try {
     const receipt = await window.rift.lookup({ riotId, platform });
     if (token !== operation) return;

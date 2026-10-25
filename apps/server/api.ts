@@ -10,7 +10,8 @@ const dateSchema = z
   .refine(
     (s) =>
       /^\d{4}-\d{2}-\d{2}(T00:00:00(?:\.000)?Z)?$/.test(s) &&
-      Number.isFinite(Date.parse(s)),
+      Number.isFinite(Date.parse(s)) &&
+      new Date(s).toISOString().slice(0, 10) === s.slice(0, 10),
   );
 async function body(req: IncomingMessage) {
   let size = 0;
