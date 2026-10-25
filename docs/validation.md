@@ -1,21 +1,50 @@
-# Validation du prototype
+# Validation
 
-## État
+## Dernière preuve automatisée
 
-- Client LoL non détecté au début de l'implémentation : connexion réelle et performances en partie à mesurer.
-- Les tests automatisés utilisent un transport simulé. Ils ne remplacent pas une draft réelle.
-- 15 septembre 2026 : 8 tests unitaires réussis (`npm test`). Syntaxe serveur et interface validée par Node.
-- Vérifications HTTP : lecture de l'état 200, POST 405, Origin étranger 403, Host étranger 403, source serveur inaccessible 404.
-- Mode démonstration : 10 champions affichés, bans présents, aucune requête LCU. Rendu contrôlé dans le navigateur ; préférence Support conservée après rechargement, puis rétablie à Jungle.
-- Mode réel : un lockfile est présent mais la connexion renvoie ECONNREFUSED. L'interface signale la connexion indisponible et retente ; aucune draft réelle validée.
-- Lecture ponctuelle en attente de connexion : moteur autour de 35–41 Mo de mémoire résidente. Ce n'est pas un benchmark et cela exclut le navigateur ; CPU instantané arrondi à 0,00 % insuffisant pour conclure à un impact nul.
+Commit applicatif [adcd1f9](https://github.com/Kalamare/RiftCompanion/commit/adcd1f98e4a870a37c6fc61731b1f82e2a63125d), [CI du 25 octobre 2026](https://github.com/Kalamare/RiftCompanion/actions/runs/40224905591) :
 
-## Relevés à compléter
+- 18 tests domaine/cache/logique UI et typage/compilation réussis.
+- 12 contrôles d’intégration PostgreSQL réussis.
+- Contrôles Chromium : disposition à 1220/1050 px, filtres, objets, détails, runes et grille d’overlay ; démarrage automatique, pagination 10→20→30→35 avec mise à jour intermédiaire, cache hors ligne.
+- Tests Electron réels sous Windows depuis les sources et depuis l’exécutable portable : isolation du renderer, secret chiffré, recherche, détails, récupération après erreur et redémarrage hors ligne.
 
-| Scénario | CPU moteur | RAM moteur | CPU/RAM navigateur | CPU/RAM client LoL | Fluidité / FPS / temps de rendu |
-| --- | --- | --- | --- | --- | --- |
-| LoL seul | — | — | — | À mesurer | À mesurer |
-| LoL + moteur + page | À mesurer | À mesurer | À mesurer | À mesurer | À mesurer |
-| LoL + moteur + page masquée | À mesurer | À mesurer | À mesurer | À mesurer | À mesurer |
+Les captures utilisent des données synthétiques. L’utilisateur a constaté le lancement et les données de KalAram#ARAM ; les derniers correctifs de démarrage/pagination attendent sa recette réelle. Ces résultats ne mesurent pas les FPS dans LoL.
 
-Conserver les mêmes conditions, durée, réglages graphiques et outils de mesure. Le mode démonstration ne mesure pas le coût de la connexion LCU.
+## Rejouer
+
+Depuis la racine, avec Node.js 24 :
+
+```powershell
+npm ci
+npm run check
+npx playwright install chromium
+npm run test:ui
+```
+
+Sur Windows avec session graphique :
+
+```powershell
+npm run test:desktop
+npm run package:win
+```
+
+Les contrôles PostgreSQL demandent une connexion à une base de test dédiée dans `RIFT_TEST_DATABASE_URL`, puis `npm run test:integration`. Chaque exécution crée et supprime son propre schéma `rift_check_*`. La CI décrit la configuration reproductible dans [.github/workflows/electron.yml](../.github/workflows/electron.yml).
+
+Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec projet/volume distinct du réel. Les contrôles .NET/WPF et bancs DirectX restent des suites séparées ; leurs anciens résultats ne qualifient pas Electron.
+
+## Recette sur le PC
+
+1. Démarrer le backend et vérifier `/health` sur le port effectivement publié.
+2. Démarrer Electron : cache immédiat, puis chargement automatique de KalAram#ARAM sans appuyer sur Actualiser.
+3. Comparer niveau/rangs et quelques parties ; tester filtres, objets, runes et navigation vers un participant.
+4. Ajouter plusieurs pages si disponibles ; vérifier fin explicite, défilement et maintien de la liste lors d’une mise à jour.
+5. Rechercher un autre compte puis revenir à Mon profil ; redémarrer sans serveur et vérifier le propriétaire en cache.
+6. En partie d’entraînement sans bordure, tester Alt+O, clics traversants, Alt-Tab, transitions et fermeture.
+7. Vérifier l’arrêt des processus et les performances sur une session prolongée.
+
+## Mesures en jeu à consigner
+
+Même machine, résolution, scène et réglages ; trois passages par scénario. Comparer LoL seul, client ouvert, overlay masqué puis visible. Relever CPU/RAM de tous les processus Electron, GPU, FPS/1 % low, temps de frame p95/p99 et trafic réseau. Répéter navigation et reconnexions pendant 60 minutes pour repérer croissance mémoire ou multiplication des requêtes.
+
+Les budgets restent à fixer sur une machine de référence. Un diagnostic fermé fait partie du scénario normal ; son coût doit être mesuré séparément.

@@ -1,95 +1,81 @@
-# Migration Electron / TypeScript
+# Installer et utiliser Electron
 
-L'application de bureau est Electron ; l'API et le worker sont des processus Node.js 24 en TypeScript. PostgreSQL reste partagé, sur le PC ou sur un serveur distant. **Aucun processus .NET n'est nécessaire pour ce nouveau parcours.** Les sources historiques restent disponibles pour comparaison et retour arrière.
+Référence actuelle : branche `codex/electron-migration`, mise à jour du 25 octobre 2026. Pour le backend, suivre [server/README.md](../server/README.md). Les anciens lanceurs `Lancer-Natif.cmd` et `Lancer-Backend-Local.cmd` concernent le parcours .NET.
 
-## Tester sur Windows
+## Installer depuis les sources
 
-Sur la branche `codex/electron-migration`, installer Node.js 24 LTS, puis à la racine :
+Prérequis : Windows, Git et Node.js 24 LTS. Pour héberger le backend sur le PC, installer aussi Docker Desktop avec les conteneurs Linux.
+
+```powershell
+git clone --branch codex/electron-migration https://github.com/Kalamare/RiftCompanion.git
+cd RiftCompanion
+npm ci
+.\Lancer-Electron.cmd
+```
+
+Pour un dépôt déjà présent, fermer l’application puis exécuter à sa racine :
 
 ```powershell
 git fetch origin
 git switch codex/electron-migration
 git pull --ff-only
 npm ci
-npm run check
 .\Lancer-Electron.cmd
 ```
 
-Ou télécharger l'artefact `RiftCompanion-Electron-Windows` du workflow **Electron and TypeScript**, extraire entièrement le ZIP et lancer `RiftCompanion.exe`. Cette distribution de qualification n'est pas signée ; aucun SDK .NET n'est requis. Ne pas exécuter le programme depuis l'intérieur du ZIP.
+Le lanceur compile l’application puis l’ouvre. En cas de modifications locales empêchant le changement de branche ou le pull, les conserver et résoudre le conflit avant de poursuivre.
 
-Dans **Réglages**, saisir l'adresse du serveur (`http://127.0.0.1:5081` pour le PC) et sa clé d'accès existante, contenue dans `server/.secrets/access-key`. Ne pas utiliser la clé Riot dans l'application. Pour un serveur distant, HTTPS est obligatoire. Choisir si nécessaire le dossier contenant `LeagueClient.exe`.
+## Utiliser l’exécutable portable
 
-La clé est chiffrée par `safeStorage` (DPAPI sous Windows), liée à l'adresse du serveur et n'est jamais relue par le renderer. La clé Riot reste exclusivement dans le worker. Le cache Electron est dans `%APPDATA%\rift-companion`. Le profil personnel WPF est importé en lecture seule depuis `%LOCALAPPDATA%\RiftCompanion\personal-profile.json`. Les anciens fichiers, la base SQLite et les secrets DPAPI WPF restent intacts. Reconfigurer le dossier LoL et le rôle préféré ; leur import SQLite n'est pas encore automatique.
+Ouvrir une exécution réussie du workflow [Electron and TypeScript](https://github.com/Kalamare/RiftCompanion/actions/workflows/electron.yml), sur la branche actuelle. Télécharger l’artefact `RiftCompanion-Electron-Windows`, extraire tout le ZIP puis lancer `RiftCompanion.exe`. Node.js et le SDK .NET ne sont pas nécessaires pour cet exécutable. Cette distribution de qualification n’est pas signée et ne se met pas à jour automatiquement.
 
-## Passer le backend existant à Node.js
+## Connecter l’application au serveur
 
-Les commandes suivantes supposent le projet réel `rift-real`, la configuration et les trois fichiers secrets existants. Vérifier le nom du projet avec `docker compose ls` avant d'utiliser un autre nom : le nom détermine le volume PostgreSQL. Ne jamais lancer `down -v`.
+Dans **Réglages** :
 
-Depuis la racine, sauvegarder d'abord PostgreSQL. Pour éviter les redirections binaires de Windows PowerShell 5.1 :
+1. Saisir l’adresse de l’API : `http://127.0.0.1:5080` pour la configuration locale par défaut. Si Docker publie un autre port, employer celui-ci. Un serveur distant exige HTTPS.
+2. Coller la clé d’accès privée contenue dans `server/.secrets/access-key`, puis enregistrer. Il ne s’agit pas de la clé Riot.
+3. Choisir si nécessaire le dossier contenant `LeagueClient.exe` et le rôle préféré.
 
-```powershell
-docker compose -p rift-real -f server/compose.yaml exec -T postgres pg_dump -U rift -d rift -Fc -f /tmp/rift-before-electron.dump
-docker compose -p rift-real -f server/compose.yaml cp postgres:/tmp/rift-before-electron.dump ./rift-before-electron.dump
-```
-
-Conserver cette sauvegarde en dehors de Git. Ensuite :
+Pour copier la clé d’accès sans l’afficher dans la console :
 
 ```powershell
-docker compose -p rift-real --env-file server/.env -f server/compose.yaml stop api worker
-docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d --build api worker
-Invoke-RestMethod http://127.0.0.1:5081/health
+(Get-Content -Raw .\server\.secrets\access-key).Trim() | Set-Clipboard
 ```
 
-La santé doit afficher `runtime: typescript`, `data: riot`. Le port est celui de `RIFT_PORT` dans `server/.env` (5081 sur l'installation actuelle). Le schéma reste en v2, les matchs, agrégats, curseurs et quotas sont conservés. Aucun changement de mot de passe SQL et aucune suppression de volume. Ne pas laisser un ancien worker tourner en parallèle pendant la qualification.
+La clé est chiffrée par le stockage sécurisé du système et liée à l’adresse du serveur. Changer d’adresse peut nécessiter de la saisir à nouveau. La clé Riot reste dans le worker.
 
-Pour revenir aux services .NET sans modifier les données :
+## Profil, historique et overlay
+
+Au démarrage, le profil en cache apparaît puis se recharge automatiquement si l’accès serveur est configuré. Hors ligne, le cache reste consultable. **Mon profil** revient au propriétaire détecté par LoL ; rechercher quelqu’un d’autre ne remplace pas ce propriétaire.
+
+La liste affiche dix parties puis ajoute dix parties déjà stockées par clic sur **Voir plus**. Les mises à jour conservent les pages ouvertes. Quand la base n’a plus de parties à fournir, un message le précise. Le filtre ne déclenche pas une collecte dédiée à une file. **Actualiser** demande une collecte récente, sous réserve du délai serveur de cinq minutes. Pour compléter les anciennes parties, voir le [rattrapage historique](../server/README.md#historique-et-clé-riot).
+
+L’overlay se masque ou s’affiche avec **Alt+O**. Sa qualification actuelle concerne le mode sans bordure ; voir [ses limites](OVERLAY.md).
+
+## Dépannage
+
+Depuis la racine du dépôt :
 
 ```powershell
-docker compose -p rift-real --env-file server/.env -f server/compose.yaml stop api worker
-docker compose -p rift-real --env-file server/.env -f server/compose.yaml up -d --build api worker
+docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml ps -a
+docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml logs --tail 80 api worker
+Invoke-RestMethod http://127.0.0.1:5080/health
 ```
 
-Le format des JSON écrits dans PostgreSQL reste compatible avec .NET. Les anciens clients WPF utilisent SignalR ; le nouveau serveur utilise des lectures de version toutes les 15 secondes dans Electron. Revenir au backend .NET pour utiliser entièrement le client WPF.
+| Symptôme | Vérification |
+|---|---|
+| `ERR_CONNECTION_REFUSED` ou serveur inaccessible | Docker démarré, service API actif, port publié dans `ps` identique à celui des réglages. `127.0.0.1:5080->8080` signifie utiliser 5080. |
+| « Accès serveur refusé : vérifie la clé » | L’API répond, mais la clé d’accès est refusée. Recopier `access-key`, enregistrer avec la bonne adresse. |
+| `riot_access_denied` dans les logs du worker | Vérifier/renouveler la clé Riot côté serveur. Ce n’est pas la clé d’accès Electron. |
+| Profil partiel ou historique épuisé | Vérifier le worker, les délais de quota et le backfill ; les statistiques ne couvrent que les parties collectées. |
+| Avertissements `safeStorage.* is deprecated` | Dette de compatibilité Electron connue ; migration vers les méthodes asynchrones à faire. Ces avertissements ne sont pas une erreur d’authentification réseau. |
+| Ancienne interface ou ancien comportement | Vérifier la branche, récupérer les modifications et relancer le build, ou remplacer le dossier portable par le nouvel artefact. |
 
-## Contrôles locaux
+`/health` confirme le mode du service (`runtime: typescript`, `data: riot`), pas la validité de la clé Riot. Ne partager ni contenu des fichiers secrets ni export complet de la configuration.
 
-1. Rechercher `KalAram#ARAM` en EUW : identité, niveau, rangs et dix matchs progressifs.
-2. Ouvrir une partie ; comparer K/D/A, CS, dégâts, or, objets et objectifs au client précédent.
-3. Filtrer Solo, Flex, ARAM ; ouvrir les statistiques de saison (couverture partielle explicitement indiquée).
-4. `Voir plus` consulte uniquement PostgreSQL. `Actualiser` respecte le délai de cinq minutes et le budget serveur.
-5. Ouvrir LoL : **Mon profil** doit identifier le compte local. Rechercher quelqu'un d'autre puis redémarrer sans serveur : le propriétaire doit rester le compte LoL.
-6. Vérifier la draft puis une partie d'entraînement en **sans bordure**. Activer l'overlay dans les réglages ; `Alt+O` le masque/affiche, les clics traversent la fenêtre.
-7. Fermer l'application : l'overlay et les lectures locales s'arrêtent.
+## Données locales
 
-L'overlay Electron standard **ne règle pas le plein écran exclusif**. Il présente le roster, les rangs et les statistiques disponibles sur l’échantillon collecté, avec attente explicite lorsque les budgets retardent une recherche. La présentation reprend désormais la grille WPF de cinq joueurs sur deux rangées. Le moteur plein écran (indépendant ou Overwolf approuvé) doit être qualifié séparément avec LoL/Vanguard.
+Le cache Electron se trouve dans `%APPDATA%\rift-companion`. Le profil personnel WPF peut être importé en lecture seule depuis `%LOCALAPPDATA%\RiftCompanion\personal-profile.json`. Les préférences SQLite ne sont pas importées automatiquement : reconfigurer le dossier LoL et le rôle si nécessaire.
 
-## Développement et vérifications
-
-- `apps/desktop` : main, preload isolé et renderer TypeScript ; aucun Node.js dans la page.
-- `apps/server` : API HTTP et worker durable ; `packages/core` : modèles et calculs communs.
-- `npm run test:ui` : contrôles visuels et fonctionnels dans Chromium (après `npx playwright install chromium`), captures synthétiques à 1 220 et 1 050 px, détails, runes et overlay.
-- `npm run check` : typage, tests métier/cache, compilation.
-- `npm run test:desktop` : Electron réel, serveur synthétique, chiffrement Windows, recherche, détail et redémarrage hors ligne. À lancer sur Windows avec une session graphique.
-- `RIFT_TEST_DATABASE_URL` + `npm run test:integration` : PostgreSQL de test ; chaque exécution utilise et supprime uniquement son propre schéma `rift_check_*`.
-- `npm run package:win` : distribution Windows portable.
-- `npm run api` / `npm run worker` : développement Node.js avec `PGHOST`, `PGUSER`, `PGDATABASE`, `PGPASSWORD` ou `PGPASSWORD_FILE`, `RIFT_ACCESS_KEY_FILE`, `RIOT_API_KEY_FILE`. `HOST` est local par défaut. `RIFT_FIXTURE_MODE=true` est réservé aux tests synthétiques.
-
-## Avant une publication publique
-
-Le serveur distant privé peut être déployé derrière un reverse proxy HTTPS, avec sauvegardes et secrets opérateur. Le mode actuel utilise une clé privée partagée et des budgets globaux : ce n'est pas une authentification pour un public multiutilisateur. Prévoir comptes/sessions, quotas par utilisateur, supervision, migrations de production, distribution signée et mises à jour. La clé Riot de développement n'offre ni les quotas ni l'autorisation d'une exploitation publique ; les démarches Riot et, si choisi, Overwolf restent distinctes.
-
-## État de transition
-
-Le nouveau parcours profil → collecte → statistiques → détails → cache → client LoL fonctionne sans .NET et fait l'objet de tests automatisés. Le rendu est porté depuis les vues WPF ; le moteur de texte Chromium peut différer légèrement de WPF. Le profil reprend les dimensions, couleurs, onglets, anneau de victoires, barres de rôles et frises de rangs définis dans le XAML. Les détails de partie retrouvent les deux équipes, le joueur sélectionné, les objets et les panneaux de runes. Les images d’objets et de profils proviennent du CDN public Riot, sans clé, et sont conservées en cache. Restent le placement/focus de l’overlay sur plusieurs écrans, l’import des préférences SQLite, le moteur plein écran et les mesures en jeu. Ne retirer `native/` et les anciens services qu'après validation de ces écarts ; les assets historiques sont encore réutilisés à la compilation.
-
-### Chargement du profil et historique
-
-Au démarrage, le profil en cache s’affiche immédiatement puis une recherche serveur recharge automatiquement ses données. Le cache reste visible hors ligne. Les mises à jour conservent les pages d’historique déjà ouvertes. « Voir plus » lit dix parties supplémentaires en base ; lorsque toutes les parties disponibles sont affichées, un message indique la fin de cet historique partiel.
-
-Par défaut, `RIFT_HISTORY_BACKFILL=false` limite la collecte aux parties récentes. Pour collecter également l’historique depuis `RIFT_HISTORY_FROM`, mettre `RIFT_HISTORY_BACKFILL=true` dans `server/.env`, puis appliquer la configuration :
-
-```powershell
-docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f server/compose.typescript.yaml up -d api worker
-```
-
-Ouvrir ensuite le profil pour réactiver sa collecte. Les anciennes parties arrivent progressivement selon les quotas Riot ; ce réglage ne les rend pas toutes disponibles immédiatement.
+Une mise à jour de l’interface seule ne nécessite pas de recréer le serveur. Les commandes d’exploitation et de retour arrière sont dans le [guide serveur](../server/README.md).
