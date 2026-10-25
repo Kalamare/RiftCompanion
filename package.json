@@ -1,0 +1,15 @@
+{
+  "name": "rift-companion", "version": "0.1.0", "private": true,
+  "description": "RiftCompanion Electron and TypeScript services", "main": "dist/desktop/main.cjs",
+  "scripts": {
+    "build": "node scripts/build.mjs", "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts", "check": "npm run typecheck && npm test && npm run build",
+    "start": "electron .", "api": "tsx apps/server/api.ts", "worker": "tsx apps/server/worker.ts",
+    "test:integration": "tsx --test tests/integration/*.test.ts",
+    "test:desktop": "node tests/desktop-smoke.mjs",
+    "package:win": "npm run build && electron-packager . RiftCompanion --platform=win32 --arch=x64 --out=artifacts/electron --overwrite --ignore=^/(native|server|experimental|tests|apps|packages|docs|scripts|artifacts|.git|node_modules)($|/) --prune=false"
+  },
+  "dependencies": {"pg":"8.16.3", "zod":"4.1.12"},
+  "devDependencies": {"@electron/packager":"19.0.1", "@types/node":"24.10.0", "@types/pg":"8.15.6", "electron":"45.0.0", "esbuild":"0.25.12", "tsx":"4.20.6", "typescript":"5.9.3", "playwright":"1.56.1"},
+  "engines": {"node": ">=24"}
+}

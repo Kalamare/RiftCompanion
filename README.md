@@ -1,5 +1,9 @@
 # Rift Companion
 
+**Nouvelle architecture : Electron + TypeScript**, avec API et worker Node.js et PostgreSQL local ou distant. Le parcours de migration ne dépend pas du SDK .NET. Lancer `Lancer-Electron.cmd` ; voir [installation, transition du serveur et contrôles](docs/ELECTRON.md). La parité graphique et le plein écran exclusif restent en qualification.
+
+Les versions ci-dessous décrivent l’application WPF historique, conservée pour comparaison et retour arrière.
+
 **v41 : dix matchs par défaut**, collecte récente et pages de consultation limitées à dix ; statistiques de saison sur les données déjà stockées.
 
 **v40 : chargement progressif des profils**, identité publiée avant les rangs et matchs, états de chargement par bloc et refus de clé Riot explicite. Voir `docs/REPRISE.md`.

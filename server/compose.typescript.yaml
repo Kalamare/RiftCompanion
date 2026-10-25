@@ -1,0 +1,23 @@
+# Overlay onto compose.yaml: reuse the same PostgreSQL service, secrets and volume.
+# Stop the old worker first; do not run both implementations during qualification.
+x-typescript: &typescript
+  PGHOST: postgres
+  PGUSER: rift
+  PGDATABASE: rift
+  PGPASSWORD_FILE: /run/secrets/postgres_password
+  HOST: 0.0.0.0
+  PORT: 8080
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+      target: runtime
+    environment: *typescript
+  worker:
+    build:
+      context: ..
+      dockerfile: apps/server/Dockerfile
+      target: runtime
+    environment: *typescript
+    command: [node, worker.js]

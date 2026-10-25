@@ -1,0 +1,50 @@
+name: Electron and TypeScript
+on:
+  push:
+    branches: [main, 'codex/electron-migration']
+  pull_request:
+    paths: ['apps/**', 'packages/**', 'tests/**', 'scripts/**', 'package*.json', 'tsconfig.json', '.github/workflows/electron.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: rift
+          POSTGRES_PASSWORD: fixture-only
+          POSTGRES_DB: rift_test
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U rift -d rift_test" --health-interval 5s --health-timeout 3s --health-retries 20
+    env:
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      RIFT_TEST_DATABASE_URL: postgresql://rift:fixture-only@127.0.0.1:5432/rift_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:integration
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '24', cache: npm }
+      - run: npm ci
+      - run: npm run check
+      - run: npm run test:desktop
+      - run: npm run package:win
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: electron-checks
+          path: artifacts/electron-checks
+      - uses: actions/upload-artifact@v4
+        with:
+          name: RiftCompanion-Electron-Windows
+          path: artifacts/electron/RiftCompanion-win32-x64
