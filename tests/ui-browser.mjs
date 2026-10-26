@@ -78,6 +78,10 @@ try {
         }),
         refresh: async () => ({ accepted: false, status: "cooldown" }),
         toggleOverlay: async () => true,
+        overlayInput: async () => {},
+        openOverlayProfile: async (id) => {
+          window.openedOverlayProfile = id;
+        },
         saveSettings: async () => {},
         chooseLeagueDirectory: async () => null,
       };
@@ -291,6 +295,11 @@ try {
       cards.map((c) => Math.round(c.getBoundingClientRect().top)),
     );
   assert.equal(new Set(positions).size, 2);
+  await overlay.locator(".overlay-profile-link").first().click();
+  assert.equal(
+    await overlay.evaluate(() => window.openedOverlayProfile),
+    owner.riotId,
+  );
   await overlay.screenshot({
     path: "artifacts/electron-checks/restored-overlay.png",
   });

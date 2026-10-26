@@ -1,6 +1,6 @@
 import { kda } from "./profile";
 import { OverlayEntry } from "../overlay-data";
-import { node, number } from "./dom";
+import { node, number, action } from "./dom";
 import {
   portrait,
   rankImage,
@@ -11,7 +11,11 @@ import {
 } from "./assets";
 import { roleIcon } from "./charts";
 import { roleLabels } from "../../../packages/core/index";
-export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
+export function renderOverlay(
+  root: HTMLElement,
+  entries: OverlayEntry[],
+  openProfile: (riotId: string) => void = () => {},
+) {
   root.replaceChildren();
   const header = node("div", "", "overlay-heading");
   header.append(
@@ -23,7 +27,7 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
     ),
     node(
       "small",
-      "Alt + O · afficher / masquer · statistiques sur les parties collectées",
+      "Ctrl + X · afficher / masquer · statistiques sur les parties collectées",
     ),
   );
   const grid = node("div", "", "overlay-grid");
@@ -40,8 +44,16 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
     const identity = node("div", "", "overlay-identity");
     identity.append(profileIcon(entry.profileIconId ?? null));
     const name = node("div");
+    const playerName =
+      player.canLookup && player.riotId
+        ? action(
+            player.riotId,
+            () => openProfile(player.riotId),
+            "overlay-profile-link",
+          )
+        : node("strong", player.riotId || "Identité masquée");
     name.append(
-      node("strong", player.riotId || "Identité masquée"),
+      playerName,
       node(
         "small",
         entry.level ? `Niveau ${entry.level}` : "Compte en attente",
@@ -130,7 +142,7 @@ export function renderOverlay(root: HTMLElement, entries: OverlayEntry[]) {
     grid.append(
       node(
         "p",
-        "Overlay visible · en attente des joueurs. Lance une partie d’entraînement en sans-bordure. Alt+O pour masquer.",
+        "Overlay visible · en attente des joueurs. Lance une partie d’entraînement en sans-bordure. Ctrl+X pour masquer.",
         "overlay-notice",
       ),
     );

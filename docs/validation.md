@@ -41,7 +41,7 @@ Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec 
 3. Comparer niveau/rangs et quelques parties ; tester filtres, objets, runes et navigation vers un participant.
 4. Faire défiler plusieurs pages au-delà des parties déjà stockées ; vérifier collecte automatique, reprise après quota, filtre Solo/ARAM, bilan stable et position conservée. Relancer le worker pendant une page en cours, puis vérifier la reprise sans doublon. Ne pas effacer de volume.
 5. Rechercher un autre compte puis revenir à Mon profil ; redémarrer sans serveur et vérifier le propriétaire en cache.
-6. En partie d’entraînement sans bordure, tester Alt+O, clics traversants, Alt-Tab, transitions et fermeture.
+6. En partie d’entraînement sans bordure, tester Ctrl+X, clics traversants, Alt-Tab, transitions et fermeture.
 7. Vérifier l’arrêt des processus et les performances sur une session prolongée.
 
 ## Mesures en jeu à consigner

@@ -60,7 +60,7 @@ docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f ser
 
 Le bilan et les champions récents portent sur les vingt premières parties du filtre disponibles ; ouvrir d’autres pages ne change plus la taille de cet échantillon. Les statistiques de saison indiquent encore leur couverture partielle.
 
-L’overlay se masque ou s’affiche avec **Alt+O**. Sa qualification actuelle concerne le mode sans bordure ; voir [ses limites](OVERLAY.md).
+L’overlay se masque ou s’affiche avec **Ctrl+X**. Sa qualification actuelle concerne le mode sans bordure ; voir [ses limites](OVERLAY.md).
 
 ## Dépannage
 

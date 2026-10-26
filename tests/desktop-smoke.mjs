@@ -160,6 +160,12 @@ try {
     (await readFile(join(directory, "state.json"), "utf8")).includes(key),
     false,
   );
+  assert.equal(
+    await app.evaluate(({ globalShortcut }) =>
+      globalShortcut.isRegistered("Control+X"),
+    ),
+    true,
+  );
   await page.locator("#top-overlay").click();
   await page.waitForFunction(() =>
     document.querySelector("#status").textContent.includes("Overlay affiché"),

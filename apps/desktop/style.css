@@ -1294,3 +1294,19 @@ dialog::backdrop {
   display: block;
   margin-top: 4px;
 }
+
+.overlay-profile-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.overlay-profile-link:hover,
+.overlay-profile-link:focus-visible {
+  color: #4ec5b3;
+  text-decoration: underline;
+}

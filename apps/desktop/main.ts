@@ -392,10 +392,48 @@ async function start() {
   handle("owner", () => cache.state.owner);
   handle("client", () => client, true);
   handle("overlayData", () => overlayData.snapshot(client.live), true);
+  handle(
+    "overlayInput",
+    (value) => {
+      const interactive = z.boolean().parse(value);
+      if (overlay && !overlay.isDestroyed())
+        overlay.setIgnoreMouseEvents(!interactive, { forward: true });
+    },
+    true,
+  );
+  handle(
+    "openOverlayProfile",
+    (value) => {
+      const riotId = z.string().max(100).parse(value);
+      const player = client.live.find(
+        (p) => p.riotId === riotId && p.canLookup,
+      );
+      if (!player || !client.owner)
+        throw new Error("Profil indisponible pour ce joueur.");
+      const input = lookupSchema.parse({
+        riotId,
+        platform: client.owner.platform,
+      });
+      if (!main || main.isDestroyed()) return;
+      overlayVisible = false;
+      overlayPreview = false;
+      showOverlay();
+      if (main.isMinimized()) main.restore();
+      main.show();
+      main.focus();
+      main.webContents.send("rift:openProfile", input);
+    },
+    true,
+  );
   handle("overlay", () => toggleOverlay());
-  globalShortcut.register("Alt+O", () => {
+  const shortcutRegistered = globalShortcut.register("Control+X", () => {
     void toggleOverlay().catch(() => console.warn("Overlay unavailable"));
   });
+  if (!shortcutRegistered)
+    dialog.showErrorBox(
+      "Raccourci indisponible",
+      "Ctrl+X n’a pas pu être enregistré. Ferme l’application qui réserve ce raccourci, puis relance RiftCompanion. Le bouton Overlay reste utilisable.",
+    );
   overlayVisible = cache.state.settings.overlayEnabled;
   void poll();
 }

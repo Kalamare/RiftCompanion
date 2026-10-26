@@ -313,7 +313,11 @@ function renderClient(state: ClientState) {
     ? "LoL · " + state.phase
     : "Client déconnecté";
   if (overlay) {
-    renderOverlay($("overlay-content"), overlayEntries);
+    renderOverlay(
+      $("overlay-content"),
+      overlayEntries,
+      (id) => void window.rift.openOverlayProfile(id).catch(fail),
+    );
     return;
   }
   const root = $("draft-content");
@@ -524,11 +528,25 @@ async function watchProfile() {
 async function start() {
   if (overlay) {
     document.body.classList.add("overlay-mode");
+    let interactive = false;
+    const input = (value: boolean) => {
+      if (value === interactive) return;
+      interactive = value;
+      void window.rift.overlayInput(value).catch(() => {});
+    };
+    document.addEventListener("pointermove", (event) =>
+      input(!!(event.target as Element).closest(".overlay-profile-link")),
+    );
+    document.addEventListener("pointerleave", () => input(false));
+    window.addEventListener("blur", () => input(false));
     view("draft");
     void pollClient();
     return;
   }
   boot = await window.rift.boot();
+  window.rift.onOpenProfile?.(
+    ({ riotId, platform }) => void lookup(riotId, platform),
+  );
   recent();
   ($("search-expander") as HTMLDetailsElement).open =
     !boot.owner && !boot.profiles.length;
@@ -575,7 +593,7 @@ async function start() {
         if (visible) $<HTMLInputElement>("overlay-enabled").checked = true;
         status(
           visible
-            ? "Overlay affiché · Alt+O pour masquer. Plein écran exclusif non pris en charge."
+            ? "Overlay affiché · Ctrl+X pour masquer. Plein écran exclusif non pris en charge."
             : "Overlay masqué.",
         );
       })

@@ -85,6 +85,11 @@ export interface RiftBridge {
   }): Promise<any>;
   owner(): Promise<Profile | null>;
   toggleOverlay(): Promise<boolean>;
+  overlayInput(interactive: boolean): Promise<void>;
+  openOverlayProfile(riotId: string): Promise<void>;
+  onOpenProfile(
+    callback: (input: { riotId: string; platform: Platform }) => void,
+  ): () => void;
   client(): Promise<ClientState>;
   overlayData(): Promise<OverlayEntry[]>;
 }

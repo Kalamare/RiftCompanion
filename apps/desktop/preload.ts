@@ -14,6 +14,20 @@ const bridge: RiftBridge = {
   details: (v) => ipcRenderer.invoke("rift:details", v),
   stats: (v) => ipcRenderer.invoke("rift:stats", v),
   owner: () => ipcRenderer.invoke("rift:owner"),
+  overlayInput: (value) => ipcRenderer.invoke("rift:overlayInput", value),
+  openOverlayProfile: (riotId) =>
+    ipcRenderer.invoke("rift:openOverlayProfile", riotId),
+  onOpenProfile: (callback) => {
+    const listener = (
+      _event: Electron.IpcRendererEvent,
+      input: {
+        riotId: string;
+        platform: import("../../packages/core/index").Platform;
+      },
+    ) => callback(input);
+    ipcRenderer.on("rift:openProfile", listener);
+    return () => ipcRenderer.removeListener("rift:openProfile", listener);
+  },
   toggleOverlay: () => ipcRenderer.invoke("rift:overlay"),
   client: () => ipcRenderer.invoke("rift:client"),
   overlayData: () => ipcRenderer.invoke("rift:overlayData"),
