@@ -152,17 +152,18 @@ function sidebar(p: Profile, actions: ProfileActions) {
   return panel;
 }
 export function renderProfile(
-  root: HTMLElement,
+  container: HTMLElement,
   p: Profile,
   queue: number,
   actions: ProfileActions,
 ) {
   dismissHints();
   const key = `${p.platform}:${p.puuid}:${queue}`;
-  const oldList = root.querySelector<HTMLElement>(".match-list");
+  const oldList = container.querySelector<HTMLElement>(".match-list");
+  const retainedList = oldList?.dataset.key === key ? oldList : null;
+  const root = node("div");
   const scroll = oldList?.dataset.key === key ? oldList.scrollTop : 0;
   const pageScroll = window.scrollY;
-  root.replaceChildren();
   if (seasonKey !== p.platform + ":" + p.puuid) {
     seasonKey = p.platform + ":" + p.puuid;
     seasonLimit = 6;
@@ -359,11 +360,11 @@ export function renderProfile(
   roles.append(node("h2", "Rôles"), roleBars(overviewMatches));
   overview.append(balance, champions, roles);
   right.append(overview);
-  const list = node("div", "", "match-list");
+  const list = retainedList ?? node("div", "", "match-list");
   list.dataset.key = key;
   list.dataset.count = String(matches.length);
   if (!matches.length)
-    list.append(
+    list.replaceChildren(
       node(
         "p",
         p.historyPending
@@ -417,7 +418,10 @@ export function renderProfile(
   let drawn = -1;
   const drawWindow = () => {
     const first = virtual
-      ? Math.max(0, Math.floor(list.scrollTop / 104) - 5)
+      ? Math.max(
+          0,
+          Math.floor((list.isConnected ? list.scrollTop : scroll) / 104) - 5,
+        )
       : 0;
     if (first === drawn || !matches.length) return;
     drawn = first;
@@ -433,9 +437,10 @@ export function renderProfile(
     );
   };
   drawWindow();
-  right.append(list);
-  list.scrollTop = scroll;
-  drawWindow();
+  // Keep the live scroll container attached: replacing it interrupts native
+  // scrollbar drags and wheel momentum during progressive collection.
+  const listSlot = node("div");
+  right.append(listSlot);
   let lastScroll = scroll;
   list.onscroll = () => {
     const moved = list.scrollTop > lastScroll;
@@ -481,5 +486,32 @@ export function renderProfile(
   root.append(
     node("p", "Rift Companion n’est pas approuvé par Riot Games.", "legal"),
   );
+  const oldLayout = container.querySelector(".profile-columns");
+  const oldRight = retainedList?.parentElement;
+  if (retainedList && oldLayout && oldRight) {
+    // Update surrounding panels without ever detaching the history or its ancestors.
+    for (const child of [...oldRight.children])
+      if (child !== retainedList) child.remove();
+    for (const child of [...right.children]) {
+      if (child === listSlot) break;
+      oldRight.insertBefore(child, retainedList);
+    }
+    oldRight.append(
+      ...Array.from(listSlot.parentElement!.children).filter(
+        (child) => child !== listSlot,
+      ),
+    );
+    oldLayout.querySelector(".profile-sidebar")!.replaceWith(left);
+    for (const child of [...container.children])
+      if (child !== oldLayout) child.remove();
+    container.insertBefore(hero, oldLayout);
+    container.insertBefore(summaryTab, oldLayout);
+    container.append(root.querySelector(".legal")!);
+  } else {
+    listSlot.replaceWith(list);
+    container.replaceChildren(...root.childNodes);
+  }
+  list.scrollTop = scroll;
+  drawWindow();
   window.scrollTo({ top: pageScroll, behavior: "instant" });
 }

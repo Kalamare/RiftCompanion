@@ -331,11 +331,34 @@ try {
     () => window.regression.requests.filter((r) => r.start === 0).length >= 3,
   );
   assert.equal(await regression.locator(".match").count(), 20);
+  await regression.locator(".match-list").evaluate((list) => {
+    list.scrollTop = 500;
+    window.retainedHistory = list;
+    window.historyDetached = false;
+    new MutationObserver((records) => {
+      for (const record of records)
+        for (const removed of record.removedNodes)
+          if (removed === list || removed.contains(list))
+            window.historyDetached = true;
+    }).observe(document.querySelector("#profile-content"), {
+      childList: true,
+      subtree: true,
+    });
+  });
   await regression.locator(".more-matches").click();
   await regression.waitForFunction(
     () =>
       document.querySelectorAll(".match").length === 30 &&
       !document.querySelector(".more-matches").disabled,
+  );
+  assert.deepEqual(
+    await regression.evaluate(() => ({
+      retained:
+        window.retainedHistory === document.querySelector(".match-list"),
+      detached: window.historyDetached,
+      scroll: window.retainedHistory.scrollTop,
+    })),
+    { retained: true, detached: false, scroll: 500 },
   );
   await regression.locator(".more-matches").click();
   await regression.waitForFunction(
@@ -401,7 +424,10 @@ try {
     (await syncPage.locator(".match").count()) <= 24,
     "large histories virtualize DOM rows",
   );
-  await syncPage.locator(".match-list").evaluate((e) => (e.scrollTop = 4000));
+  await syncPage.locator(".match-list").evaluate((e) => {
+    e.scrollTop = 4000;
+    window.retainedHistory = e;
+  });
   await syncPage.locator(".more-matches").click();
   await syncPage.waitForFunction(
     () => document.querySelector(".match-list")?.dataset.count === "90",
@@ -409,6 +435,12 @@ try {
   assert.equal(
     await syncPage.locator(".match-list").evaluate((e) => e.scrollTop),
     4000,
+  );
+  assert.equal(
+    await syncPage.evaluate(
+      () => window.retainedHistory === document.querySelector(".match-list"),
+    ),
+    true,
   );
   // Near the end, scrolling itself requests the next page.
   await syncPage

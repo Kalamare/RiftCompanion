@@ -1,5 +1,7 @@
 # Validation
 
+- 27/10/2026 — Défilement pendant la collecte : Chromium vérifie que le conteneur de l’historique reste le même et n’est jamais détaché lors du chargement de nouvelles pages ; position conservée à 500 px (30 parties) et 4 000 px (90 parties virtualisées). Compilation TypeScript, build et 18 tests unitaires réussis. Test avec données synthétiques, à confirmer sur le profil réel sous Windows.
+
 ## Synchronisation progressive — vérification actuelle
 
 Le parcours de synchronisation a été vérifié localement sur une base PostgreSQL 17 dédiée et des données entièrement synthétiques :
