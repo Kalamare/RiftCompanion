@@ -5,7 +5,7 @@ const { tmpdir } = require("node:os");
 const { spawn } = require("node:child_process");
 const { createHash } = require("node:crypto");
 const width = 1280,
-  height = 720;
+  height = 830;
 let window,
   child,
   folder,

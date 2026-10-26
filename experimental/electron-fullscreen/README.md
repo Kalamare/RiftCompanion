@@ -27,8 +27,8 @@ Fermer le banc termine le producteur et nettoie les fichiers temporaires.
 - R : recréer la swap chain, puis F11 pour revenir en plein écran.
 - Faire plusieurs Alt-Tab, changer la taille de fenêtre, fermer le banc.
 
-Le panneau fait 1280×720 ; utiliser une résolution suffisante pour voir toutes
-les cartes. Le compteur prouve que les pixels sont renouvelés uniquement s’il
+Le panneau fait 1280×830, placé sous l’en-tête du banc et son lien Powered by
+GOverlay ; utiliser de préférence 1920×1080 pour voir toutes les cartes. Le compteur prouve que les pixels sont renouvelés uniquement s’il
 est effectivement visible dans le banc. L’indication IPC/hook seule ne le prouve pas.
 Les clics sur les pseudos ne sont pas encore transportés par cet adaptateur.
 Ctrl+X reste le raccourci du client normal ; Espace appartient au banc.

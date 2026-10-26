@@ -39,7 +39,7 @@ class Bridge final : public ProbeBridge, public IIpcHost {
         w.windowId=1; w.nativeHandle=0; w.name="Rift Electron BGRA panel";
         w.transparent=true; w.resizable=false;
         w.maxWidth=w.minWidth=PanelWidth; w.maxHeight=w.minHeight=PanelHeight;
-        w.bufferName=memoryName; w.rect={0,0,PanelWidth,PanelHeight};
+        w.bufferName=memoryName; w.rect={40,180,PanelWidth,PanelHeight};
         return w;
     }
     void onClientConnect(IIpcLink* client) override {
@@ -77,7 +77,7 @@ public:
         wchar_t folder[32768]{};
         DWORD count=GetEnvironmentVariableW(L"RIFT_PROBE_FRAME_DIR",folder,32768);
         if(count>=32768)throw std::runtime_error("Frame directory path too long");
-        if(count){frameFolder=folder;PanelWidth=1280;PanelHeight=720;}
+        if(count){frameFolder=folder;PanelWidth=1280;PanelHeight=830;}
 
         if (FindWindowA("STATIC",HostName))
             throw std::runtime_error("Another GOverlay host is running. Close it before starting the probe.");
@@ -154,7 +154,7 @@ public:
             ReadFile(file,header.data(),24,&read,nullptr) && read==24;
         std::array<std::uint32_t,4> fields{};
         memcpy(fields.data(),header.data()+8,16);
-        valid=valid && memcmp(header.data(),"RIFTBGRA",8)==0 && fields[0]==1280 && fields[1]==720 && fields[3]==bytes;
+        valid=valid && memcmp(header.data(),"RIFTBGRA",8)==0 && fields[0]==1280 && fields[1]==830 && fields[3]==bytes;
         if(!valid){CloseHandle(file);failed=true;return;}
         if(fields[2]==lastSequence){CloseHandle(file);return;}
         std::vector<unsigned char> pixels(bytes);

@@ -26,7 +26,7 @@ Aucun injecteur, sélection de PID, accès Riot ou connexion à LoL n'est ajout�
 Fermer les autres démonstrations GOverlay avant ce test : l'amont utilise un nom
 IPC fixe. Les pixels sont une image BGRA de 600×160, mise à jour une fois par
 seconde dans une mémoire partagée protégée par mutex. Un [producteur Electron hors écran](../electron-fullscreen/README.md) peut maintenant
-fournir les dix cartes fictives en BGRA 1280×720.
+fournir les dix cartes fictives en BGRA 1280×830.
 
 L'archive CI ne redistribue pas le moteur ni l'adaptateur lié à GOverlay : la
 couverture des licences des dépendances est encore à clarifier dans
