@@ -61,6 +61,17 @@ function fail(e: unknown) {
     true,
   );
 }
+function deferredHistory(p: Profile) {
+  const reasons: Record<string, string> = {
+    riot_access_denied: "clé Riot refusée côté worker",
+    riot_key_missing: "clé Riot absente côté worker",
+    riot_quota_wait: "quota Riot en attente",
+    riot_rate_limited: "limite temporaire Riot",
+    server_busy: "collecteur occupé",
+    riot_unavailable: "service Riot indisponible",
+  };
+  return `Historique différé : ${reasons[p.historyError ?? ""] ?? "collecte momentanément indisponible"}${p.historyRetryAt ? " · nouvelle tentative après " + new Date(p.historyRetryAt).toLocaleTimeString("fr-FR") : ""}. Les données chargées restent visibles.`;
+}
 function retryable(e: unknown) {
   return (
     e instanceof Error &&
@@ -160,6 +171,12 @@ async function pollLookup(id: string, token: number, attempt = 0) {
         Math.min(60000, Date.parse(state.retryAt ?? "") - Date.now() || 30000),
       );
       setTimeout(() => void pollLookup(id, token, attempt + 1), wait);
+      return;
+    }
+    if (profile?.historyState === "deferred") {
+      $("cancel-search").hidden = true;
+      status(deferredHistory(profile), true);
+      setTimeout(() => void pollLookup(id, token, attempt + 1), 5000);
       return;
     }
     const pending = !profile || profile.historyPending || profile.ranksPending;
@@ -268,7 +285,7 @@ async function updateHistory() {
       wanted = Math.max(wanted, fresh.nextStart + 10);
     status(
       fresh.historyState === "deferred"
-        ? `Collecte différée · reprise automatique${fresh.historyRetryAt ? " après " + new Date(fresh.historyRetryAt).toLocaleTimeString("fr-FR") : ""}. Les données enregistrées restent consultables.`
+        ? deferredHistory(fresh)
         : fresh.historyState === "complete"
           ? "Historique accessible chargé."
           : "Profil synchronisé · la suite se prépare en arrière-plan.",

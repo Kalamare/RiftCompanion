@@ -273,6 +273,12 @@ export class HistorySync {
       }
       return true;
     } catch (e: any) {
+      console.warn(
+        "History collection deferred:",
+        typeof e?.code === "string" && /^[a-z0-9_]{1,64}$/i.test(e.code)
+          ? e.code
+          : "source_unavailable",
+      );
       if (s)
         await c.query(
           `UPDATE sync_sessions SET error=$2,due_at=now()+($3*interval '1 millisecond'),retry_at=now()+($3*interval '1 millisecond') WHERE id=$1`,

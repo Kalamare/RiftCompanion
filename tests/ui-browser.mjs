@@ -90,7 +90,7 @@ try {
           ...owner.matches[i % 10],
           id: "EUW1_sync" + i,
         }));
-        window.syncCheck = { available: 0, requests: [] };
+        window.syncCheck = { available: 0, deferred: true, requests: [] };
         window.rift.profile = async ({ start = 0, queue = 0 }) => {
           window.syncCheck.requests.push({ start, queue });
           const filtered = all.filter((m) => queue === 0 || m.queue === queue);
@@ -112,8 +112,15 @@ try {
             overviewMatches: filtered.slice(0, Math.min(20, available)),
             historyQueue: queue,
             historySession: "session-" + queue,
-            historyState:
-              nextStart >= available && hasMore
+            historyError: window.syncCheck.deferred
+              ? "riot_access_denied"
+              : null,
+            historyRetryAt: window.syncCheck.deferred
+              ? new Date(Date.now() + 100).toISOString()
+              : null,
+            historyState: window.syncCheck.deferred
+              ? "deferred"
+              : nextStart >= available && hasMore
                 ? "collecting"
                 : hasMore
                   ? "ready"
@@ -347,7 +354,18 @@ try {
   await syncPage.waitForFunction(() => window.syncCheck.requests.length >= 2);
   // The cache remains visible until canonical rows arrive, without a refresh click.
   assert.equal(await syncPage.locator(".match").count(), 10);
-  await syncPage.evaluate(() => (window.syncCheck.available = 3));
+  await syncPage.waitForFunction(() =>
+    document.querySelector("#status").textContent.includes("clé Riot refusée"),
+  );
+  await syncPage.waitForTimeout(2500);
+  assert.match(
+    await syncPage.locator("#status").innerText(),
+    /clé Riot refusée/,
+  );
+  await syncPage.evaluate(() => {
+    window.syncCheck.deferred = false;
+    window.syncCheck.available = 3;
+  });
   await syncPage.waitForFunction(
     () => document.querySelector(".match-list")?.dataset.count === "3",
   );

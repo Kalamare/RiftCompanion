@@ -13,6 +13,7 @@ export async function startWorker() {
     process.env.RIFT_FIXTURE_MODE === "true"
       ? new FixtureRiot(store)
       : new Riot(store, await secret("RIOT_API_KEY"), controller.signal);
+  console.log("Rift TypeScript worker ready");
   try {
     let turn = 0;
     const sync = new HistorySync(store);
