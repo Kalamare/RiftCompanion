@@ -20,6 +20,14 @@ Une fenêtre Electron transparente au premier plan ne suffit pas à fournir un o
 
 L’adaptateur de rendu Electron, le cycle de vie, les entrées, la licence et la compatibilité Riot/Vanguard restent à établir avant toute intégration au lanceur normal. Les affirmations sur les autres logiciels ne remplacent pas un test de Rift Companion.
 
+## Adaptateur Electron en développement
+
+Le [banc Electron → GOverlay → DirectX](../experimental/electron-fullscreen/README.md)
+réutilise maintenant les cartes de l’interface en rendu hors écran et transporte
+des trames BGRA bornées jusqu’au moteur du banc. Il permet de préparer la recette
+F11/Alt-Tab/recréation sur des données fictives. Les entrées et le chargement dans
+LoL restent à développer/qualifier ; ce banc n’active pas le plein écran du client normal.
+
 ## Recette restante
 
 Vérifier visibilité/masquage, Alt-Tab, fermeture de LoL, changement de résolution, écrans de DPI différents et absence de vol de focus. Comparer les temps de frame du jeu avec et sans overlay. La position multi-écran et les performances réelles ne sont pas garanties par les tests automatiques de la grille.
