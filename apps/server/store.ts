@@ -84,6 +84,11 @@ export class Store {
       }
       await c.query(schema);
       await c.query(syncSchema);
+      // Previous observations mixed application and method quotas. Keep their
+      // request history/cooldowns, but relearn correctly scoped window limits.
+      await c.query(`CREATE TABLE IF NOT EXISTS riot_scoped_windows (
+        host text NOT NULL, seconds integer NOT NULL, quota integer NOT NULL,
+        PRIMARY KEY(host,seconds))`);
     });
   }
   async budget(c: PoolClient, kind: string, limit: number) {
@@ -501,24 +506,30 @@ export class Store {
       [host, delay],
     );
   }
-  async reserve(host: string): Promise<number> {
+  async reserve(host: string, method?: string): Promise<number> {
     return this.tx(async (c) => {
       await c.query("SELECT pg_advisory_xact_lock(hashtext($1))", [
         "rift-quota:" + host,
       ]);
-      await c.query(
-        "DELETE FROM riot_requests WHERE host=$1 AND at<=now()-interval '1 day'",
-        [host],
-      );
-      const { rows } = await c.query(
-        `SELECT EXTRACT(EPOCH FROM (GREATEST(now(),COALESCE((SELECT max(due_at) FROM profile_jobs WHERE error='riot_access_denied'),now()),COALESCE((SELECT until_at FROM riot_cooldowns WHERE host=$1),now()),
- COALESCE((SELECT at+interval '1 second' FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET 17 LIMIT 1),now()),COALESCE((SELECT at+interval '2 minutes' FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET 89 LIMIT 1),now()),COALESCE((SELECT max((SELECT at+make_interval(secs => w.seconds) FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET (w.quota-1) LIMIT 1)) FROM riot_windows w WHERE w.host=$1),now()))-now()))*1000 AS delay`,
-        [host],
-      );
-      const delay = Number(rows[0].delay);
-      if (delay <= 0)
-        await c.query("INSERT INTO riot_requests(host) VALUES($1)", [host]);
-      return delay;
+      const scopes = method ? [host, `${host}|${method}`] : [host];
+      let wait = 0;
+      for (const scope of scopes) {
+        await c.query(
+          "DELETE FROM riot_requests WHERE host=$1 AND at<=now()-interval '1 day'",
+          [scope],
+        );
+        const { rows } = await c.query(
+          `SELECT EXTRACT(EPOCH FROM (GREATEST(now(),COALESCE((SELECT max(due_at) FROM profile_jobs WHERE error='riot_access_denied'),now()),COALESCE((SELECT until_at FROM riot_cooldowns WHERE host=$1),now()),
+ COALESCE((SELECT at+interval '1 second' FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET 17 LIMIT 1),now()),COALESCE((SELECT at+interval '2 minutes' FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET 89 LIMIT 1),now()),COALESCE((SELECT max((SELECT at+make_interval(secs => w.seconds) FROM riot_requests WHERE host=$1 ORDER BY at DESC OFFSET (w.quota-1) LIMIT 1)) FROM riot_scoped_windows w WHERE w.host=$1),now()))-now()))*1000 AS delay`,
+          [scope],
+        );
+        wait = Math.max(wait, Number(rows[0].delay));
+      }
+      // Reserve both or neither; a rejected method must not consume app budget.
+      if (wait <= 0)
+        for (const scope of scopes)
+          await c.query("INSERT INTO riot_requests(host) VALUES($1)", [scope]);
+      return wait;
     });
   }
   async observe(host: string, seconds: number, quota: number, used: number) {
@@ -532,7 +543,7 @@ export class Store {
     )
       return;
     await this.pool.query(
-      "INSERT INTO riot_windows VALUES($1,$2,$3) ON CONFLICT(host,seconds) DO UPDATE SET quota=LEAST(riot_windows.quota,EXCLUDED.quota)",
+      "INSERT INTO riot_scoped_windows VALUES($1,$2,$3) ON CONFLICT(host,seconds) DO UPDATE SET quota=EXCLUDED.quota",
       [host, seconds, quota],
     );
     if (used >= quota) await this.pause(host, seconds * 1000);

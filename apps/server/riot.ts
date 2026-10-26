@@ -40,6 +40,16 @@ export async function limitedJson(response: Response, max = 8_000_000) {
     await reader.cancel();
   }
 }
+export function riotMethod(path: string) {
+  if (path.startsWith("/riot/account/v1/accounts/by-riot-id/"))
+    return "account";
+  if (path.startsWith("/lol/summoner/v4/summoners/by-puuid/"))
+    return "summoner";
+  if (path.startsWith("/lol/league/v4/entries/by-puuid/")) return "ranks";
+  if (path.startsWith("/lol/match/v5/matches/by-puuid/")) return "match-list";
+  if (path.startsWith("/lol/match/v5/matches/")) return "match-detail";
+  throw new Error("invalid_route");
+}
 export class Riot {
   constructor(
     private store: Store,
@@ -54,7 +64,8 @@ export class Riot {
     )
       throw new Error("invalid_route");
     if (!this.key) throw new SourceFailure("riot_key_missing", 900000);
-    const wait = await this.store.reserve(host);
+    const method = riotMethod(path);
+    const wait = await this.store.reserve(host, method);
     if (wait > 0) throw new SourceFailure("riot_quota_wait", wait + 50);
     const response = await fetch(`https://${host}.api.riotgames.com${path}`, {
       headers: { "X-Riot-Token": this.key },
@@ -78,7 +89,7 @@ export class Riot {
         response.headers.get(`X-${scope}-Rate-Limit`),
       ))
         await this.store.observe(
-          host,
+          scope === "App" ? host : `${host}|${method}`,
           seconds,
           quota,
           counts.get(seconds) ?? 0,

@@ -48,7 +48,7 @@ KDA = somme(kills + assists) / max(1, somme(morts)). Les moyennes K/D/A restent 
 | Délai par profil | 5 minutes, fixé dans le code TypeScript actuel |
 | Intérêt d’un profil consulté | Prolongé de 30 minutes |
 | Collecte récente terminée | Prochaine échéance automatique à 15 minutes, si le profil reste actif |
-| Limiteur Riot | Réservations persistantes par hôte : 18/s et 90/2 min, avec Retry-After |
+| Limiteur Riot | Réservations persistantes par hôte : 18/s et 90/2 min, fenêtres applicatives et par méthode distinctes, avec Retry-After |
 | API privée | 64 requêtes authentifiées simultanées par processus ; surcharge temporaire avec Retry-After |
 
 `RIFT_REFRESH_COOLDOWN_SECONDS` existe dans le Compose historique mais n’est pas lu par le Store TypeScript. Ne pas le présenter comme un réglage opérationnel du nouveau serveur.
@@ -62,3 +62,5 @@ Sources officielles : [portail Riot et quotas](https://developer.riotgames.com/d
 Ce mécanisme mutualise les données et borne la demande, mais ne prouve pas une capacité de milliers d’utilisateurs. La clé partagée actuelle ne permet pas l’équité par compte. Avant le public : authentification individuelle, budgets par compte, métriques de file/fraîcheur/cache/latence, tests de charge et clé Riot de production adaptée. Les sessions inactives cessent d’être collectées après trente minutes ; leurs index sont conservés pour la reprise. Une politique de rétention/compaction de ces index reste à définir avant une exploitation prolongée à grande échelle.
 
 Les bilans 30 jours/période personnalisée, le remplissage automatique complet des statistiques de saison, les listes de profils suivis et le signal de fin de partie ne sont pas encore intégrés. Les agrégats de saison restent explicitement partiels.
+
+Correctif du limiteur : les fenêtres applicatives et celles de chaque méthode sont enregistrées séparément dans `riot_scoped_windows`. Une réservation est atomique pour les deux budgets ; un refus local ne consomme aucune réservation. Les anciennes fenêtres mélangées ne sont plus utilisées ; l’historique des appels et les pauses persistantes restent conservés. Les nouvelles réponses Riot mettent à jour les limites observées, sans conserver systématiquement le minimum historique. `riot_quota_wait` signifie une attente décidée localement ; `riot_rate_limited` correspond à une réponse HTTP 429. Le client conserve le motif et la date de reprise à l’écran.

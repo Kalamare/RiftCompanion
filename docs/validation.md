@@ -5,7 +5,7 @@
 Le parcours de synchronisation a été vérifié localement sur une base PostgreSQL 17 dédiée et des données entièrement synthétiques :
 
 - 18 tests domaine/cache/logique UI, typage et compilation réussis.
-- 15 contrôles PostgreSQL : migration additive, ancien format, trente consultations simultanées mutualisées, checkpoints, quota/reprise, détails manquants, pages source décalées sans doublon, rotation des profils, admission saturée à 1 000 sessions avec cache toujours lisible.
+- 16 contrôles PostgreSQL : migration additive, ancien format, trente consultations simultanées mutualisées, checkpoints, quota/reprise, détails manquants, pages source décalées sans doublon, rotation des profils, admission saturée à 1 000 sessions avec cache toujours lisible, isolation des quotas par méthode et réservation atomique sans consommation en cas de refus.
 - Chromium : cache puis chargement automatique partiel, poursuite d’une page initialement absente, filtres serveur, bilan indépendant des pages, défilement automatique, position conservée et DOM virtualisé sur un historique de 120 parties synthétiques. Les contrôles de disposition, détails, runes et overlay sont conservés.
 
 La [CI de la branche](https://github.com/Kalamare/RiftCompanion/actions/workflows/electron.yml) rejoue ces tests et les contrôles Electron Windows depuis les sources puis l’exécutable portable. Utiliser une exécution réussie correspondant au commit récupéré. La preuve Windows antérieure, avant ce changement de collecte, est [adcd1f9 / exécution 40224905591](https://github.com/Kalamare/RiftCompanion/actions/runs/40224905591).

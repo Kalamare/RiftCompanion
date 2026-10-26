@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { Pool } from "pg";
 import { Store } from "../../apps/server/store";
 import { FixtureRiot, fixtureMatch } from "../../apps/server/fixture";
-import { collect } from "../../apps/server/riot";
+import { collect, Riot } from "../../apps/server/riot";
 import { HistorySync } from "../../apps/server/sync";
 import { SourceFailure } from "../../apps/server/riot";
 import type { Job } from "../../apps/server/store";
@@ -480,6 +480,53 @@ test(
             riotId: "other0#one",
           });
           assert.equal(first.id, again.id);
+        },
+      );
+      await t.test(
+        "Riot method quotas do not block other methods or consume app reservations on rejection",
+        async () => {
+          const originalFetch = globalThis.fetch;
+          let calls = 0;
+          globalThis.fetch = async () => {
+            calls++;
+            return Response.json([], {
+              headers: {
+                "X-App-Rate-Limit": "100:120",
+                "X-App-Rate-Limit-Count": `${calls}:120`,
+                "X-Method-Rate-Limit": "1:120",
+                "X-Method-Rate-Limit-Count": "1:120",
+              },
+            });
+          };
+          try {
+            // A legacy method window had incorrectly contaminated this host.
+            await db.query("INSERT INTO riot_windows VALUES('eun1',86400,1)");
+            const riot = new Riot(store, "synthetic-test-key");
+            await riot.get("eun1", "/lol/match/v5/matches/by-puuid/test/ids");
+            await assert.rejects(
+              riot.get("eun1", "/lol/match/v5/matches/by-puuid/test/ids"),
+              (e) => e instanceof SourceFailure && e.code === "riot_quota_wait",
+            );
+            assert.equal(
+              (
+                await db.query(
+                  "SELECT count(*) FROM riot_requests WHERE host='eun1'",
+                )
+              ).rows[0].count,
+              "1",
+            );
+            await riot.get("eun1", "/lol/match/v5/matches/EUN1_1");
+            assert.equal(calls, 2);
+            assert.ok(
+              (await new Store(db).reserve("eun1", "match-list")) > 100000,
+            );
+            await store.observe("eun1", 120, 2, 0);
+            assert.ok((await store.reserve("eun1", "summoner")) > 0);
+            await store.observe("eun1", 120, 100, 0);
+            assert.equal(await store.reserve("eun1", "summoner"), 0);
+          } finally {
+            globalThis.fetch = originalFetch;
+          }
         },
       );
       await t.test("future schema versions fail closed", async () => {
