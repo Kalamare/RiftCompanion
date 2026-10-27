@@ -28,18 +28,18 @@ jobs:
           $diagnostic = "experimental/dx11-probe/build-goverlay/Release/RiftProbeDiagnostic.exe"
           if (Test-Path $diagnostic) { & $diagnostic (Resolve-Path $probe).Path }
           Get-ChildItem "$env:LOCALAPPDATA/log/RiftDx11Probe*.log" -ErrorAction SilentlyContinue | ForEach-Object {
-            Get-Content $_.FullName | Select-String 'RIFT diagnostic|failed|error|graphicsInit|graphicsWindow|window:|shader|hooked|swap:' | Select-Object -Last 80
+            Get-Content $_.FullName | Select-String 'failed|error|graphicsInit|graphicsWindow|window:|shader|hooked|swap:' | Select-Object -Last 80
           }
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: npm }
       - run: npm ci
       - name: Build Electron offscreen producer
         run: node experimental/electron-fullscreen/build.mjs
-      - name: Verify Electron pixels reach the native shared buffer
+      - name: Verify Electron panel pixels in DirectX output
         shell: pwsh
         run: |
           & ./node_modules/.bin/electron.cmd dist/fullscreen-probe/main.cjs --probe (Resolve-Path experimental/dx11-probe/build-goverlay/Release/RiftDx11Probe.exe).Path --smoke
-          if ($LASTEXITCODE) { throw 'Electron to GOverlay frame transfer failed.' }
+          if ($LASTEXITCODE) { throw 'Electron to GOverlay rendering check failed.' }
       - name: Collect baseline executable and instructions
         shell: pwsh
         run: |

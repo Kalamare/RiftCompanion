@@ -48,8 +48,11 @@ sans Node, sans secrets, sans API Riot et sans accès au client LoL. Le préchar
 ne fournit qu’un substitut local pour les illustrations de profil.
 
 Ajouter `--smoke` à la commande Electron effectue un test automatique : démarrage
-du banc, connexion IPC et réception de plusieurs trames Electron. Cela ne valide
-ni la visibilité des pixels en plein écran réel, ni les performances en jeu.
+du banc, connexion IPC, réception de plusieurs trames Electron et lecture des pixels
+du panneau dans le tampon DirectX après présentation, redimensionnement et recréation.
+Le test échoue si la zone du panneau ne contient que le fond. Le mode automatique
+utilise WARP et un tampon conservé ; il ne valide ni le plein écran exclusif matériel,
+ni les performances en jeu.
 Le workflow DirectX construit le moteur localement et exécute ce contrôle ; il
 ne redistribue pas le moteur GOverlay.
 
@@ -74,5 +77,19 @@ ce champ lors du survol, même pour un panneau non redimensionnable.
 Après mise à jour, reconstruire avec `Build-WithGOverlay.ps1` puis relancer
 le producteur Electron : reconstruire uniquement JavaScript ne met pas à jour
 le pont natif. Le compteur « trames » mesure les copies vers la mémoire partagée,
-pas les images effectivement affichées. Les contrôles automatiques IPC ne
-remplacent donc pas la vérification visuelle des cartes en fenêtre et en plein écran.
+pas les images effectivement affichées. Les contrôles automatiques de pixels ne
+remplacent pas la vérification visuelle des cartes sur le matériel réel en fenêtre et en plein écran.
+
+### Correctif du rendu vide (27/10/2026)
+
+Direct2D expose une interface de compatibilité DirectX 10 sur notre périphérique
+DirectX 11. Le moteur épinglé sélectionnait cette interface : notre patch
+`../goverlay/patches/prefer-d3d11.patch` donne priorité à DirectX 11. Il reconnecte
+aussi le moteur lorsqu’une nouvelle swap chain remplace celle de la même fenêtre.
+Le banc réinitialise l’état Direct2D avant présentation. Le patch est appliqué
+aux sources épinglées et son empreinte figure dans le rapport de compilation.
+
+Après `git pull --ff-only`, reconstruire **le moteur et le banc** avec
+`Build-WithGOverlay.ps1`, puis reconstruire et lancer le producteur Electron
+avec les commandes du début de ce guide. Aucun changement de Node ou CMake
+n’est nécessaire si la compilation précédente réussissait.

@@ -261,8 +261,16 @@ public:
         window=CreateWindow(wc.lpszClassName,L"Rift DirectX 11 probe",WS_OVERLAPPEDWINDOW,
             CW_USEDEFAULT,CW_USEDEFAULT,1100,720,nullptr,nullptr,wc.hInstance,this);
         if (!window) throw std::runtime_error("CreateWindow failed");
-        check(D3D11CreateDevice(nullptr,smoke?D3D_DRIVER_TYPE_WARP:D3D_DRIVER_TYPE_HARDWARE,
-            nullptr,D3D11_CREATE_DEVICE_BGRA_SUPPORT | (smoke ? D3D11_CREATE_DEVICE_DEBUG : 0),nullptr,0,D3D11_SDK_VERSION,&device,nullptr,&context),"D3D11CreateDevice");
+        auto makeDevice = [&](UINT flags) {
+            return D3D11CreateDevice(nullptr,smoke?D3D_DRIVER_TYPE_WARP:D3D_DRIVER_TYPE_HARDWARE,
+                nullptr,flags,nullptr,0,D3D11_SDK_VERSION,&device,nullptr,&context);
+        };
+        HRESULT deviceResult=makeDevice(D3D11_CREATE_DEVICE_BGRA_SUPPORT | (smoke ? D3D11_CREATE_DEVICE_DEBUG : 0));
+        if(smoke && deviceResult==DXGI_ERROR_SDK_COMPONENT_MISSING) {
+            event("debug_layer_unavailable; pixel_checks_still_required");
+            deviceResult=makeDevice(D3D11_CREATE_DEVICE_BGRA_SUPPORT);
+        }
+        check(deviceResult,"D3D11CreateDevice");
         check(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.GetAddressOf()),"D2D factory");
         check(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),
             reinterpret_cast<IUnknown**>(write.GetAddressOf())),"DWrite factory");

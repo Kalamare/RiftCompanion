@@ -36,16 +36,13 @@ if (Test-Path $native) { [System.IO.Directory]::Delete($native) }
 Get-PinnedSource $pins.nativeRepository $pins.nativeCommit $native
 # A D3D11 device used by Direct2D also exposes ID3D10Device. Prefer the actual
 # D3D11 renderer instead of silently selecting the compatibility interface.
+# The same patch rebinds recreated swap chains belonging to the selected window.
 $patch = (Resolve-Path (Join-Path $PSScriptRoot 'patches/prefer-d3d11.patch')).Path
 & git -C $native apply --check --ignore-space-change $patch
 if ($LASTEXITCODE) { throw 'Pinned renderer patch no longer applies.' }
 & git -C $native apply --ignore-space-change $patch
 if ($LASTEXITCODE) { throw 'Could not apply the D3D11 renderer selection patch.' }
 
-
-$tracePatch = (Resolve-Path (Join-Path $PSScriptRoot 'patches/trace-pixels.patch')).Path
-& git -C $native apply --ignore-space-change $tracePatch
-if ($LASTEXITCODE) { throw 'Could not apply pixel diagnostics.' }
 
 $result = [ordered]@{
     sourceDirectory = $source
