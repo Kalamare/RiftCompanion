@@ -2,6 +2,7 @@
 #include <windowsx.h>
 #include <shellapi.h>
 #include <d3d11.h>
+#include <d3d11sdklayers.h>
 #include <dxgi.h>
 #include <d2d1.h>
 #include <dwrite.h>
@@ -155,7 +156,20 @@ class Probe {
             }
         context->Unmap(staging.Get(),0);
         event("overlay_readback_nonbackground_pixels="+std::to_string(painted));
-        if(painted<100)throw std::runtime_error("Overlay IPC works but presented panel pixels are absent");
+        if(painted<100) {
+            ComPtr<ID3D11InfoQueue> info;
+            if(SUCCEEDED(device.As(&info))) {
+                auto count=info->GetNumStoredMessagesAllowedByRetrievalFilter();
+                for(UINT64 i=0;i<count && i<100;++i) {
+                    SIZE_T size=0; info->GetMessage(i,nullptr,&size);
+                    std::vector<unsigned char> bytes(size);
+                    auto message=reinterpret_cast<D3D11_MESSAGE*>(bytes.data());
+                    if(SUCCEEDED(info->GetMessage(i,message,&size)))
+                        std::fprintf(stderr,"D3D11 diagnostic: %s\n",message->pDescription);
+                }
+            }
+            throw std::runtime_error("Overlay IPC works but presented panel pixels are absent");
+        }
     }
     void render() {
         BOOL actual = FALSE;
@@ -248,7 +262,7 @@ public:
             CW_USEDEFAULT,CW_USEDEFAULT,1100,720,nullptr,nullptr,wc.hInstance,this);
         if (!window) throw std::runtime_error("CreateWindow failed");
         check(D3D11CreateDevice(nullptr,smoke?D3D_DRIVER_TYPE_WARP:D3D_DRIVER_TYPE_HARDWARE,
-            nullptr,D3D11_CREATE_DEVICE_BGRA_SUPPORT,nullptr,0,D3D11_SDK_VERSION,&device,nullptr,&context),"D3D11CreateDevice");
+            nullptr,D3D11_CREATE_DEVICE_BGRA_SUPPORT | (smoke ? D3D11_CREATE_DEVICE_DEBUG : 0),nullptr,0,D3D11_SDK_VERSION,&device,nullptr,&context),"D3D11CreateDevice");
         check(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, d2d.GetAddressOf()),"D2D factory");
         check(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED,__uuidof(IDWriteFactory),
             reinterpret_cast<IUnknown**>(write.GetAddressOf())),"DWrite factory");
