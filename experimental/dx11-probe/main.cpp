@@ -86,7 +86,8 @@ class Probe {
         desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
         desc.SampleDesc.Count = 1; desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
         desc.BufferCount = 2; desc.OutputWindow = window; desc.Windowed = TRUE;
-        desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
+        // Preserve the presented image for smoke-test GPU readback after the hook.
+        desc.SwapEffect = smoke ? DXGI_SWAP_EFFECT_SEQUENTIAL : DXGI_SWAP_EFFECT_DISCARD;
         desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
         check(factory->CreateSwapChain(device.Get(), &desc, &chain), "CreateSwapChain");
         check(factory->MakeWindowAssociation(window, DXGI_MWA_NO_ALT_ENTER), "WindowAssociation");
@@ -133,6 +134,28 @@ class Probe {
         context->Unmap(staging.Get(), 0);
         if (!good) throw std::runtime_error("Rendered background readback mismatch");
         event("readback_ok");
+    }
+    void overlayReadbackCheck() {
+        ComPtr<ID3D11Texture2D> back, staging;
+        check(chain->GetBuffer(0, IID_PPV_ARGS(&back)), "Overlay readback buffer");
+        D3D11_TEXTURE2D_DESC desc{}; back->GetDesc(&desc);
+        desc.Usage=D3D11_USAGE_STAGING; desc.BindFlags=0;
+        desc.CPUAccessFlags=D3D11_CPU_ACCESS_READ; desc.MiscFlags=0;
+        check(device->CreateTexture2D(&desc,nullptr,&staging), "Overlay staging");
+        context->CopyResource(staging.Get(),back.Get());
+        D3D11_MAPPED_SUBRESOURCE mapped{};
+        check(context->Map(staging.Get(),0,D3D11_MAP_READ,0,&mapped), "Overlay map");
+        unsigned painted=0;
+        // Below the probe's own text, inside both synthetic and Electron panels.
+        for(unsigned y=200;y<300 && y<desc.Height;++y)
+            for(unsigned x=60;x<400 && x<desc.Width;++x) {
+                auto pixel=static_cast<const unsigned char*>(mapped.pData)+y*mapped.RowPitch+x*4;
+                if(pixel[0]<28 || pixel[0]>33 || pixel[1]<18 || pixel[1]>23 || pixel[2]<8 || pixel[2]>13)
+                    ++painted;
+            }
+        context->Unmap(staging.Get(),0);
+        event("overlay_readback_nonbackground_pixels="+std::to_string(painted));
+        if(painted<100)throw std::runtime_error("Overlay IPC works but presented panel pixels are absent");
     }
     void render() {
         BOOL actual = FALSE;
@@ -253,7 +276,10 @@ public:
                 if (frames>=40 && step==1) { recreate(); ++step; }
                 if (frames>=60 && (!withOverlay || Clock::now()-start>std::chrono::seconds(5))) {
                     if (withOverlay && !bridge->connected()) throw std::runtime_error("GOverlay IPC handshake failed");
-                    if (withOverlay) event("goverlay_ipc_pass; visual_rendering_not_asserted");
+                    if (withOverlay) {
+                        overlayReadbackCheck();
+                        event("goverlay_ipc_and_presented_pixels_pass; exclusive_fullscreen_not_tested");
+                    }
                     running=false;
                 }
                 if (Clock::now()-start>std::chrono::seconds(20)) throw std::runtime_error("Smoke test timed out");
