@@ -36,7 +36,11 @@ class Bridge final : public ProbeBridge, public IIpcHost {
     }
     overlay::Window panel() const {
         overlay::Window w;
-        w.windowId=1; w.nativeHandle=0; w.name="Rift Electron BGRA panel";
+        w.windowId=1; w.nativeHandle=0;
+        // The pinned renderer draws ordinary windows only while intercepting input.
+        // StatusBar is its persistent, non-intercepting HUD slot (DxgiGraphics::beforePresent).
+        // This protocol name is functional, not a user-facing panel title.
+        w.name="StatusBar";
         w.transparent=true; w.resizable=false;
         w.maxWidth=w.minWidth=PanelWidth; w.maxHeight=w.minHeight=PanelHeight;
         w.bufferName=memoryName; w.rect={40,180,PanelWidth,PanelHeight};

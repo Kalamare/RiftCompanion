@@ -8,7 +8,7 @@ un overlay utilisable dans LoL. Aucun processus de jeu n’est ciblé.
 ## Construire et lancer
 
 Prérequis : Node.js 24, Git, Visual Studio 2022 avec outils C++ x64, SDK Windows
-et CMake. Depuis une console développeur Visual Studio à la racine du dépôt :
+et CMake 3.24 minimum. Depuis une console développeur Visual Studio à la racine du dépôt :
 
 ```powershell
 npm ci
@@ -60,3 +60,16 @@ réelles. Le chargement du moteur dans LoL reste une intégration distincte à
 établir avec les contraintes Riot/Vanguard. Aucun contournement de l’anti-cheat
 ni succès de compatibilité LoL n’est annoncé. Les obligations de licence amont
 restent celles détaillées dans `experimental/goverlay/README.md`.
+
+## Panneau absent malgré IPC connecté
+
+Le nom de fenêtre `StatusBar` sélectionne le panneau permanent du moteur épinglé.
+Une fenêtre portant un nom libre est dessinée uniquement lorsque GOverlay
+intercepte les entrées ; le banc n’active pas ce mode. Le correctif du 27/10/2026
+utilise ce panneau permanent sans capturer les entrées du jeu.
+
+Après mise à jour, reconstruire avec `Build-WithGOverlay.ps1` puis relancer
+le producteur Electron : reconstruire uniquement JavaScript ne met pas à jour
+le pont natif. Le compteur « trames » mesure les copies vers la mémoire partagée,
+pas les images effectivement affichées. Les contrôles automatiques IPC ne
+remplacent donc pas la vérification visuelle des cartes en fenêtre et en plein écran.
