@@ -27,7 +27,7 @@ int wmain(int argc, wchar_t** argv) {
             auto& exception = event.u.Exception;
             DWORD code = exception.ExceptionRecord.ExceptionCode;
             if (code != EXCEPTION_BREAKPOINT) disposition = DBG_EXCEPTION_NOT_HANDLED;
-            if (!exception.dwFirstChance || code == 0xc0000409) {
+            if (code != EXCEPTION_BREAKPOINT && code != 0x406d1388) {
                 printf("exception=0x%08lx first=%lu address=%p parameters=", code,
                     exception.dwFirstChance, exception.ExceptionRecord.ExceptionAddress);
                 for (DWORD i=0;i<exception.ExceptionRecord.NumberParameters;++i)
@@ -38,9 +38,9 @@ int wmain(int argc, wchar_t** argv) {
                 CONTEXT context{}; context.ContextFlags = CONTEXT_FULL;
                 if (thread && GetThreadContext(thread, &context)) {
                     STACKFRAME64 frame{};
-                    frame.AddrPC = {context.Rip, AddrModeFlat};
-                    frame.AddrFrame = {context.Rbp, AddrModeFlat};
-                    frame.AddrStack = {context.Rsp, AddrModeFlat};
+                    frame.AddrPC.Offset=context.Rip; frame.AddrPC.Mode=AddrModeFlat;
+                    frame.AddrFrame.Offset=context.Rbp; frame.AddrFrame.Mode=AddrModeFlat;
+                    frame.AddrStack.Offset=context.Rsp; frame.AddrStack.Mode=AddrModeFlat;
                     for (int i=0;i<40;++i) {
                         if (!StackWalk64(IMAGE_FILE_MACHINE_AMD64, process.hProcess, thread, &frame,
                             &context, nullptr, SymFunctionTableAccess64, SymGetModuleBase64, nullptr)) break;
