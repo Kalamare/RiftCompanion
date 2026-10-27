@@ -1,8 +1,8 @@
 # Qualification GOverlay
 
-> Expérience de qualification : moteur non intégré au client Electron actuel. La direction produit est décrite dans [docs/OVERLAY.md](../../docs/OVERLAY.md).
+> ARCHIVE — développement du plein écran abandonné le 27/10/2026. Sources et licences conservées pour référence ; les commandes ci-dessous décrivent les anciens essais. Pour utiliser l’overlay sans bordure ou fenêtré, suivre [le guide actuel](../../docs/OVERLAY.md).
 
-Voie retenue le 24 octobre 2026 : overlay indépendant d'Overwolf et de Windows
+Voie explorée le 24 octobre 2026, abandonnée le 27 octobre 2026 : overlay indépendant d'Overwolf et de Windows
 Game Bar. L'expérience Game Bar n'est plus la voie de développement retenue.
 Ce dossier commence par une qualification du moteur natif ; il ne fournit pas
 encore un overlay fonctionnel dans LoL.
@@ -68,7 +68,7 @@ Les bibliothèques tierces déjà livrées par l'amont ne sont pas toutes recons
 La CI publie les rapports uniquement. Une compilation réussie ne valide ni le
 rendu, ni le plein écran, ni Vanguard.
 
-## Suite et critères de passage
+## Ancien plan de qualification (abandonné)
 
 1. Obtenir une compilation native reproductible et documenter les adaptations
    nécessaires ; clarifier les licences et la distribution des dépendances.

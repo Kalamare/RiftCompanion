@@ -1,5 +1,7 @@
 # Electron → GOverlay → DirectX 11
 
+> ARCHIVE — développement du plein écran abandonné le 27/10/2026. Sources et licences conservées pour référence ; les commandes ci-dessous décrivent les anciens essais. Pour utiliser l’overlay sans bordure ou fenêtré, suivre [le guide actuel](../../docs/OVERLAY.md).
+
 Adaptateur de développement Windows x64. Le renderer réutilise les dix cartes de
 l’interface Electron, avec les données fictives des tests. Il produit des images
 BGRA hors écran ; le banc les transmet à son moteur GOverlay. Ce n’est pas encore
@@ -56,10 +58,10 @@ ni les performances en jeu.
 Le workflow DirectX construit le moteur localement et exécute ce contrôle ; il
 ne redistribue pas le moteur GOverlay.
 
-## Étape suivante pour LoL
+## Ancienne piste pour LoL (abandonnée)
 
-Qualifier ce rendu sur Windows, puis transporter les entrées et les données
-réelles. Le chargement du moteur dans LoL reste une intégration distincte à
+Le plan initial prévoyait de qualifier ce rendu sur Windows, puis de transporter
+les entrées et les données réelles. Ce travail n’est plus prévu. Le chargement du moteur dans LoL reste une intégration distincte à
 établir avec les contraintes Riot/Vanguard. Aucun contournement de l’anti-cheat
 ni succès de compatibilité LoL n’est annoncé. Les obligations de licence amont
 restent celles détaillées dans `experimental/goverlay/README.md`.

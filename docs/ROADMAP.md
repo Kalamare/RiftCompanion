@@ -1,6 +1,6 @@
 # Feuille de route
 
-État du 25 octobre 2026, branche `codex/electron-migration`. [Tableau Notion](https://app.notion.com/p/f81e9e8403b6448c97790c6b1a23007e) pour les tâches ; ce fichier décrit l’ordre et les critères de passage.
+État du 27 octobre 2026, branche `codex/electron-migration`. [Tableau Notion](https://app.notion.com/p/f81e9e8403b6448c97790c6b1a23007e) pour les tâches ; ce fichier décrit l’ordre et les critères de passage.
 
 ## Disponible en qualification
 
@@ -12,7 +12,7 @@ Client Electron, API/worker Node.js, PostgreSQL compatible avec les données exi
 - Vérifier le défilement, le changement de compte pendant un chargement, la fermeture et le retour hors ligne.
 - Remplacer les méthodes `safeStorage` dépréciées par leurs variantes asynchrones, avec lecture des secrets existants et tests Windows.
 - Porter les préférences SQLite utiles et améliorer les diagnostics de connexion sans exposer les secrets.
-- Qualifier fenêtres, focus, multi-écran/DPI et overlay sans bordure.
+- Qualifier fenêtres, focus, multi-écran/DPI et overlay sans bordure/fenêtré : Ctrl+X, pseudos cliquables et clics traversants.
 
 Critère : parcours reproductible sur le PC utilisateur, erreurs compréhensibles et aucune régression de données ou d’interface.
 
@@ -24,11 +24,11 @@ Critère : parcours reproductible sur le PC utilisateur, erreurs compréhensible
 - Définir rétention/compaction des sessions, observabilité et migration versionnée de l’extension SQL.
 - Avant le public : remplacer la clé partagée par des comptes, établir les budgets/équité par compte, puis tester charge et pannes avec les quotas Riot réellement alloués.
 
-## 3. Mesurer les performances et traiter le plein écran
+## 3. Stabiliser l’overlay sans bordure/fenêtré et mesurer les performances
 
 Comparer LoL seul, application ouverte, overlay masqué et visible : trois passages comparables, CPU/RAM de tous les processus Electron, GPU, temps de frame p95/p99, 1 % low et endurance 60 minutes. Fixer les budgets à partir de la machine de référence, sans annoncer d’impact nul.
 
-Plein écran exclusif : moteur indépendant souhaité, sans Game Bar. Les essais GOverlay/DirectX sont des bancs expérimentaux ; licence, adaptateur Electron, compatibilité Riot/Vanguard et recette réelle restent à établir. Une compilation réussie ne vaut pas qualification LoL. Voir [Overlay](OVERLAY.md).
+Décision du 27/10/2026 : abandon du plein écran exclusif. L’overlay reste une fenêtre Electron indépendante, sans Overwolf ni Game Bar. Les essais GOverlay/DirectX sont archivés et ne font plus partie de la feuille de route. Priorité à la visibilité, aux interactions, au focus et au placement sur les écrans dans les deux modes retenus. Voir [Overlay](OVERLAY.md).
 
 ## 4. Enrichir le profil sans inventer des données
 

@@ -34,7 +34,7 @@ npm run package:win
 
 Les contrôles PostgreSQL demandent une connexion à une base de test dédiée dans `RIFT_TEST_DATABASE_URL`, puis `npm run test:integration`. Chaque exécution crée et supprime son propre schéma `rift_check_*`. La CI décrit la configuration reproductible dans [.github/workflows/electron.yml](../.github/workflows/electron.yml).
 
-Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec projet/volume distinct du réel. Les contrôles .NET/WPF et bancs DirectX restent des suites séparées ; leurs anciens résultats ne qualifient pas Electron.
+Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec projet/volume distinct du réel. Les contrôles .NET/WPF et bancs DirectX sont historiques ; leurs anciens résultats ne qualifient pas l’overlay Electron. Les essais de plein écran sont abandonnés et leur workflow ne se déclenche plus automatiquement.
 
 ## Recette sur le PC
 
@@ -43,7 +43,7 @@ Le mode `RIFT_FIXTURE_MODE=true` est réservé aux données synthétiques, avec 
 3. Comparer niveau/rangs et quelques parties ; tester filtres, objets, runes et navigation vers un participant.
 4. Faire défiler plusieurs pages au-delà des parties déjà stockées ; vérifier collecte automatique, reprise après quota, filtre Solo/ARAM, bilan stable et position conservée. Relancer le worker pendant une page en cours, puis vérifier la reprise sans doublon. Ne pas effacer de volume.
 5. Rechercher un autre compte puis revenir à Mon profil ; redémarrer sans serveur et vérifier le propriétaire en cache.
-6. En partie d’entraînement sans bordure, tester Ctrl+X, clics traversants, Alt-Tab, transitions et fermeture.
+6. Rejouer la [recette overlay](OVERLAY.md#recette-sur-le-pc) en partie d’entraînement **sans bordure**, puis **fenêtrée** : Ctrl+X, ouverture du bon profil, clics traversants, Alt-Tab, résolution, multi-écran/DPI et fermeture.
 7. Vérifier l’arrêt des processus et les performances sur une session prolongée.
 
 ## Mesures en jeu à consigner

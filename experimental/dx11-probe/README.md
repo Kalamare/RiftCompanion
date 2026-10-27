@@ -1,6 +1,6 @@
 # Banc DirectX 11 — Rift Companion
 
-> Banc synthétique conservé pour la qualification du plein écran. Il ne fait pas partie du lancement Electron et ne valide pas LoL/Vanguard. Voir [état de l’overlay](../../docs/OVERLAY.md).
+> ARCHIVE — développement du plein écran abandonné le 27/10/2026. Sources et licences conservées pour référence ; les commandes ci-dessous décrivent les anciens essais. Pour utiliser l’overlay sans bordure ou fenêtré, suivre [le guide actuel](../../docs/OVERLAY.md).
 
 Prototype Windows x64 indépendant d'Overwolf et de Windows Game Bar. Il sert à
 qualifier un moteur de rendu, pas à afficher les statistiques dans LoL.

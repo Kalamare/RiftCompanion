@@ -1,10 +1,7 @@
-name: DirectX 11 probe
+name: Archived DirectX 11 probe
+# Fullscreen development abandoned on 2026-10-27; historical checks only.
 on:
-  push:
-    branches: [codex/dx11-probe]
-    paths: ['experimental/electron-fullscreen/**', 'experimental/dx11-probe/**', 'experimental/goverlay/**', '.github/workflows/dx11-probe.yml']
-  pull_request:
-    paths: ['experimental/electron-fullscreen/**', 'experimental/dx11-probe/**', 'experimental/goverlay/**', '.github/workflows/dx11-probe.yml']
+  workflow_dispatch:
 permissions:
   contents: read
 jobs:

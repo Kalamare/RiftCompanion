@@ -60,7 +60,7 @@ docker compose -p rift-real --env-file server/.env -f server/compose.yaml -f ser
 
 Le bilan et les champions récents portent sur les vingt premières parties du filtre disponibles ; ouvrir d’autres pages ne change plus la taille de cet échantillon. Les statistiques de saison indiquent encore leur couverture partielle.
 
-L’overlay se masque ou s’affiche avec **Ctrl+X**. Sa qualification actuelle concerne le mode sans bordure ; voir [ses limites](OVERLAY.md).
+L’overlay se masque ou s’affiche avec **Ctrl+X**. Dans les réglages vidéo de LoL, choisir **Sans bordure** ou **Fenêtré**. Le plein écran exclusif est hors périmètre ; aucun banc DirectX, GOverlay, CMake ou Visual Studio n’est nécessaire. Voir la [recette de l’overlay](OVERLAY.md).
 
 ## Dépannage
 

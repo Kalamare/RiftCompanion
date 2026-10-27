@@ -2,7 +2,7 @@
 
 Application Windows pour consulter les profils League of Legends, l’historique, les statistiques et les joueurs en partie. Le client **Electron / TypeScript** utilise une API et un worker **Node.js 24**, avec **PostgreSQL 17** sur le PC ou un serveur distant privé.
 
-La version en qualification est sur **`codex/electron-migration`**, dans la [PR #5](https://github.com/Kalamare/RiftCompanion/pull/5). Elle ne nécessite pas .NET. L’interface reprend le travail réalisé en WPF : profil, graphiques, détails des parties et grille d’overlay. Le plein écran exclusif n’est pas pris en charge par l’overlay Electron actuel.
+La version en qualification est sur **`codex/electron-migration`**, dans la [PR #5](https://github.com/Kalamare/RiftCompanion/pull/5). Elle ne nécessite pas .NET. L’interface reprend le travail réalisé en WPF : profil, graphiques, détails des parties et grille d’overlay. L’overlay cible les modes **sans bordure et fenêtré** ; le développement du plein écran exclusif est abandonné.
 
 ## Démarrer ou mettre à jour
 
@@ -29,7 +29,7 @@ Un exécutable portable est également produit par le workflow [Electron and Typ
 | Backend, sauvegarde, transition depuis .NET | [Exploitation serveur](server/README.md) |
 | Modules, stockage, contrats et choix techniques | [Architecture](docs/ARCHITECTURE.md) |
 | Statistiques, pagination, sources et quotas | [Données](docs/DONNEES.md) |
-| Overlay et état du plein écran | [Overlay](docs/OVERLAY.md) |
+| Overlay sans bordure et fenêtré | [Overlay](docs/OVERLAY.md) |
 | Prochaines étapes | [Feuille de route](docs/ROADMAP.md) |
 | Tests et recette Windows/LoL | [Validation](docs/validation.md) |
 | Anciennes versions et documents remplacés | [Archives](docs/ARCHIVES.md) |

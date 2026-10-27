@@ -58,7 +58,7 @@ Le déploiement actuel est privé, avec une clé partagée et une admission glob
 
 ## Limites de la migration
 
-- L’overlay standard Electron ne couvre pas le plein écran exclusif.
+- L’overlay Electron cible uniquement les modes sans bordure et fenêtré. Le plein écran exclusif est abandonné (décision du 27/10/2026) ; les essais natifs restent archivés hors du build et du paquet distribués.
 - Placement/focus multi-écran et DPI à qualifier ; mesures en jeu encore absentes.
 - Diagnostic Electron limité à l’état de connexion, à la version et à la configuration ; le diagnostic détaillé WPF n’est pas porté.
 - Méthodes synchrones `safeStorage` dépréciées par Electron 45 : adaptation asynchrone prévue, pas encore livrée.

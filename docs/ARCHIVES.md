@@ -2,6 +2,10 @@
 
 Le nettoyage du 25 octobre 2026 remplace les notes de session et les guides WPF contradictoires par une documentation centrée sur Electron. Les fichiers retirés restent consultables à la révision précédant ce nettoyage ; ils ne sont plus des procédures actuelles.
 
+## Essais de plein écran abandonnés — 27 octobre 2026
+
+Le périmètre produit est désormais limité aux modes sans bordure et fenêtré. Les dossiers `experimental/electron-fullscreen`, `experimental/dx11-probe` et `experimental/goverlay` conservent les sources, preuves et licences des essais ; ils ne sont ni intégrés au client ni à poursuivre pour LoL. Game Bar reste également abandonné. Le workflow DirectX est conservé pour exécution manuelle uniquement. Le lancement normal passe par `Lancer-Electron.cmd` ou l’exécutable portable.
+
 ## Où lire maintenant
 
 - Installation PC, reprise et dépannage : [Electron](ELECTRON.md) et [serveur](../server/README.md).

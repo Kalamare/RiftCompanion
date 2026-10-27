@@ -435,7 +435,10 @@ function renderClient(state: ClientState) {
       el("p", "Serveur : " + boot.settings.serverUrl),
       el("p", "Accès configuré : " + (boot.hasAccessKey ? "oui" : "non")),
       el("p", "Client LoL : " + state.phase),
-      el("p", "Plein écran exclusif : moteur non intégré."),
+      el(
+        "p",
+        "Overlay : sans bordure ou fenêtré. Plein écran exclusif non pris en charge.",
+      ),
     );
 }
 async function pollClient() {
@@ -610,7 +613,7 @@ async function start() {
         if (visible) $<HTMLInputElement>("overlay-enabled").checked = true;
         status(
           visible
-            ? "Overlay affiché · Ctrl+X pour masquer. Plein écran exclusif non pris en charge."
+            ? "Overlay affiché · Ctrl+X pour masquer. Dans LoL, utilise Sans bordure ou Fenêtré."
             : "Overlay masqué.",
         );
       })
