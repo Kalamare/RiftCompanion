@@ -183,6 +183,9 @@ class Probe {
         HRESULT draw = canvas->EndDraw();
         if (draw == D2DERR_RECREATE_TARGET) { resizePending = true; return; }
         check(draw, "EndDraw");
+        // Direct2D can leave shader stages bound that the GOverlay sprite pipeline
+        // does not override. Start the Present hook from a clean D3D11 state.
+        context->ClearState();
         if (smoke && frames % 20 == 0) readbackCheck();
         HRESULT present = chain->Present(1,0);
         if (present == DXGI_STATUS_OCCLUDED) { Sleep(50); return; }
