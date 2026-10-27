@@ -43,6 +43,10 @@ if ($LASTEXITCODE) { throw 'Pinned renderer patch no longer applies.' }
 if ($LASTEXITCODE) { throw 'Could not apply the D3D11 renderer selection patch.' }
 
 
+$tracePatch = (Resolve-Path (Join-Path $PSScriptRoot 'patches/trace-pixels.patch')).Path
+& git -C $native apply --ignore-space-change $tracePatch
+if ($LASTEXITCODE) { throw 'Could not apply pixel diagnostics.' }
+
 $result = [ordered]@{
     sourceDirectory = $source
     upstreamCommit = $pins.commit

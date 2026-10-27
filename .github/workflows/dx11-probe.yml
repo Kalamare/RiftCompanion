@@ -28,7 +28,7 @@ jobs:
           $diagnostic = "experimental/dx11-probe/build-goverlay/Release/RiftProbeDiagnostic.exe"
           if (Test-Path $diagnostic) { & $diagnostic (Resolve-Path $probe).Path }
           Get-ChildItem "$env:LOCALAPPDATA/log/RiftDx11Probe*.log" -ErrorAction SilentlyContinue | ForEach-Object {
-            Get-Content $_.FullName | Select-String 'failed|error|graphicsInit|graphicsWindow|window:|shader|hooked|swap:' | Select-Object -Last 80
+            Get-Content $_.FullName | Select-String 'RIFT diagnostic|failed|error|graphicsInit|graphicsWindow|window:|shader|hooked|swap:' | Select-Object -Last 80
           }
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: npm }

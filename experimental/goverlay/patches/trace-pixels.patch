@@ -1,0 +1,37 @@
+--- a/n_overlay/graphics/d3d11graphics.cc
++++ b/n_overlay/graphics/d3d11graphics.cc
+@@ -282,6 +282,8 @@
+     if (orgin)
+     {
+         overlay::ShareMemFrameBuffer* head = (overlay::ShareMemFrameBuffer*)orgin;
++        static bool sampledInput=false;
++        if(!sampledInput) { sampledInput=true; LOGGER("n_overlay") << "RIFT diagnostic input " << head->width << "x" << head->height << " pixel=" << *(reinterpret_cast<unsigned*>(head+1)); }
+         int width = std::min(windowSprite->rect.width, head->width);
+         int height = std::min(windowSprite->rect.height, head->height);
+ 
+@@ -519,6 +521,25 @@
+     RECT  drawRect = { windowSprite->rect.x, windowSprite->rect.y, windowSprite->rect.x + windowSprite->rect.width , windowSprite->rect.y + windowSprite->rect.height };
+ 
+     sprite_->drawUnscaleSprite(windowSprite->texture, drawRect);
++    static bool sampledOutput=false;
++    if(!sampledOutput) {
++        sampledOutput=true;
++        Windows::ComPtr<ID3D11Texture2D> back, staging;
++        swap_->GetBuffer(0,__uuidof(ID3D11Texture2D),(void**)back.resetAndGetPointerAddress());
++        D3D11_TEXTURE2D_DESC desc{};back->GetDesc(&desc);
++        desc.Usage=D3D11_USAGE_STAGING;desc.BindFlags=0;desc.CPUAccessFlags=D3D11_CPU_ACCESS_READ;desc.MiscFlags=0;
++        HRESULT hr=d3d11Device_->CreateTexture2D(&desc,nullptr,staging.resetAndGetPointerAddress());
++        if(SUCCEEDED(hr)) {
++            d3d11Context_->CopyResource(staging,back);
++            D3D11_MAPPED_SUBRESOURCE mapped{};
++            hr=d3d11Context_->Map(staging,0,D3D11_MAP_READ,0,&mapped);
++            if(SUCCEEDED(hr)) {
++                auto pixel=*(reinterpret_cast<unsigned*>(static_cast<char*>(mapped.pData)+200*mapped.RowPitch+60*4));
++                LOGGER("n_overlay") << "RIFT diagnostic output pixel=" << pixel << " rect=" << drawRect.left << "," << drawRect.top << "," << drawRect.right << "," << drawRect.bottom;
++                d3d11Context_->Unmap(staging,0);
++            }
++        }
++    }
+ }
+ 
+ void D3d11Graphics::_saveStatus()
