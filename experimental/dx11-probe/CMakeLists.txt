@@ -24,3 +24,7 @@ if(GOVERLAY_SOURCE)
   add_test(NAME goverlay-self-load-ipc COMMAND RiftDx11Probe --bridge-check)
   set_tests_properties(goverlay-self-load-ipc PROPERTIES TIMEOUT 30)
 endif()
+
+add_executable(RiftProbeDiagnostic diagnostic.cpp)
+target_compile_features(RiftProbeDiagnostic PRIVATE cxx_std_17)
+target_link_libraries(RiftProbeDiagnostic PRIVATE dbghelp)

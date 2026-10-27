@@ -20,6 +20,13 @@ jobs:
       - name: Compile GOverlay bridge and native renderer
         shell: pwsh
         run: ./experimental/dx11-probe/Build-WithGOverlay.ps1
+      - name: Diagnose native probe failure
+        if: failure()
+        shell: pwsh
+        run: |
+          $probe = "experimental/dx11-probe/build-goverlay/Release/RiftDx11Probe.exe"
+          $diagnostic = "experimental/dx11-probe/build-goverlay/Release/RiftProbeDiagnostic.exe"
+          if (Test-Path $diagnostic) { & $diagnostic (Resolve-Path $probe).Path }
       - uses: actions/setup-node@v4
         with: { node-version: '24', cache: npm }
       - run: npm ci
