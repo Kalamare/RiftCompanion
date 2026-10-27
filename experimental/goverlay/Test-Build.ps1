@@ -34,12 +34,21 @@ if ($LASTEXITCODE -or $submodule -notmatch ('^160000 commit ' + $pins.nativeComm
 $native = Join-Path $source 'game-overlay/sln'
 if (Test-Path $native) { [System.IO.Directory]::Delete($native) }
 Get-PinnedSource $pins.nativeRepository $pins.nativeCommit $native
+# A D3D11 device used by Direct2D also exposes ID3D10Device. Prefer the actual
+# D3D11 renderer instead of silently selecting the compatibility interface.
+$patch = (Resolve-Path (Join-Path $PSScriptRoot 'patches/prefer-d3d11.patch')).Path
+& git -C $native apply --check --ignore-space-change $patch
+if ($LASTEXITCODE) { throw 'Pinned renderer patch no longer applies.' }
+& git -C $native apply --ignore-space-change $patch
+if ($LASTEXITCODE) { throw 'Could not apply the D3D11 renderer selection patch.' }
+
 
 $result = [ordered]@{
     sourceDirectory = $source
     upstreamCommit = $pins.commit
     nativeCommit = $pins.nativeCommit
     configuration = 'Release|x64'
+    patches = @(@{ name = 'prefer-d3d11.patch'; sha256 = (Get-FileHash $patch -Algorithm SHA256).Hash })
     built = $false
     executed = $false
     gameTested = $false

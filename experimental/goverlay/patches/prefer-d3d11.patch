@@ -1,0 +1,11 @@
+--- a/n_overlay/graphics/dxgihook.cc
++++ b/n_overlay/graphics/dxgihook.cc
+@@ -549,7 +549,7 @@
+         }
+     }
+ 
+-    else if (device11 && !device10)
++    else if (device11)
+     {
+         std::unique_ptr<D3d11Graphics> graphics = std::make_unique<D3d11Graphics>();
+         if (graphics->initGraphics(swap))
