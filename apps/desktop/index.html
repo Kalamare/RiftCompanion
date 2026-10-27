@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'"
+    />
+    <title>RiftCompanion</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <div class="overlay-toolbar">
+        <span id="connection">Overlay : en attente du client LoL…</span
+        ><button id="top-overlay">Overlay</button>
+      </div>
+      <nav class="tabs" aria-label="Pages de Rift Companion">
+        <button data-view="profile" class="active">Profil joueur</button
+        ><button data-view="draft">Connexion et draft</button
+        ><button data-view="settings">Réglages</button
+        ><button data-view="diagnostics">Diagnostic</button>
+      </nav>
+      <main>
+        <div id="profile-tools">
+          <div class="profile-toolbar">
+            <button id="my-profile">Mon profil</button
+            ><button id="cancel-search" hidden>Annuler</button>
+            <div class="toolbar-right">
+              <button id="debug-toggle">Débug</button
+              ><button id="diagnostics-open">Diagnostic en direct</button>
+            </div>
+          </div>
+          <details id="search-expander">
+            <summary>Rechercher un autre joueur</summary>
+            <form id="search">
+              <label
+                >Riot ID<input
+                  id="riotId"
+                  placeholder="Pseudo#TAG"
+                  value="KalAram#ARAM"
+                  required
+                  maxlength="100"
+                  list="recent"
+                  aria-label="Riot ID" /></label
+              ><datalist id="recent"></datalist
+              ><label
+                >Serveur<select id="platform" aria-label="Serveur">
+                  <option value="euw1">EUW</option>
+                  <option value="eun1">EUNE</option>
+                  <option value="na1">NA</option>
+                  <option value="kr">KR</option>
+                </select></label
+              ><button type="submit">Charger le profil</button>
+            </form>
+          </details>
+          <section id="debug-panel" class="panel" hidden>
+            <h2>Diagnostic du profil</h2>
+            <p>
+              Filtres sur les parties chargées. Remakes exclus des moyennes. Les
+              classements ne dépendent pas de cet échantillon.
+            </p>
+          </section>
+        </div>
+        <p id="status" role="status" aria-live="polite"></p>
+        <section id="profile" class="view">
+          <div id="profile-content">
+            <div class="empty">
+              <h1>Ton prochain match commence ici.</h1>
+              <p>Recherche un Riot ID ou ouvre ton profil LoL.</p>
+              <p>Les données déjà consultées restent disponibles hors ligne.</p>
+            </div>
+          </div>
+        </section>
+        <section id="draft" class="view" hidden>
+          <div class="draft-brand">◈ RIFT / COMPANION</div>
+          <p class="draft-eyebrow">TON ÉQUIPE. TES CHOIX.</p>
+          <h1>La draft, en un regard.</h1>
+          <p>Informations fournies par le client LoL local.</p>
+          <button id="overlay-toggle">Afficher / masquer l’overlay</button>
+          <p class="muted">
+            Dans LoL, choisis le mode Sans bordure ou Fenêtré dans les réglages
+            vidéo. Ctrl+X affiche ou masque l’overlay.
+          </p>
+          <div id="draft-content"></div>
+          <div id="overlay-content"></div>
+        </section>
+        <section id="settings" class="view" hidden>
+          <h1>Réglages</h1>
+          <form id="settings-form" class="panel settings">
+            <label
+              >Adresse du serveur<input
+                id="server-url"
+                placeholder="https://rift.exemple.fr"
+                required /></label
+            ><label
+              >Clé d’accès au serveur<input
+                id="server-key"
+                type="password"
+                autocomplete="off"
+                placeholder="Laisser vide pour conserver la clé"
+            /></label>
+            <p class="muted">
+              La clé Riot reste sur le serveur. La clé d’accès est chiffrée par
+              Windows.
+            </p>
+            <label
+              >Dossier League of Legends<input
+                id="league-directory"
+                readonly /></label
+            ><button type="button" id="choose-directory">
+              Choisir le dossier</button
+            ><label
+              >Rôle préféré<select id="preferred-role">
+                <option value="top">Top</option>
+                <option value="jungle">Jungle</option>
+                <option value="middle">Mid</option>
+                <option value="bottom">ADC</option>
+                <option value="utility">Support</option>
+              </select></label
+            ><label class="check"
+              ><input type="checkbox" id="overlay-enabled" />Activer l’overlay
+              en partie (sans bordure ou fenêtré)</label
+            ><button type="submit">Enregistrer</button>
+          </form>
+        </section>
+        <section id="diagnostics" class="view" hidden>
+          <h1>Diagnostic</h1>
+          <div id="diagnostic-content" class="panel"></div>
+        </section>
+      </main>
+    </div>
+    <dialog id="details">
+      <button id="close-details">Fermer</button>
+      <div id="details-content"></div>
+    </dialog>
+    <script src="renderer.js"></script>
+  </body>
+</html>

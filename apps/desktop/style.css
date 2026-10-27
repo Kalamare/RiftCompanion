@@ -1,0 +1,1312 @@
+/* Port of native/ProfileView.xaml, ProfileCharts.cs, MatchDetailsView.xaml and OverlayWindow.xaml. */
+:root {
+  color-scheme: dark;
+  font:
+    14px/1.4 "Segoe UI",
+    sans-serif;
+  color: #e6edf3;
+  background: #191919;
+  --muted: #9fb3c1;
+  --win: #4591ff;
+  --loss: #f66977;
+  --teal: #55c6af;
+  --border: #3d3d3d;
+}
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+  border: 1px solid #405b6b;
+  border-radius: 7px;
+  background: #243b49;
+  padding: 8px 14px;
+  min-height: 36px;
+}
+button {
+  font-weight: 600;
+  cursor: pointer;
+}
+button:hover {
+  background: #304b5a;
+  border-color: #658a9b;
+}
+button:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid #71d3d7;
+  outline-offset: 2px;
+}
+input,
+select {
+  background: #192c38;
+  font-weight: 400;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+small,
+.muted {
+  color: var(--muted);
+}
+small {
+  font-size: 11px;
+}
+h2 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 14px;
+}
+h3 {
+  font-size: 13px;
+  font-weight: 600;
+}
+img {
+  object-fit: contain;
+}
+button img {
+  pointer-events: none;
+}
+[hidden] {
+  display: none !important;
+}
+.overlay-toolbar {
+  background: #192630;
+  padding: 7px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+.overlay-toolbar span {
+  flex: 1;
+}
+.tabs {
+  display: flex;
+  background: #10151a;
+  border-bottom: 1px solid #34414b;
+  padding: 5px 8px 0;
+  gap: 3px;
+}
+.tabs button {
+  border-radius: 5px 5px 0 0;
+  border-color: transparent;
+  background: transparent;
+  font-weight: 400;
+  padding: 8px 18px;
+}
+.tabs button.active {
+  background: #191919;
+  border-color: #34414b;
+  border-bottom-color: #191919;
+}
+.tabs button:hover {
+  background: #24343f;
+}
+main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  min-width: 0;
+}
+.profile-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.toolbar-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+#search-expander {
+  margin: 0 0 12px;
+  color: #a7becf;
+}
+summary {
+  cursor: pointer;
+}
+#search {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+  margin-top: 12px;
+}
+#search label {
+  display: grid;
+  gap: 4px;
+  font-size: 11px;
+}
+#riotId {
+  width: 230px;
+}
+#platform {
+  min-width: 130px;
+}
+#status {
+  font-size: 12px;
+  color: #b8e0da;
+  white-space: pre-line;
+}
+#status:not(:empty) {
+  padding: 10px 12px;
+  background: #30404b;
+  border-radius: 6px;
+  margin: 0 0 12px;
+}
+.error {
+  color: #ffb2bb !important;
+}
+.panel {
+  background: #262626;
+  border: 1px solid #3d3d3d;
+  border-radius: 5px;
+  padding: 10px;
+}
+.profile-heading {
+  padding: 20px;
+  min-height: 175px;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 18px;
+}
+.profile-icon {
+  width: 112px;
+  height: 112px;
+  border-radius: 8px;
+  background: #30424e;
+  position: relative;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.profile-icon img {
+  width: 108px;
+  height: 108px;
+}
+.asset-fallback {
+  font-size: 28px;
+  color: #e6edf3;
+}
+.identity h1 {
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.identity p {
+  margin: 6px 0 12px;
+}
+.refresh-button {
+  background: #7266e8;
+  border-color: #7266e8;
+}
+.summary-tab {
+  padding: 6px 8px;
+  margin-bottom: 10px;
+}
+.summary-tab span {
+  display: inline-block;
+  padding: 5px 25px;
+  background: #50c3ab;
+  border-radius: 5px;
+  color: #101820;
+  font-size: 16px;
+  font-weight: 600;
+}
+.profile-columns {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 10px;
+}
+.profile-sidebar > .panel {
+  margin-bottom: 16px;
+}
+.rank-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  margin: 8px 0;
+}
+.rank-row small {
+  display: block;
+  margin: 3px 0;
+}
+.rank-image {
+  width: 62px;
+  height: 62px;
+  object-fit: contain;
+}
+.rank-title {
+  display: block;
+  font-size: 18px;
+  color: #9fb3c1;
+  font-weight: 600;
+}
+.rank-row:has(img[alt="DIAMOND"]) .rank-title {
+  color: #35afea;
+}
+.rank-row:has(img[alt="GOLD"]) .rank-title {
+  color: #e7bb58;
+}
+.rank-row:has(img[alt="EMERALD"]) .rank-title {
+  color: #38cc8c;
+}
+.rank-row:has(img[alt="MASTER"]) .rank-title {
+  color: #ba65db;
+}
+.rank-row:has(img[alt="GRANDMASTER"]) .rank-title {
+  color: #ed6268;
+}
+.rank-row:has(img[alt="CHALLENGER"]) .rank-title {
+  color: #eccd81;
+}
+.rank-row:has(img[alt="PLATINUM"]) .rank-title {
+  color: #56bdb3;
+}
+.flex-rank {
+  border-top: 1px solid #414141;
+  margin-top: 12px;
+  padding-top: 10px;
+}
+.rank-road {
+  display: flex;
+  margin-top: 16px;
+}
+.rank-stop {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  position: relative;
+  padding-top: 6px;
+}
+.rank-stop:before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  height: 3px;
+  background: #353f4d;
+  left: 0;
+  right: 0;
+}
+.rank-marker {
+  display: block;
+  position: relative;
+  margin: auto;
+  width: 17px;
+  height: 17px;
+  border: 2px solid var(--rank-color);
+  border-radius: 50%;
+  background: #fff;
+  line-height: 13px;
+  font-size: 11px;
+  color: white;
+}
+.rank-stop small {
+  display: block;
+  color: var(--rank-color);
+  margin-top: 7px;
+}
+.rank-stop.current .rank-marker {
+  background: var(--rank-color);
+}
+.rank-stop.current:after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: calc(50% - 4px);
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--rank-color);
+}
+.rank-stop.current small {
+  font-weight: bold;
+}
+.season-panel h2 {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+.season-modes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-bottom: 8px;
+}
+.season-modes button {
+  padding: 5px;
+  font-size: 11px;
+  border-radius: 4px;
+  min-height: 30px;
+  background: #262626;
+  border-color: #454545;
+  font-weight: 400;
+}
+.season-modes .active {
+  background: #29423d;
+  color: turquoise;
+}
+.season-scope {
+  font-size: 10px;
+  white-space: pre-line;
+  color: #9fb3c1;
+  margin-bottom: 6px;
+}
+.season-champion {
+  display: grid;
+  grid-template-columns: 35px minmax(0, 1fr) 65px;
+  align-items: center;
+  margin: 10px 0;
+}
+.season-champion .portrait {
+  width: 30px;
+  height: 30px;
+}
+.season-champion strong {
+  font-size: 12px;
+  display: block;
+}
+.season-champion small {
+  display: block;
+}
+.season-score {
+  text-align: right;
+  font-size: 12px;
+}
+.season-score small {
+  font-size: 10px;
+}
+.season-panel > button {
+  width: 100%;
+  font-size: 11px;
+  padding: 5px;
+  min-height: 28px;
+}
+.filters {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-bottom: 7px;
+}
+.filters button {
+  padding: 6px 10px;
+  min-height: 30px;
+  font-size: 11px;
+  border-radius: 5px;
+  background: #262626;
+  border-color: #454545;
+}
+.filters button.active {
+  background: #29423d;
+  color: #55c6af;
+  border-color: #55c6af;
+}
+.filters select {
+  margin-left: auto;
+  width: 145px;
+  min-width: 0;
+  height: 32px;
+  min-height: 30px;
+  font-size: 11px;
+  padding: 4px 6px;
+  background: #262626;
+  border-color: #454545;
+}
+.overview-strip {
+  display: grid;
+  grid-template-columns: 1.4fr 0.8fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+  align-items: start;
+}
+.overview-strip > .panel {
+  min-height: 176px;
+  padding: 7px 9px;
+  min-width: 0;
+}
+.overview-strip h2 {
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.balance-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 111px;
+}
+.winrate-donut {
+  width: 90px;
+  flex-shrink: 0;
+}
+.balance-values {
+  min-width: 0;
+}
+.balance-values > small {
+  display: block;
+  margin: 5px 0;
+  font-size: 10px;
+}
+.balance-values .kda {
+  white-space: nowrap;
+  font-size: 12px;
+}
+.teal {
+  color: #55c6af;
+}
+.kills {
+  color: #32d6a0;
+}
+.deaths {
+  color: #ff707b;
+}
+.assists {
+  color: #ffb65c;
+}
+.separator {
+  color: #9fb3c1;
+}
+.kda {
+  font-weight: 600;
+}
+.balance-more {
+  font-size: 11px;
+  color: #a7becf;
+}
+.extra-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding-top: 8px;
+}
+.extra-metrics strong,
+.extra-metrics small {
+  display: block;
+}
+.recent-champion {
+  display: flex;
+  gap: 5px;
+  margin: 8px 0;
+  align-items: center;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.recent-champion .portrait {
+  width: 27px;
+  height: 27px;
+}
+.recent-champion small {
+  display: block;
+  font-size: 10px;
+}
+.role-columns {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 2px;
+  margin: 8px 0 4px;
+}
+.role-column {
+  text-align: center;
+}
+.role-pair {
+  height: 58px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 3px;
+}
+.role-pair span {
+  display: block;
+  width: 7px;
+  border-radius: 3px 3px 0 0;
+}
+.role-pair .win {
+  background: #4591ff;
+}
+.role-pair .loss {
+  background: #f66977;
+}
+.role-icon {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  margin-top: 7px;
+}
+.role-legend {
+  display: block;
+  font-size: 10px;
+  text-align: center;
+  line-height: 1.25;
+  margin-top: 3px;
+}
+.match-list {
+  overflow-anchor: none;
+  max-height: 720px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.match {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 112px 200px;
+  align-items: center;
+  width: 100%;
+  padding: 10px;
+  margin: 0 0 8px;
+  border: 1px solid transparent;
+  border-left: 3px solid #d87685;
+  border-radius: 6px;
+  background: #482d32;
+  text-align: left;
+  font-weight: 400;
+  height: 96px;
+}
+.match.win {
+  background: #293a5c;
+  border-left-color: #4591ff;
+}
+.match.remake {
+  background: #29333d;
+  border-left-color: #9fb3c1;
+}
+.match:hover {
+  background: #482d32;
+  border-top-color: #658a9b;
+  border-right-color: #658a9b;
+  border-bottom-color: #658a9b;
+}
+.match.win:hover {
+  background: #293a5c;
+}
+.match.remake:hover {
+  background: #29333d;
+}
+.match-champion {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.portrait {
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+}
+.match-champion strong {
+  display: block;
+  font-size: 14px;
+}
+.match-champion span {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+}
+.match-queue {
+  display: block;
+  font-size: 11px;
+  margin-top: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-combat {
+  margin-right: 12px;
+}
+.match-combat .kda {
+  font-size: 15px;
+  white-space: nowrap;
+}
+.match-combat small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.match-gear > small {
+  display: block;
+  text-align: right;
+  font-size: 11px;
+  margin-top: 8px;
+}
+.equipment {
+  display: flex;
+  gap: 2px;
+}
+.item-slot {
+  display: inline-grid;
+  place-items: center;
+  position: relative;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  background: #30424e;
+  vertical-align: middle;
+  overflow: hidden;
+}
+.item-slot img {
+  width: 100%;
+  height: 100%;
+}
+.item-slot .asset-fallback {
+  font-size: 12px;
+}
+.empty-slot {
+  visibility: hidden;
+  pointer-events: none;
+}
+.more-matches {
+  display: block;
+  margin: 12px auto 0;
+}
+.legal {
+  color: #8198a7;
+  font-size: 10px;
+  margin: 22px 0;
+}
+.empty {
+  padding: 50px 20px;
+  text-align: center;
+}
+.empty h1 {
+  font-size: 24px;
+}
+.empty p {
+  margin-top: 14px;
+}
+.settings {
+  display: grid;
+  gap: 16px;
+  max-width: 650px;
+  margin-top: 18px;
+}
+.settings label {
+  display: grid;
+  gap: 6px;
+}
+.settings .check {
+  display: flex;
+  align-items: center;
+}
+.settings p {
+  font-size: 12px;
+}
+.settings input[type="checkbox"] {
+  min-height: 0;
+}
+#diagnostics > h1 {
+  margin-bottom: 18px;
+}
+#diagnostic-content p {
+  margin: 8px 0;
+}
+.draft-brand {
+  color: #dec78e;
+  font-size: 19px;
+  font-weight: 600;
+  padding: 12px 0 22px;
+  border-bottom: 1px solid #303b43;
+  margin-bottom: 26px;
+}
+.draft-eyebrow {
+  color: #dec78e;
+  font-size: 11px;
+}
+#draft h1 {
+  font-size: 32px;
+  margin: 8px 0 6px;
+}
+#draft > p {
+  color: #96a5af;
+  margin-bottom: 16px;
+}
+#draft > button {
+  margin: 8px 0;
+}
+.teams {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  margin-top: 18px;
+}
+.teams .panel {
+  background: #172129;
+  border-color: #34414b;
+  border-radius: 8px;
+  padding: 18px;
+}
+.teams .panel:first-child h2 {
+  color: #8ad7b7;
+}
+.teams .panel:nth-child(2) h2 {
+  color: #e2a4a4;
+}
+.teams .panel p {
+  padding: 12px 4px;
+  border-bottom: 1px solid #34414b;
+}
+.teams table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.teams td {
+  padding: 8px 4px;
+  border-bottom: 1px solid #34414b;
+}
+.teams td small {
+  display: block;
+}
+.visual-tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: #233440;
+  border: 1px solid #506773;
+  border-radius: 7px;
+  padding: 12px;
+  color: #e6edf3;
+  max-width: 380px;
+  font-size: 13px;
+  box-shadow: 0 4px 16px #0007;
+  white-space: pre-line;
+}
+.visual-tooltip p {
+  color: #b5c6d2;
+  margin: 8px 0 12px;
+}
+.tooltip-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tooltip-heading img {
+  width: 30px;
+  height: 30px;
+}
+.components {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 6px 0;
+}
+.price {
+  color: #debd78 !important;
+  text-align: right;
+}
+.statistics-tooltip strong {
+  display: block;
+}
+.statistics-tooltip p:last-child {
+  margin-bottom: 0;
+}
+dialog {
+  padding: 20px;
+  border: 1px solid #324651;
+  border-radius: 8px;
+  background: #101820;
+  color: #e6edf3;
+  width: min(1400px, 96vw);
+  max-width: 96vw;
+  max-height: 94vh;
+  font:
+    13px "Segoe UI",
+    sans-serif;
+}
+dialog::backdrop {
+  background: #0009;
+}
+#close-details {
+  float: right;
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+#details-content > h2 {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.detail-subtitle {
+  color: #9fb3c1;
+  margin-bottom: 20px;
+}
+.detail-teams {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.detail-team {
+  background: #192630;
+  border: 1px solid #324651;
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.team-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.team-heading h3 {
+  font-size: 18px;
+  color: #8ad7b7;
+}
+.detail-team.loss h3 {
+  color: #e2a4a4;
+}
+.team-heading > strong {
+  font-size: 17px;
+}
+.objectives {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 8px 0 14px;
+  font-size: 11px;
+  color: #c5d6e1;
+}
+.participant {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 112px 114px;
+  background: #1e303b;
+  border-left: 2px solid transparent;
+  border-radius: 6px;
+  padding: 8px;
+  margin-bottom: 6px;
+  min-height: 94px;
+  align-items: center;
+}
+.participant.selected-player {
+  background: #23424a;
+  border-left-color: #71d3d7;
+}
+.participant-champion .portrait {
+  width: 56px;
+  height: 56px;
+}
+.player-link {
+  display: block;
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: 0;
+  color: #b6e8eb;
+  text-align: left;
+  font-size: 13px;
+  position: relative;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.player-link:hover {
+  background: #31515d;
+  color: white;
+}
+.champion-level {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  background: #101820;
+  border-radius: 4px;
+  padding: 2px;
+  font-size: 10px;
+}
+.participant-name {
+  min-width: 0;
+  padding-right: 8px;
+}
+.participant-name small {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+}
+.participant-name .rank-current {
+  color: #b6b7d5;
+  font-style: italic;
+  font-size: 11px;
+}
+.spells-runes {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  margin-top: 4px;
+}
+.rune-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+.rune-icon {
+  width: 18px;
+  height: 18px;
+}
+.spell-icon {
+  width: 17px;
+  height: 18px;
+}
+.participant-stats {
+  text-align: right;
+  padding-right: 12px;
+}
+.participant-stats .kda {
+  font-size: 15px;
+  white-space: nowrap;
+}
+.participant-stats small {
+  display: block;
+  font-size: 10px;
+  margin-top: 2px;
+}
+.participant-equipment {
+  display: flex;
+  gap: 2px;
+}
+.six-items {
+  display: grid;
+  grid-template-columns: repeat(3, 25px);
+  gap: 3px;
+}
+.participant-equipment .item-slot {
+  width: 25px;
+  height: 25px;
+}
+.trinket {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-left: 2px;
+}
+.bans {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+.banned-champion {
+  position: relative;
+}
+.banned-champion img {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  opacity: 0.65;
+  border: 2px solid #778995;
+}
+.banned-champion:after {
+  content: "";
+  height: 3px;
+  width: 25px;
+  background: #d3a4a3;
+  position: absolute;
+  left: 0;
+  top: 12px;
+  transform: rotate(-45deg);
+}
+.detail-footnote {
+  color: #829cab;
+  font-size: 11px;
+}
+.runes-popup {
+  position: fixed;
+  z-index: 20;
+  top: 15vh;
+  left: calc(50% - 312px);
+  width: 624px;
+  max-width: 90vw;
+  max-height: 70vh;
+  overflow: auto;
+  padding: 12px;
+  background: #233440;
+  border: 1px solid #506773;
+  border-radius: 7px;
+  box-shadow: 0 8px 32px #0008;
+}
+.runes-popup h3 {
+  font-size: 15px;
+  margin: 0 0 16px;
+}
+.runes-close {
+  float: right;
+  min-height: 26px;
+  padding: 4px 8px;
+  font-size: 11px;
+}
+.rune-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.rune-description {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  margin: 0 12px 16px 0;
+}
+.rune-description .rune-icon {
+  width: 30px;
+  height: 30px;
+}
+.rune-description p {
+  font-size: 12px;
+  color: #b5c6d2;
+  margin-top: 4px;
+  white-space: pre-line;
+}
+.overlay-mode {
+  background: transparent;
+}
+.overlay-mode .overlay-toolbar,
+.overlay-mode .tabs,
+.overlay-mode #profile-tools,
+.overlay-mode #status {
+  display: none !important;
+}
+.overlay-mode main {
+  max-width: none;
+  padding: 12px;
+  margin: 0;
+}
+.overlay-mode #draft > *:not(#overlay-content) {
+  display: none !important;
+}
+.overlay-heading {
+  background: #111a23e6;
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin: 4px 0 6px;
+}
+.overlay-heading small {
+  display: block;
+  margin-top: 5px;
+}
+.overlay-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  padding: 5px;
+}
+.overlay-player {
+  background: #202e3a;
+  border-radius: 8px;
+  border-top: 2px solid #e2a4a4;
+  padding: 12px;
+  min-height: 310px;
+  min-width: 0;
+}
+.overlay-player.blue-team {
+  border-color: #8ad7b7;
+}
+.overlay-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  border-bottom: 1px solid #8ad7b7;
+  padding-bottom: 7px;
+  margin-bottom: 7px;
+}
+.red-team .overlay-identity {
+  border-color: #e2a4a4;
+}
+.overlay-identity .profile-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 4px;
+  background: #192630;
+}
+.overlay-identity .profile-icon img {
+  width: 36px;
+  height: 36px;
+}
+.overlay-identity .asset-fallback {
+  font-size: 14px;
+}
+.overlay-identity > div:last-child {
+  min-width: 0;
+}
+.overlay-identity strong {
+  font-size: 13px;
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.overlay-identity small {
+  display: block;
+}
+.overlay-champion {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 85px;
+  gap: 6px;
+}
+.overlay-champion small {
+  display: block;
+  font-size: 11px;
+}
+.overlay-champion .portrait {
+  width: 44px;
+  height: 44px;
+}
+.overlay-champion strong {
+  display: block;
+  margin-top: 4px;
+}
+.overlay-rank {
+  text-align: center;
+}
+.overlay-rank .rank-image {
+  width: 45px;
+  height: 45px;
+}
+.overlay-periods {
+  border-top: 1px solid #475662;
+  margin-top: 8px;
+  padding-top: 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+.overlay-periods small {
+  display: block;
+  font-size: 9px;
+  margin-bottom: 6px;
+}
+.overlay-periods span {
+  display: block;
+  font-size: 11px;
+}
+.overlay-notice {
+  display: block;
+  font-size: 10px;
+  margin-top: 12px;
+}
+#overlay-content:empty {
+  display: none;
+}
+@media (max-width: 1120px) {
+  .overview-strip {
+    grid-template-columns: 1.25fr 0.85fr 1fr;
+  }
+  .balance-body {
+    gap: 3px;
+  }
+  .winrate-donut,
+  .winrate-donut svg {
+    width: 74px;
+    height: 74px;
+  }
+  .balance-values .kda {
+    font-size: 11px;
+  }
+  .match {
+    grid-template-columns: minmax(0, 1fr) 104px 196px;
+  }
+  .participant {
+    grid-template-columns: 62px minmax(0, 1fr) 95px;
+  }
+  .participant-equipment {
+    grid-column: 2/4;
+    margin-top: 6px;
+  }
+  .participant-stats {
+    padding-right: 0;
+  }
+  .detail-team {
+    padding: 10px;
+  }
+}
+
+:root:has(body.overlay-mode) {
+  background: transparent;
+}
+.draft-player {
+  padding: 10px;
+  margin: 3px 0;
+  border-radius: 5px;
+}
+.draft-player.is-you {
+  background: #223931;
+}
+.draft-player strong,
+.draft-player small {
+  display: block;
+}
+.draft-player small {
+  margin-top: 4px;
+  color: #778899;
+}
+.draft-status {
+  padding: 18px;
+  background: #1d2931;
+  border-radius: 8px;
+  margin-top: 18px;
+}
+.draft-status strong {
+  font-size: 16px;
+}
+.draft-status p {
+  margin-top: 5px;
+  color: #a8bac6;
+}
+
+.objective {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.rank-current {
+  display: flex !important;
+  align-items: center;
+  gap: 3px;
+}
+.rank-current .rank-image {
+  width: 20px;
+  height: 20px;
+}
+.rank-current span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.overlay-choices {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin: 4px 0;
+}
+.overlay-champion .kda {
+  font-size: 12px;
+  display: block;
+  margin-top: 4px;
+}
+
+.overlay-profile-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.overlay-profile-link:hover,
+.overlay-profile-link:focus-visible {
+  color: #4ec5b3;
+  text-decoration: underline;
+}

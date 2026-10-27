@@ -1,0 +1,25 @@
+--- a/n_overlay/graphics/dxgihook.cc
++++ b/n_overlay/graphics/dxgihook.cc
+@@ -473,6 +473,13 @@
+ 
+ void DXGIHook::onBeforePresent(IDXGISwapChain *swap)
+ {
++    // A recreated chain can bypass the legacy factory hook (COM interface aliases).
++    // Rebind only when the new chain belongs to the already selected game window.
++    if (graphicsInit_ && swapChain_.get() != swap) {
++        DXGI_SWAP_CHAIN_DESC desc{};
++        if (SUCCEEDED(swap->GetDesc(&desc)) && desc.OutputWindow == session::graphicsWindow())
++            freeGraphics();
++    }
+     if (graphicsInit_)
+     {
+         if (!session::overlayConnected() || !session::overlayEnabled())
+@@ -549,7 +556,7 @@
+         }
+     }
+ 
+-    else if (device11 && !device10)
++    else if (device11)
+     {
+         std::unique_ptr<D3d11Graphics> graphics = std::make_unique<D3d11Graphics>();
+         if (graphics->initGraphics(swap))

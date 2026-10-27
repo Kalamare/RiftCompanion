@@ -1,0 +1,10 @@
+**
+!package.json
+!package-lock.json
+!apps/
+!apps/**
+!packages/
+!packages/**
+!server/
+!server/Rift.Backend/
+!server/Rift.Backend/schema.sql
