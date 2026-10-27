@@ -38,9 +38,12 @@ class Bridge final : public ProbeBridge, public IIpcHost {
         overlay::Window w;
         w.windowId=1; w.nativeHandle=0;
         // The pinned renderer draws ordinary windows only while intercepting input.
-        // StatusBar is its persistent, non-intercepting HUD slot (DxgiGraphics::beforePresent).
+        // StatusBar is its persistent HUD slot (DxgiGraphics::beforePresent).
         // This protocol name is functional, not a user-facing panel title.
         w.name="StatusBar";
+        // The pinned hit-test calls caption.value() even for non-resizable HUDs.
+        // An absent caption throws bad_optional_access across its window callback.
+        w.caption=overlay::WindowCaptionMargin{};
         w.transparent=true; w.resizable=false;
         w.maxWidth=w.minWidth=PanelWidth; w.maxHeight=w.minHeight=PanelHeight;
         w.bufferName=memoryName; w.rect={40,180,PanelWidth,PanelHeight};

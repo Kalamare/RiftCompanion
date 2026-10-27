@@ -160,10 +160,6 @@ class Probe {
         HRESULT draw = canvas->EndDraw();
         if (draw == D2DERR_RECREATE_TARGET) { resizePending = true; return; }
         check(draw, "EndDraw");
-        // Direct2D owns its internal pipeline state. The injected sprite renderer
-        // expects a plain D3D11 pipeline and does not reset every D2D shader stage.
-        // Release that state before Present invokes the overlay draw callback.
-        context->ClearState();
         if (smoke && frames % 20 == 0) readbackCheck();
         HRESULT present = chain->Present(1,0);
         if (present == DXGI_STATUS_OCCLUDED) { Sleep(50); return; }

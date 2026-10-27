@@ -66,7 +66,10 @@ restent celles détaillées dans `experimental/goverlay/README.md`.
 Le nom de fenêtre `StatusBar` sélectionne le panneau permanent du moteur épinglé.
 Une fenêtre portant un nom libre est dessinée uniquement lorsque GOverlay
 intercepte les entrées ; le banc n’active pas ce mode. Le correctif du 27/10/2026
-utilise ce panneau permanent sans capturer les entrées du jeu.
+utilise ce panneau permanent sans activer le mode global d’interception. Ce panneau
+peut intercepter la souris dans sa zone ; les clics ne sont pas encore transmis à
+Electron. Sa définition fournit aussi une marge de titre vide : le moteur attend
+ce champ lors du survol, même pour un panneau non redimensionnable.
 
 Après mise à jour, reconstruire avec `Build-WithGOverlay.ps1` puis relancer
 le producteur Electron : reconstruire uniquement JavaScript ne met pas à jour
