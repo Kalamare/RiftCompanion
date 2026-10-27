@@ -85,7 +85,7 @@ class Probe {
         desc.BufferDesc.Width = width; desc.BufferDesc.Height = height;
         desc.BufferDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
         desc.SampleDesc.Count = 1; desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-        desc.BufferCount = 2; desc.OutputWindow = window; desc.Windowed = TRUE;
+        desc.BufferCount = smoke ? 1 : 2; desc.OutputWindow = window; desc.Windowed = TRUE;
         // Preserve the presented image for smoke-test GPU readback after the hook.
         desc.SwapEffect = smoke ? DXGI_SWAP_EFFECT_SEQUENTIAL : DXGI_SWAP_EFFECT_DISCARD;
         desc.Flags = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH;
